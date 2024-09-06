@@ -1,0 +1,30 @@
+/* Enter your custom styles here */
+.sapMPanel .sapMPanelHdr,
+.sapMPanel .sapMTB.sapMPanelHeaderTB {
+    background-color: #8cb8da;
+    opacity: 70%;
+    color: black;
+    font-weight: bolder;
+}
+
+/* .sapMPanel.sapMPanelExpandable .sapMPanelHdr,
+.sapMPanel.sapMPanelExpandable .sapMTB.sapMPanelHeaderTB {
+    padding-left: 5px;
+} */
+
+.sapMPanelHdr {
+    font-size: 1.1rem;
+}
+
+.sapMPanel .sapMPanelHeadingDiv>.sapMPanelHdr, .sapMPanelWrappingDiv, .sapMPanelWrappingDivTb {
+    background-color: #8cb8da;
+}
+
+.sapMPanelWrappingDiv .sapUiIcon {
+    color: #000;
+}
+
+.sapMLnk {
+    display: inline;
+}
+/* Enter your custom styles here */

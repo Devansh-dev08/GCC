@@ -1,0 +1,181 @@
+{
+  "_version": "1.59.0",
+  "sap.app": {
+    "id": "com.gcc.absenceqa.ar02qa",
+    "type": "application",
+    "i18n": "i18n/i18n.properties",
+    "applicationVersion": {
+      "version": "0.0.2"
+    },
+    "title": "{{appTitle}}",
+    "description": "{{appDescription}}",
+    "resources": "resources.json",
+    "sourceTemplate": {
+      "id": "@sap/generator-fiori:basic",
+      "version": "1.12.2",
+      "toolsId": "25299da4-b87d-4c21-a87c-8a5ade89f075"
+    },
+    "dataSources": {
+      "mainService": {
+        "uri": "/odata/v2/",
+        "type": "OData",
+        "settings": {
+          "annotations": [],
+          "localUri": "localService/metadata.xml",
+          "odataVersion": "2.0"
+        }
+      },
+      "ZSFGTGW_AR02_SRV_01": {
+        "uri": "/sap/opu/odata/sap/ZSFGTGW_AR02_SRV_01",
+        "type": "OData",
+        "settings": {
+          "annotations": [],
+          "localUri": "localService/ZSFGTGW_AR02_SRV_01/metadata.xml",
+          "odataVersion": "2.0"
+        }
+      },
+      "ZSFGTGW_LOG_SRV": {
+        "uri": "/sap/opu/odata/sap/ZSFGTGW_LOG_SRV",
+        "type": "OData",
+        "settings": {
+          "annotations": [],
+          "localUri": "localService/ZSFGTGW_LOG_SRV/metadata.xml",
+          "odataVersion": "2.0"
+        }
+      }
+    },
+    "crossNavigation": {
+      "inbounds": {
+        "GCC_SemObj_AR02_QA-Display": {
+          "semanticObject": "GCC_SemObj_AR02_QA",
+          "action": "Display",
+          "title": "{{flpTitle}}",
+          "icon": "sap-icon://batch-payments",
+          "signature": {
+            "parameters": {},
+            "additionalParameters": "allowed"
+          }
+        }
+      }
+    }
+  },
+  "sap.ui": {
+    "technology": "UI5",
+    "icons": {
+      "icon": "",
+      "favIcon": "",
+      "phone": "",
+      "phone@2": "",
+      "tablet": "",
+      "tablet@2": ""
+    },
+    "deviceTypes": {
+      "desktop": true,
+      "tablet": true,
+      "phone": true
+    }
+  },
+  "sap.ui5": {
+    "flexEnabled": true,
+    "dependencies": {
+      "minUI5Version": "1.120.4",
+      "libs": {
+        "sap.m": {},
+        "sap.ui.core": {},
+        "sap.f": {},
+        "sap.suite.ui.generic.template": {},
+        "sap.ui.comp": {},
+        "sap.ui.generic.app": {},
+        "sap.ui.table": {},
+        "sap.ushell": {}
+      }
+    },
+    "contentDensities": {
+      "compact": true,
+      "cozy": true
+    },
+    "models": {
+      "i18n": {
+        "type": "sap.ui.model.resource.ResourceModel",
+        "settings": {
+          "bundleName": "com.gcc.absenceqa.ar02qa.i18n.i18n"
+        }
+      },
+      "": {
+        "dataSource": "mainService",
+        "preload": true,
+        "settings": {}
+      },
+      "S4hService": {
+        "dataSource": "ZSFGTGW_AR02_SRV_01",
+        "preload": true,
+        "settings": {
+          "defaultBindingMode": "TwoWay",
+          "defaultCountMode": "Inline",
+          "refreshAfterChange": false,
+          "metadataUrlParams": {
+            "sap-value-list": "none"
+          }
+        }
+      },
+      "logService": {
+        "dataSource": "ZSFGTGW_LOG_SRV",
+        "preload": true,
+        "settings": {
+          "defaultBindingMode": "TwoWay",
+          "defaultCountMode": "Inline",
+          "refreshAfterChange": false,
+          "metadataUrlParams": {
+            "sap-value-list": "none"
+          }
+        }
+      }
+    },
+    "resources": {
+      "css": [
+        {
+          "uri": "css/style.css"
+        }
+      ]
+    },
+    "routing": {
+      "config": {
+        "routerClass": "sap.m.routing.Router",
+        "viewType": "XML",
+        "async": true,
+        "viewPath": "com.gcc.absenceqa.ar02qa.view",
+        "controlAggregation": "pages",
+        "controlId": "app",
+        "clearControlAggregation": false
+      },
+      "routes": [
+        {
+          "name": "RouteView1",
+          "pattern": ":?query:",
+          "target": [
+            "TargetView1"
+          ]
+        }
+      ],
+      "targets": {
+        "TargetView1": {
+          "viewType": "XML",
+          "transition": "slide",
+          "clearControlAggregation": false,
+          "viewId": "View1",
+          "viewName": "View1"
+        }
+      }
+    },
+    "rootView": {
+      "viewName": "com.gcc.absenceqa.ar02qa.view.App",
+      "type": "XML",
+      "async": true,
+      "id": "App"
+    }
+  },
+  "sap.cloud": {
+    "public": true,
+    "service": "comgccabsenceqaar02qa"
+  }
+}

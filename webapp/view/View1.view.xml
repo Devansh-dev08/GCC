@@ -1,0 +1,471 @@
+<mvc:View controllerName="com.gcc.pensionqa.ps03qa.controller.View1"
+	xmlns:mvc="sap.ui.core.mvc" displayBlock="true"
+	xmlns="sap.m"
+	xmlns:l="sap.ui.layout"
+	xmlns:f="sap.ui.layout.form"
+	xmlns:core="sap.ui.core">
+	<Page id="page" >
+		<IconTabBar id="_IDGenIconTabBar1" backgroundDesign="Solid" expandable="true" select="onTabChange" >
+			<items>
+				<IconTabFilter id="_IDGenIconTabFilter1" text="{i18n>FormText}" key="{i18n>FormText}"  >
+					<!-- INTRODUCTION SECTION-->
+					<Panel id="panel1" expanded="true" expandable="true" headerText="Introduction" width="auto" class="sapUiResponsiveMargin">
+							<Text id="text1" text="{i18n>para}" />
+					</Panel>
+					<!--THE HEADER SECTION -->
+					<Panel id="panel2"  expanded="true" expandable="true" headerText="Header" width="auto" class="sapUiResponsiveMargin">
+						<f:SimpleForm id="SimpleFormDisplay354"
+			editable="true"
+			layout="ResponsiveGridLayout"
+			labelSpanXL="3"
+			labelSpanL="3"
+			labelSpanM="3"
+			labelSpanS="12"
+			adjustLabelSpan="false"
+			emptySpanXL="4"
+			emptySpanL="4"
+			emptySpanM="4"
+			emptySpanS="0"
+			columnsXL="1"
+			columnsL="1"
+			columnsM="1"
+			singleContainerFullSize="false" >
+							<f:content>
+								<VBox id="_IDGenVBox4" >
+									<HBox id="_IDGenHBox2" >
+										<Label id="_IDGenLabel1" width="200px" text="Initiator" showColon="true" class="sapUiTinyMarginTop" />
+										<Input id="nameText" width="200px" editable="false" tooltip="{i18n>intiatiortooltip}" />
+									</HBox>
+									<HBox id="_IDGenHBox3">
+										<Label id="_IDGenLabel2" width="200px" text="Form ID" showColon="true" class="sapUiTinyMarginTop" />
+										<Input id="nameText1" editable="false" width="200px"/>
+									</HBox>
+									<HBox id="_IDGenHBox4" >
+										<Label id="_IDGenLabel3" width="200px" text="Date" showColon="true" class="sapUiTinyMarginTop" />
+										<DatePicker id="date1" editable="false" width="200px" />
+									</HBox>
+								</VBox>
+							</f:content>
+						</f:SimpleForm>
+					</Panel>
+					<!-- POSITION DETAILS SECTION-->
+					<Panel id="panel3" expanded="true" expandable="true" headerText="Position Details" width="auto" class="sapUiResponsiveMargin">
+						<f:SimpleForm id="SimpleFormDisplay355"
+			editable="true"
+			layout="ResponsiveGridLayout"
+			labelSpanXL="3"
+			labelSpanL="3"
+			labelSpanM="3"
+			labelSpanS="12"
+			adjustLabelSpan="false"
+			emptySpanXL="4"
+			emptySpanL="4"
+			emptySpanM="4"
+			emptySpanS="0"
+			columnsXL="1"
+			columnsL="1"
+			columnsM="1"
+			singleContainerFullSize="false" >
+							<f:content>
+								<VBox id="_IDGenVBox5">
+									<HBox id="_IDGenHBox15" >
+										<Label id="_IDGenLabel4" width="200px" text="Start Date" required="true" showColon="true" class="sapUiTinyMarginTop" />
+										<DatePicker id="date" change="dateCheck" width="200px" placeholder=" " enabled="{= ${InitData>/Param/mode} !== 'display'}" fieldGroupIds="required" required="true" tooltip="{i18n>Start}" />
+									</HBox>
+									<HBox id="_IDGenHBox16" >
+										<Label id="_IDGenLabel5" width="200px" text="PayRoll Area" required="true" showColon="true" class="sapUiTinyMarginTop" />
+										<Select id="Pay" width="200px" forceSelection="false" change="onPayAreaChange" enabled="{= ${InitData>/Param/mode} !== 'display'}" fieldGroupIds="requiredCombo" required="true" tooltip="{i18n>Pay}" selectedKey="{InitData>/defaultValues/Payroll}"  >
+											<items>
+												<core:Item id="_IDGenItem1" text="P3 - Others LGPS" key="P3"/>
+												<core:Item id="_IDGenItem2" text="P4 - GCC LGPS" key="P4"/>
+												<core:Item id="_IDGenItem3" text="P5 - Teachers" key="P5"/>
+											</items>
+										</Select>
+									</HBox>
+									<HBox id="_IDGenHBox17" >
+										<Label id="_IDGenLabel6" width="200px" text="Cost Center" required="true" showColon="true" class="sapUiTinyMarginTop" />
+										<Input id="nameText2" width="200px" change="onCostCentChange" liveChange="numberValidation" enabled="{= ${InitData>/Param/mode} !== 'display'}" fieldGroupIds="required" required="true" tooltip="{i18n>Cost}" />
+									</HBox>
+									<HBox id="_IDGenHBox18" >
+										<Label id="_IDGenLabel7" width="200px" text="Cost Center Name" showColon="true" class="sapUiTinyMarginTop" />
+										<Input id="nameText3" editable="false" width="200px" />
+									</HBox>
+									<HBox id="_IDGenHBox19" >
+										<Label id="_IDGenLabel8" width="200px" text="Org. Key(value)" required="true" showColon="true" class="sapUiTinyMarginTop" />
+										<Input id="nameText4" width="200px" enabled="{= ${InitData>/Param/mode} !== 'display'}" fieldGroupIds="required" required="true" tooltip="{i18n>Org}" />
+									</HBox>
+								</VBox>
+							</f:content>
+						</f:SimpleForm>
+					</Panel>
+					<!-- STARTER DETAILS SECTION -->
+					<!-- P4 -->
+					<Panel id="panel4" expanded="true" expandable="true" headerText="Starter Details" width="auto" class="sapUiResponsiveMargin">
+						<f:SimpleForm id="SimpleFormDisplay356"
+			editable="true"
+			layout="ResponsiveGridLayout"
+			labelSpanXL="3"
+			labelSpanL="3"
+			labelSpanM="3"
+			labelSpanS="12"
+			adjustLabelSpan="false"
+			emptySpanXL="4"
+			emptySpanL="4"
+			emptySpanM="4"
+			emptySpanS="0"
+			columnsXL="1"
+			columnsL="1"
+			columnsM="1"
+			singleContainerFullSize="false" >
+							<f:content>
+								<VBox id="_IDGenVBox3">
+									<HBox id="_IDGenHBox1" width="auto" >
+										<Label id="_IDGenLabel9" width="200px" text="Title" showColon="true" required="true" class="sapUiTinyMarginTop" />
+										<Select id="Title" width="200px" items="{InitData>/salutations}" forceSelection="false" enabled="{= ${InitData>/Param/mode} !== 'display'}" fieldGroupIds="requiredCombo" required="true" tooltip="{i18n>Title}" selectedKey="{InitData>/defaultValues/Title}"  >
+											<items>
+												<core:Item id="_IDGenItem4" text="{InitData>text}" key="{InitData>id}"/>
+											</items>
+										</Select>
+									</HBox>
+									<HBox id="_IDGenHBox5" width="auto" >
+										<Label id="_IDGenLabel10" width="200px" text="Forename" showColon="true" required="true" class="sapUiTinyMarginTop" />
+										<Input id="_nameText" width="200px" enabled="{= ${InitData>/Param/mode} !== 'display'}" fieldGroupIds="required" required="true" tooltip="{i18n>Fore}" />
+									</HBox>
+									<HBox id="_IDGenHBox6" width="auto">
+										<Label id="_IDGenLabel12" width="200px" showColon="true" text="Middlename" class="sapUiTinyMarginTop" />
+										<Input id="nameText5" width="200px" enabled="{= ${InitData>/Param/mode} !== 'display'}" tooltip="{i18n>Mid}" />
+									</HBox>
+									<HBox id="_IDGenHBox7" width="auto">
+										<Label id="_IDGenLabel13" width="200px" showColon="true" text="Surname" required="true" class="sapUiTinyMarginTop" />
+										<Input id="nameText6" width="200px" enabled="{= ${InitData>/Param/mode} !== 'display'}" fieldGroupIds="required" required="true" tooltip="{i18n>Sur}" />
+									</HBox>
+									<HBox id="_IDGenHBox8" width="auto">
+										<Label id="_IDGenLabel14" width="200px" showColon="true" text="Gender" required="true" class="sapUiTinyMarginTop" />
+										<Select id="id1" width="200px" forceSelection="false" enabled="{= ${InitData>/Param/mode} !== 'display'}" fieldGroupIds="requiredCombo" required="true" tooltip="{i18n>Gender}" selectedKey="{InitData>/defaultValues/Gender}"  >
+											<items>
+												<core:Item id="_IDGenItem6" text="Male" key="M"/>
+												<core:Item id="_IDGenItem7" text="Female" key="F"/>
+											</items>
+										</Select>
+									</HBox>
+									<HBox id="_IDGenHBox9" width="auto">
+										<Label id="_IDGenLabel15" width="200px" showColon="true" text="Date of Birth" required="true" class="sapUiTinyMarginTop" />
+										<DatePicker id="date2" change="dateCheck" width="200px" placeholder=" " enabled="{= ${InitData>/Param/mode} !== 'display'}" fieldGroupIds="required" required="true" tooltip="{i18n>Birth}"  />
+									</HBox>
+									<HBox id="_IDGenHBox10" width="auto">
+										<Label id="_IDGenLabel16" width="200px" showColon="true" text="Super service date" required="true" class="sapUiTinyMarginTop" />
+										<DatePicker id="nameText8" change="dateCheck" width="200px" placeholder=" " enabled="{= ${InitData>/Param/mode} !== 'display'}" fieldGroupIds="required" required="true" tooltip="{i18n>Super}" />
+									</HBox>
+									<HBox id="_IDGenHBox11" width="auto">
+										<Label id="_IDGenLabel17" width="200px" showColon="true" text="National Insurance Number" class="sapUiTinyMarginTop" />
+										<Input id="nameText9" width="200px" maxLength="13" type="Text" change="onNIChange" enabled="{= ${InitData>/Param/mode} !== 'display'}" tooltip="{i18n>Nation}" />
+									</HBox>
+									<HBox id="_IDGenHBox12" width="auto">
+										<Label id="_IDGenLabel18" width="200px" showColon="true" text="Nationality" required="true" class="sapUiTinyMarginTop" />
+										<ComboBox id="id2" width="200px" items="{path : 'InitData>/nationalityDropdown', length : 400, sorter: { path: 'label_en_GB' }, templateShareable:false}" enabled="{= ${InitData>/Param/mode} !== 'display'}" fieldGroupIds="requiredCombo" required="true" tooltip="{i18n>Nationality}" selectedKey="{InitData>/defaultNationality}" change="onDropValid" >
+											<items>
+												<core:Item id="_IDGenItem8" text="{InitData>label_en_GB}" key="{InitData>externalCode}"/>
+											</items>
+										</ComboBox>
+									</HBox>
+									<HBox id="_IDGenHBox13" width="auto">
+										<Label id="_IDGenLabel19" width="300px" showColon="true" text="Please tick this box if the pensioner is overseas" class="sapUiTinyMarginTop" />
+										<CheckBox id="_IDGenCheckBox1" width="300px" enabled="{= ${InitData>/Param/mode} !== 'display'}" class="sapUiSmallMarginBegin" tooltip="{i18n>Overseas}" />
+									</HBox>
+									<HBox id="_IDGenHBox14" width="auto">
+										<Label id="_IDGenLabel20" width="300px" showColon="true" text="Please tick this box if this is a flexible retirement" class="sapUiTinyMarginTop" />
+										<CheckBox id="_IDGenCheckBox2" width="300px" enabled="{= ${InitData>/Param/mode} !== 'display'}" class="sapUiSmallMarginBegin" tooltip="{i18n>Flexible}" />
+									</HBox>
+									<HBox id="_HBox">
+										<Label id="_IDGenLabel21" width="200px" showColon="true" text="Previous SAP no" class="sapUiTinyMarginTop" />
+										<Input id="nameText10" width="200px" enabled="{= ${InitData>/Param/mode} !== 'display'}" tooltip="{i18n>Previous}" liveChange="numberValidation" />
+									</HBox>
+									<Title id="_IDGenLabel22" text="Pensioner Address" class="sapUiTinyMarginTop" />
+									<HBox id="Hbox1" >
+										<Label id="_IDGenLabel23" width="200px" showColon="true" text="Street and House No" required="true" class="sapUiTinyMarginTop" />
+										<Input id="nameText11" width="200px" enabled="{= ${InitData>/Param/mode} !== 'display'}" fieldGroupIds="required" required="true" tooltip="{i18n>House}" />
+									</HBox>
+									<HBox id="Hbox2" >
+										<Label id="_IDGenLabel24" width="200px" showColon="true" text="2nd Address Line" class="sapUiTinyMarginTop" />
+										<Input id="nameText12" width="200px" enabled="{= ${InitData>/Param/mode} !== 'display'}" tooltip="{i18n>2ndAddress}" />
+									</HBox>
+									<HBox id="Hbox4" >
+										<Label id="_IDGenLabel26" width="200px" showColon="true" text="City" required="true" class="sapUiTinyMarginTop" />
+										<Input id="nameText14" width="200px" fieldGroupIds="required" enabled="{= ${InitData>/Param/mode} !== 'display'}" tooltip="{i18n>Citys}" />
+									</HBox>
+									<HBox id="Hbox5" >
+										<Label id="_IDGenLabel27" width="200px" showColon="true" text="County" class="sapUiTinyMarginTop" />
+										<ComboBox id="nameText15" width="200px" enabled="{= ${InitData>/Param/mode} !== 'display'}" items="{path : 'InitData>/countyDropdown', length : 250, templateShareable:false}" tooltip="{i18n>Cou}" selectedKey="{InitData>/defaultValues/County1}" change="onDropValid" >
+											<items>
+												<core:Item id="_IDGenItem316" key="{InitData>optionId}" text="{InitData>label_en_GB}"/>
+											</items>
+										</ComboBox>
+									</HBox>
+									<HBox id="Hbox6" >
+										<Label id="_IDGenLabel28" width="200px" showColon="true" text="Post Code" required="true" class="sapUiTinyMarginTop" />
+										<Input id="nameText16" width="200px" enabled="{= ${InitData>/Param/mode} !== 'display'}" liveChange="onPostCodeChange" fieldGroupIds="required" required="true"  tooltip="{i18n>Code}" />
+									</HBox>
+									<HBox id="Hbox7" >
+										<Label id="_IDGenLabel29" width="200px" showColon="true" text="Email address" class="sapUiTinyMarginTop" />
+										<Input id="nameText17" width="200px" type="Email" enabled="{= ${InitData>/Param/mode} !== 'display'}" change="onEmailChange" tooltip="{i18n>Email}" />
+									</HBox>
+									<HBox id="Hbox8" >
+										<Label id="_IDGenLabel30" width="200px" showColon="true" text="Home Telephone Number" class="sapUiTinyMarginTop" />
+										<Input id="nameText18" width="200px" maxLength="11" enabled="{= ${InitData>/Param/mode} !== 'display'}" liveChange="onTeleChange"  tooltip="{i18n>telephone}"  />
+									</HBox>
+									<HBox id="Hbox9" >
+										<Label id="_IDGenLabel31" width="200px" showColon="true" text="Mobile number" class="sapUiTinyMarginTop" />
+										<Input id="nameText19" width="200px" maxLength="11" enabled="{= ${InitData>/Param/mode} !== 'display'}" liveChange="onMobChange" tooltip="{i18n>Mobileno}"  />
+									</HBox>
+									<HBox id="Hbox10" >
+										<Label id="_IDGenLabel32" width="230px" showColon="true" text="Add First Emergency Contact Details" class="sapUiTinyMarginTop" />
+										<CheckBox id="_IDGenCheckBox3" width="200px" select="Onpress" enabled="{= ${InitData>/Param/mode} !== 'display'}" class="sapUiTinyMarginBegin" tooltip="{i18n>Add}" />
+									</HBox>
+									<VBox id="_IDGenVBox1">
+										<HBox id="Hbox11">
+											<Label id="_IDGenLabel33" width="200px" showColon="true" visible="false" fieldGroupIds="fg1" text="Street and House No" required="true" class="sapUiTinyMarginTop" />
+											<Input id="nameText20" width="200px" visible="false" fieldGroupIds="fg1,required" enabled="{= ${InitData>/Param/mode} !== 'display'}" required="true" tooltip="{i18n>Street}" />
+										</HBox>
+										<HBox id="Hbox12" >
+											<Label id="_IDGenLabel34" width="200px" showColon="true" visible="false" fieldGroupIds="fg1" text="2nd Address Line" class="sapUiTinyMarginTop" />
+											<Input id="nameText21" width="200px" visible="false" fieldGroupIds="fg1" enabled="{= ${InitData>/Param/mode} !== 'display'}" tooltip="{i18n>2nd}" />
+										</HBox>
+										<HBox id="Hbox14" >
+											<Label id="_IDGenLabel36" width="200px" showColon="true" visible="false" fieldGroupIds="fg1" required="true" text="City" class="sapUiTinyMarginTop" />
+											<Input id="nameText23" width="200px" visible="false" fieldGroupIds="fg1,required" enabled="{= ${InitData>/Param/mode} !== 'display'}" tooltip="{i18n>City}" />
+										</HBox>
+										<HBox id="Hbox15" >
+											<Label id="_IDGenLabel37" width="200px" showColon="true" visible="false" fieldGroupIds="fg1" text="County" class="sapUiTinyMarginTop"/>
+											<ComboBox id="nameText24" width="200px" visible="false" fieldGroupIds="fg1" enabled="{= ${InitData>/Param/mode} !== 'display'}" items="{path : 'InitData>/countyDropdown', length : 250, templateShareable:false}" tooltip="{i18n>Country}" selectedKey="{InitData>/defaultValues/County2}" change="onDropValid" >
+												<items>
+													<core:Item id="_IDGenItem3165" key="{InitData>optionId}" text="{InitData>label_en_GB}"/>
+												</items>
+											</ComboBox>
+										</HBox>
+										<HBox id="Hbox16" >
+											<Label id="_IDGenLabel38" width="200px" showColon="true" visible="false" fieldGroupIds="fg1" text="PostCode" required="true" class="sapUiTinyMarginTop" />
+											<Input id="nameText25" width="200px" visible="false" fieldGroupIds="fg1,required" enabled="{= ${InitData>/Param/mode} !== 'display'}" liveChange="onPostCodeChange" tooltip="{i18n>Post}" />
+										</HBox>
+										<HBox id="Hbox17" >
+											<Label id="_IDGenLabel39" width="200px" showColon="true" visible="false" fieldGroupIds="fg1" text="Email address" class="sapUiTinyMarginTop" />
+											<Input id="nameText26" width="200px" visible="false" fieldGroupIds="fg1" enabled="{= ${InitData>/Param/mode} !== 'display'}" type="Email" change="onEmailChange" />
+										</HBox>
+										<HBox id="Hbox18" >
+											<Label id="_IDGenLabel40" width="200px" showColon="true" visible="false" text="Home Telephone Number" class="sapUiTinyMarginTop" />
+											<Input id="nameText27" width="200px" visible="false" enabled="{= ${InitData>/Param/mode} !== 'display'}" liveChange="onTeleChange" tooltip="{i18n>Home}" />
+										</HBox>
+										<HBox id="Hbox191" >
+											<Label id="_IDGenLabel412" width="200px" showColon="true" visible="false" required="true" fieldGroupIds="fg1" text="First Name" class="sapUiTinyMarginTop" />
+											<Input id="nameText282" width="200px" visible="false" fieldGroupIds="fg1, required" enabled="{= ${InitData>/Param/mode} !== 'display'}" tooltip="{i18n>FirstNameEmer}" />
+										</HBox>
+										<HBox id="Hbox194" >
+											<Label id="_IDGenLabel411" width="200px" showColon="true" visible="false" fieldGroupIds="fg1" text="Surname" class="sapUiTinyMarginTop" required="true" />
+											<Input id="nameText281" width="200px" visible="false" fieldGroupIds="fg1, required" enabled="{= ${InitData>/Param/mode} !== 'display'}" tooltip="{i18n>SurnameEmer}" />
+										</HBox>
+										<HBox id="Hbox195" >
+											<Label id="_IDGenLabel414" width="200px" showColon="true" visible="false" fieldGroupIds="fg1" text="Relation" class="sapUiTinyMarginTop" required="true" />
+											<ComboBox id="nameText284" width="200px" visible="false" fieldGroupIds="fg1, required" enabled="{= ${InitData>/Param/mode} !== 'display'}" items="{path : 'InitData>/relationDropdown', length : 250, templateShareable:false}" selectedKey="{InitData>/defaultValues/Relation}" tooltip="{i18n>RelationEmer}" >
+												<items>
+													<core:Item id="_IDGenItem35" key="{InitData>optionId}" text="{InitData>label_en_GB}"/>
+												</items>
+											</ComboBox>
+										</HBox>
+										<HBox id="Hbox19" >
+											<Label id="_IDGenLabel41" width="200px" showColon="true" visible="false" required="true" fieldGroupIds="fg1" text="Contact Telephone Number" class="sapUiTinyMarginTop" />
+											<Input id="nameText28" width="200px" visible="false" fieldGroupIds="fg1,required" enabled="{= ${InitData>/Param/mode} !== 'display'}" change="onMobChange" tooltip="{i18n>Mobile}" />
+										</HBox>
+									</VBox>
+								</VBox>
+							</f:content>
+						</f:SimpleForm>
+						<HBox id="_HBox1" justifyContent="Start" class="sapUiTinyMarginBegin">
+							<Label id="_IDGenLabel42" width="200px" showColon="true" text="Bank Sort Code" required="true" class="sapUiTinyMarginTop" />
+							<Input id="nameText29" width="200px" type="Text" maxLength="6" change="onSortCodeChange" liveChange="onLiveSortCodeChange" enabled="{= ${InitData>/Param/mode} !== 'display'}" fieldGroupIds="required" required="true" tooltip="{i18n>Sort}" />
+							<Label id="_IDGenLabel43" width="200px" showColon="true" class="sapUiLargeMarginBegin sapUiTinyMarginTop" text="Bank Account Number" required="true" />
+							<Input id="nameText30" width="200px" type="Text" maxLength="8" liveChange="onAccNumChange" enabled="{= ${InitData>/Param/mode} !== 'display'}" fieldGroupIds="required" required="true" tooltip="{i18n>Bank}" />
+						</HBox>
+						<HBox id="_HBox2" justifyContent="Start" class="sapUiTinyMarginBegin">
+							<Label id="_IDGenLabel44" width="200px" showColon="true" text="Bank Name" class="sapUiTinyMarginTop" />
+							<Input id="nameText31" width="200px" editable="false" enabled="{= ${InitData>/Param/mode} !== 'display'}" />
+							<Label id="_IDGenLabel45" width="200px" showColon="true" class="sapUiLargeMarginBegin sapUiTinyMarginTop" text="Building Society Ref No" />
+							<Input id="nameText32" width="200px" enabled="{= ${InitData>/Param/mode} !== 'display'}" tooltip="{i18n>Building}" />
+						</HBox>
+						<Table id="Table" items="{InitData>/allowance}" width="auto" mode="MultiSelect" class="sapUiResponsiveMargin" backgroundDesign="Solid"  >
+							<headerToolbar>
+								<Toolbar id="_IDGenToolbar1" width="auto" design="Transparent" style="Standard"  >
+									<ToolbarSpacer id="_IDGenToolbarSpacer1" />
+									<Button id="_IDGenButton1" text="Add Row" type="Emphasized" press="AddRow" icon="sap-icon://add" visible="{= ${InitData>/Param/mode} !== 'display'}" />
+									<Button id="_IDGenButton2" text="Delete Row" type="Emphasized" press="DelRow" icon="sap-icon://delete" visible="{= ${InitData>/Param/mode} !== 'display'}" />
+								</Toolbar>
+							</headerToolbar>
+							<columns>
+								<Column id="_IDGenColumn1" demandPopin="true" minScreenWidth="tablet" hAlign="Center">
+									<Text id="_IDGenText1" text="Wage Type" />
+								</Column>
+								<Column id="_IDGenColumn2" demandPopin="true" minScreenWidth="tablet" hAlign="Center">
+									<Text id="_IDGenText2" text="Annual Amount" />
+								</Column>
+								<Column id="_IDGenColumn3" demandPopin="true" minScreenWidth="tablet" hAlign="Center">
+									<Text id="_IDGenText3" text="Monthly Amount" />
+								</Column>
+								<Column id="_IDGenColumn4" demandPopin="true" minScreenWidth="tablet" hAlign="Center">
+									<Text id="_IDGenText4" text="Start Date" />
+								</Column>
+								<Column id="_IDGenColumn5" demandPopin="true" minScreenWidth="tablet" hAlign="Center">
+									<Text id="_IDGenText5" text="Temp" />
+								</Column>
+							</columns>
+							<items>
+								<ColumnListItem id="_IDGenColumnListItem1">
+									<ComboBox id="id4" selectedKey="{id4}" value="{InitData>wageType}" change="onWageChange" enabled="{= ${InitData>/Param/mode} !== 'display'}" fieldGroupIds="requiredCombo" required="true" tooltip="{i18n>Wage}" >
+										<items>
+											<core:Item id="_IDGenItem17" text="{i18n>1700}" key="1700"/>
+											<core:Item id="_IDGenItem18" text="{i18n>1701}" key="1701"/>
+											<core:Item id="_IDGenItem181" text="{i18n>1702}" key="1702"/>
+											<core:Item id="_IDGenItem19" text="{i18n>1705}" key="1705"/>
+											<core:Item id="_IDGenItem23" text="{i18n>1710}" key="1710"/>
+											<core:Item id="_IDGenItem20" text="{i18n>1715}" key="1715"/>
+											<core:Item id="_IDGenItem21" text="{i18n>1716}" key="1716"/>
+											<core:Item id="_IDGenItem22" text="{i18n>1717}" key="1717"/>
+											<core:Item id="_IDGenItem24" text="{i18n>1720}" key="1720"/>
+											<core:Item id="_IDGenItem33" text="{i18n>1725}" key="1725"/>
+											<core:Item id="_IDGenItem25" text="{i18n>1730}" key="1730"/>
+											<core:Item id="_IDGenItem26" text="{i18n>1735}" key="1735"/>
+											<core:Item id="_IDGenItem27" text="{i18n>1740}" key="1740"/>
+											<core:Item id="_IDGenItem28" text="{i18n>1750}" key="1750"/>
+											<core:Item id="_IDGenItem29" text="{i18n>1755}" key="1755"/>
+											<core:Item id="_IDGenItem31" text="{i18n>1760}" key="1760"/>
+											<core:Item id="_IDGenItem32" text="{i18n>1765}" key="1765"/>
+											<core:Item id="_IDGenItem30" text="{i18n>1770}" key="1770"/>
+										</items>
+									</ComboBox>
+									<Input id="cl1" liveChange="onAmountChange" value="{InitData>annualAmt}" enabled="{= ${InitData>/Param/mode} !== 'display'}" fieldGroupIds="required" required="true"  tooltip="{i18n>Amount}" />
+									<Input id="cl2" editable="false" value="{InitData>monthlyAmt}" type="Number" enabled="{= ${InitData>/Param/mode} !== 'display'}" fieldGroupIds="required" required="true" tooltip="{i18n>Month}" />
+									<DatePicker id="cl4" change="dateCheck" value="{InitData>startDate}" placeholder=" " enabled="{= ${InitData>/Param/mode} !== 'display'}" fieldGroupIds="required" required="true" tooltip="{i18n>Date}" />
+									<Input id="cl5" value="{InitData>temp}" enabled="{= ${InitData>/Param/mode} !== 'display'}" fieldGroupIds="required" required="true" tooltip="{i18n>Temp}" liveChange="numberValidation" />
+								</ColumnListItem>
+							</items>
+						</Table>
+						<f:SimpleForm id="SimpleFormDisplay357"
+			editable="true"
+			layout="ResponsiveGridLayout"
+			labelSpanXL="3"
+			labelSpanL="3"
+			labelSpanM="3"
+			labelSpanS="12"
+			adjustLabelSpan="false"
+			emptySpanXL="4"
+			emptySpanL="4"
+			emptySpanM="4"
+			emptySpanS="0"
+			columnsXL="1"
+			columnsL="1"
+			columnsM="1"
+			singleContainerFullSize="false">
+							<f:content>
+								<VBox id="_vbox1">
+									<HBox id="_Hbox" >
+										<Label id="_IDGenLabel46" showColon="true" width="200px" text="Annual Pension" required="true" class="sapUiTinyMarginTop" />
+										<Input id="nameText33" width="200px" enabled="{= ${InitData>/Param/mode} !== 'display'}" tooltip="{i18n>Annual}" liveChange="numberValidation" />
+									</HBox>
+									<HBox id="Hbox">
+										<Label id="_IDGenLabel47" showColon="true" width="200px" text="Type of pension" required="true" class="sapUiTinyMarginTop" />
+										<Select id="id" width="200px" forceSelection="false" enabled="{= ${InitData>/Param/mode} !== 'display'}" fieldGroupIds="requiredCombo" required="true" tooltip="{i18n>Type}" selectedKey="{InitData>/defaultValues/Pension}"  >
+											<items>
+												<core:Item id="_IDGenItem10" text="{i18n>nor}" key="9R01"/>
+												<core:Item id="_IDGenItem11" text="{i18n>wid}" key="9003"/>
+												<core:Item id="_IDGenItem12" text="{i18n>kid}" key="9002"/>
+											</items>
+										</Select>
+									</HBox>
+								</VBox>
+							</f:content>
+						</f:SimpleForm>
+						<HBox id="_HBox3" justifyContent="Start" class="sapUiTinyMarginBegin">
+							<Label id="_IDGenLabel48" showColon="true" width="200px" text="Deceased name" class="sapUiTinyMarginTop" />
+							<Input id="nameText34" width="200px" enabled="{= ${InitData>/Param/mode} !== 'display'}" tooltip="{i18n>Deceased}" />
+							<Label id="_IDGenLabel49" width="200px" showColon="true" class="sapUiLargeMarginBegin sapUiTinyMarginTop" text="Deceased SAP No." />
+							<Input id="nameText35" width="200px" enabled="{= ${InitData>/Param/mode} !== 'display'}" tooltip="{i18n>SAPNo}" liveChange="numberValidation" />
+						</HBox>
+					</Panel>
+					<Panel id="Panel5" expandable="true" headerText="{i18n>Comment}" width="auto" class="sapUiResponsiveMargin" expanded="true">
+						<VBox id="P8VBox1">
+							<Label id="_IDGenLabel11" text="{i18n>text}" showColon="true" visible="false" />
+							<TextArea id="_IDGenTextArea2" editable="true" width="1000px" height="150px" visible="false" enabled="false" />
+							<Label id="_IDGenLabel56" text="{i18n>UserComments}" showColon="true" class="sapUiSmallMarginTop" />
+							<TextArea id="_IDGenTextArea3" editable="true" width="1000px" height="60px" growing="true" growingMaxLines="5" />
+							<Button id="button1" text="{i18n>AddRow}" press="onAddComment" type="Emphasized" />
+						</VBox>
+					</Panel>
+					<MessageStrip id="messagestrip1" showIcon="true" type="Information" text="{i18n>Disclaimer}" class="sapUiResponsiveMargin" />
+				</IconTabFilter>
+				<IconTabFilter id="_IDGenIconTabFilter2" text="{i18n>HistoryText}" key="{i18n>HistoryText}" >
+					<Panel id="_IDGenPanel9" expandable="false" stickyHeader="true" headerText="Absence Report Form" width="auto" class="sapUiResponsiveMargin" >
+						<Table id="_IDGenTable4" width="auto" delete="deleteRow" mode="MultiSelect" items="{InitData>/historyTable}">
+							<headerToolbar>
+								<Toolbar id="_IDGenToolbar5" width="auto" design="Solid" style="Standard">
+									<Label id="_HIDGenLabel1" labelFor="_HIDGenFormId1" text="Form Id"/>
+									<Input id="_HIDGenFormId1" width="auto" enabled="false"/>
+									<Label id="_HIDGenLabel2" labelFor="_HIDGenType1" text="Type"/>
+									<Input id="_HIDGenType1" width="auto" enabled="false" value="PS03"/>
+								</Toolbar>
+							</headerToolbar>
+							<columns>
+								<Column id="_HIDGenColumn1" demandPopin="true" minScreenWidth="Tablet" hAlign="Center" >
+									<Text id="_HIDGenText1" text="{i18n>HCol1}"/>
+								</Column>
+								<Column id="_HIDGenColumn2" demandPopin="true" minScreenWidth="Tablet" hAlign="Center">
+									<Text id="_HIDGenText2" text="{i18n>HCol2}"/>
+								</Column>
+								<Column id="_HIDGenColumn3" demandPopin="true" minScreenWidth="Tablet" hAlign="Center">
+									<Text id="_HIDGenText3" text="{i18n>HCol3}"/>
+								</Column>
+								<Column id="_HIDGenColumn4" demandPopin="true" minScreenWidth="Tablet" hAlign="Center">
+									<Text id="_HIDGenText4" text="{i18n>HCol4}"/>
+								</Column>
+								<Column id="_HIDGenColumn5" demandPopin="true" minScreenWidth="Tablet" hAlign="Center">
+									<Text id="_HIDGenText5" text="{i18n>HCol5}"/>
+								</Column>
+								<Column id="_HIDGenColumn6" demandPopin="true" minScreenWidth="Tablet" hAlign="Center">
+									<Text id="_HIDGenText6" text="{i18n>HCol6}"/>
+								</Column>
+								<Column id="_HIDGenColumn7" demandPopin="true" minScreenWidth="Tablet" hAlign="Center">
+									<Text id="_HIDGenText7" text="{i18n>HCol7}"/>
+								</Column>
+								<Column id="_HIDGenColumn8" demandPopin="true" minScreenWidth="Tablet" hAlign="Center">
+									<Text id="_HIDGenText8" text="{i18n>HCol8}"/>
+								</Column>
+								<!-- <Column id="_HIDGenColumn9" demandPopin="true" minScreenWidth="Tablet"><Text id="_HIDGenText9" text="{i18n>HCol9}"/></Column> -->
+							</columns>
+							<items>
+								<ColumnListItem id="_IDGenColumnListItem6">
+									<cells>
+										<Input id="_HIDGenInput1" editable="false" value="{InitData>SeqNumber}" tooltip="Sequence Number" />
+										<Input id="_HIDGenInput2" editable="false" value="{InitData>Initiator}" tooltip="Initiator" />
+										<Input id="_HIDGenInput3" editable="false" value="{InitData>StartedOn}" tooltip="Started On" />
+										<Input id="_HIDGenInput4" editable="false" value="{InitData>OrganizationName}" tooltip="Organization Name" />
+										<Input id="_HIDGenInput5" editable="false" value="{InitData>Description}" tooltip="Description" />
+										<Input id="_HIDGenInput6" editable="false" value="{InitData>Status}" tooltip="Status" />
+										<Input id="_HIDGenInput7" editable="false" value="{InitData>FormOwner}" tooltip="Form Owner" />
+										<Input id="_HIDGenInput8" editable="false" value="{InitData>AvailableFrom}" tooltip="Available From" />
+										<!-- <Input id="_HIDGenInput9" editable="false" value="{AllData>createdOn}" tooltip="Created On" /> -->
+									</cells>
+								</ColumnListItem>
+							</items>
+						</Table>
+					</Panel>
+				</IconTabFilter>
+			</items>
+		</IconTabBar>
+		<footer>
+			<OverflowToolbar id="footerflowToolbar1">
+				<Button id="footerButton" text="Print" type="Emphasized" icon="sap-icon://print" press="onPrint" />
+				<ToolbarSpacer id="ToolbarSpacer2"/>
+				<Button id="footerButton2" text="{i18n>Cancel}" type="Emphasized" icon="sap-icon://cancel" press="onCancel" />
+				<Button id="footerButton3"  text="{i18n>Delete}" type="Emphasized" icon="sap-icon://delete" press="onDelete" visible="{= ${InitData>/Param/mode} !== 'display'}" />
+				<Button id="footerButton1"  text="{i18n>saveto}" type="Emphasized" icon="sap-icon://save" press="onSave" />
+				<Button id="footerButton4" type="Emphasized" text="{i18n>Submit}" icon="sap-icon://accept" press="onSubmit" visible="{= ${InitData>/Param/mode} !== 'display'}" />
+			</OverflowToolbar>
+		</footer>
+	</Page>
+</mvc:View>

@@ -1,0 +1,249 @@
+<mvc:View
+	xmlns:unified="sap.ui.unified" controllerName="com.gcc.claimsqa.cf01qa.controller.View1"
+	xmlns:core="sap.ui.core"
+	xmlns:mvc="sap.ui.core.mvc"
+	xmlns:l="sap.ui.layout"
+	xmlns:f="sap.ui.layout.form" displayBlock="true"
+	xmlns="sap.m">
+	<Page id="_IDGenPage1" >
+		<IconTabBar id="idIconTabBarNoIcons" class="sapUiResponsiveContentPadding" select="onTabChange" >
+			<items>
+				<IconTabFilter id="_IDGenIconTabFilter1" text="Forms" key="Form">
+					<l:VerticalLayout id="_IDGenVerticalLayout1" class="sapUiContentPadding" width="100%">
+						<l:content>
+							<Panel id="_IDGenPanel1" headerText="Introduction" expandable="true" expanded="true">
+								<content>
+									<!-- <Text id="_IDGenMessageStrip1" text="This is the form used to pay all pay related claims submitted by employees in your organisation on a monthly basis.  Upon submission of the claim form, the form will route for approval" />
+									<Text id="fef" text=" and upload directly into SAP. Help and guidance on completing this form can be found on our " renderWhitespace="true" />
+									<Link id="link09" text="" href="https://www.gloucestershire.gov.uk/schoolsnet/gccplus/staff/e-forms/claim-form/" target="_blank" tooltip="{i18n>SchoolsnetLink}" /> -->
+									<FormattedText id="_IDGenFormattedText1" />
+								</content>
+							</Panel>
+						</l:content>
+						<Panel id="_IDGenPanel3" headerText="Header" expandable="true" expanded="true">
+							<f:SimpleForm id="_IDGenSimpleForm1" editable="false" layout="ResponsiveGridLayout" labelSpanXL="4" labelSpanL="4" labelSpanM="4"
+										labelSpanS="12" adjustLabelSpan="false" emptySpanXL="0" emptySpanL="0" emptySpanM="0" emptySpanS="0" columnsXL="1" columnsL="1" columnsM="1">
+								<f:content>
+									<VBox id="_IDGenVBox1">
+										<HBox id="_IDGenHBox1" >
+											<Label id="_IDGenLabel1" text="Initiator" design="Standard"  showColon="true" class="sapUiTinyMargin"/>
+											<Input id="idInitator" value="{oneModel1>/salutation/d/results/0/label} {oneModel1>/personalInfo/d/results/0/firstName} {oneModel1>/personalInfo/d/results/0/lastName}" width="200px" maxLength="40" editable="false" type="Text" class="sapUiSmallMarginBeginEnd" />
+											<Label id="_IDGenLabel2" text="Organisation Name" design="Standard"  showColon="true" class="sapUiTinyMargin"/>
+											<ComboBox id="idOrgName" value="{oneModel1>/jobInfo/d/results/0/customString3}" width="200px" selectionChange="onOrgChange" enabled="{= ${oneModel1>/form/mode} !== 'display' }" items="{path: 'oneModel1>/OrgValues', templateShareable:false}" >
+												<items>
+													<core:Item key="{oneModel1>key}" text="{oneModel1>value}" />
+												</items>
+											</ComboBox>
+											<Label id="_IDGenLabel3" text="Claim Month" design="Standard" required="true" showColon="false" class="sapUiTinyMargin"/>
+											<ComboBox id="_IDGenComboBox1" width="200px" selectionChange="onMonthChange" enabled="{= ${oneModel1>/form/mode} !== 'display' }" items="{path: 'oneModel1>/Months', templateShareable:false}" >
+												<items>
+													<core:Item key="{oneModel1>key}" text="{oneModel1>months}" />
+												</items>
+											</ComboBox>
+										</HBox>
+										<HBox id="_IDGenHBox2">
+											<Label id="_IDGenLabel4" text="Form ID" design="Standard"  showColon="true" class="sapUiTinyMargin"/>
+											<Input id="idFormId" value="" maxLength="40" width="200px" editable="false"/>
+											<Label id="_IDGenLabel5" text="Date" design="Standard"  showColon="true" class="sapUiTinyMargin"/>
+											<DatePicker id="IDDate" width="200px" editable="false" />
+											<!-- <DatePicker id="DP11" value=" " formatError="yyyy" change="handleChange" class="sapUiSmallMarginBottom"/> -->
+											<Label id="_IDGenLabel6" text="Cost Centre" design="Standard"  showColon="true" class="sapUiTinyMargin"/>
+											<Input id="idCostCentre" maxLength="40" width="200px" editable="false" />
+											<Label id="_IDGenLabel7" text="Claim End Date" design="Standard"  showColon="true" class="sapUiTinyMargin"/>
+											<DatePicker id="DP12" displayFormat="dd-MM-yyyy" formatError="yyyy" change="onClaimDateChange" class="sapUiSmallMarginBottom" width="200px" editable="false"/>
+										</HBox>
+									</VBox>
+								</f:content>
+							</f:SimpleForm>
+						</Panel>
+						<Panel id="_IDGenPanel4" headerText="Section A - Claim Hours" expandable="true" expanded="true">
+							<Table id="_IDGenTable1" mode="MultiSelect" items="{oneModel1>/finalData}"   >
+								<headerToolbar>
+									<OverflowToolbar id="_IDGenOverflowToolbar1">
+										<content>
+											<ToolbarSpacer id="_IDGenToolbarSpacer1"/>
+											<ToggleButton id="toggleInfoToolbar" text="Add Row" press="SecAaddRow" enabled="{= ${oneModel1>/form/mode} !== 'display' }" />
+											<ToggleButton id="toggleInfoToolbar6" text="Delete Row" press="SecAdelRow" enabled="{= ${oneModel1>/form/mode} !== 'display' }" />
+										</content>
+									</OverflowToolbar>
+								</headerToolbar>
+								<columns>
+									<Column id="_IDGenColumn1" minScreenWidth="Tablet" demandPopin="true" hAlign="Begin"  width="4rem">
+										<Label id="_IDGenLabel9" text="Emp.Name/Per no./Position"  />
+									</Column>
+									<Column id="_IDGenColumn2" minScreenWidth="Tablet" demandPopin="true" hAlign="Begin" width="4rem">
+										<Label id="_IDGenLabel10" text="Wage Type"  />
+									</Column>
+									<Column id="_IDGenColumn3" minScreenWidth="Tablet" demandPopin="true" hAlign="Begin" width="4rem" >
+										<Label id="_IDGenLabel11"   text="Amount" />
+									</Column>
+									<Column id="_IDGenColumn4" minScreenWidth="Tablet" demandPopin="true" hAlign="Begin" width="4rem">
+										<Label id="_IDGenLabel12"  text="Units/Hours" />
+									</Column>
+									<Column id="_IDGenColum10" width="4rem">
+										<Label id="_IDGenLabel13"  text="" />
+									</Column>
+								</columns>
+								<items>
+									<ColumnListItem id="_IDGenColumnListItem1" fieldGroupIds="checkSecA" >
+										<ComboBox id="_IDGenInput1" value="{oneModel1>empName}" required="true" enabled="{= ${oneModel1>/form/mode} !== 'display' }" items="{path: 'oneModel1>/dropdownEmp', templateShareable:false}" change="onEmplChange" tooltip="Select the contract the employee is claiming against for your organisation">
+											<items>
+												<core:Item key="{oneModel1>userId}" text="{oneModel1>lastName} {oneModel1>firstName} {oneModel1>userId} {oneModel1>jobTitle}" />
+											</items>
+										</ComboBox>
+										<ComboBox id="_IDGenInput2" value="{oneModel1>PayComponentCode}" required="true" enabled="{= ${oneModel1>/form/mode} !== 'display' }" items="{oneModel1>/dropdownWage}" change="onWageChange" tooltip="Select the correct wage type for the claim being made" >
+											<items>
+												<core:Item id="Item20" key="{oneModel1>externalCode}" text="{oneModel1>externalCode} - {oneModel1>name}" />
+											</items>
+										</ComboBox>
+										<Input id="_IDGenInput3" value="{oneModel1>Value}" type="Number" required="{oneModel1>enableRate}" enabled="{= ${oneModel1>/form/mode} !== 'display' }" editable="{oneModel1>enableRate}" liveChange="onAmountChange" tooltip="Enter the amount being claimed" />
+										<Input id="_IDGenInput4" value="{oneModel1>NumberOfUnits}" type="Number" required="{oneModel1>enableUnit}" enabled="{= ${oneModel1>/form/mode} !== 'display' }" editable="{oneModel1>enableUnit}" liveChange="onUnitChange" tooltip="Enter the units or hours (in decimal)" />
+										<Button id="_IDGenButton5" type="Emphasized" text="Show" press="onShowBut" enabled="{= ${oneModel1>/form/mode} !== 'display' }" tooltip="Add comments about this claim here" ></Button>
+									</ColumnListItem>
+								</items>
+							</Table>
+						</Panel>
+						<Panel id="_IDGenPanel5" headerText="Section B - Supply Claims" expandable="true" expanded="true">
+							<Table id="_IDGenTable2" mode="MultiSelect" items="{oneModel1>/finalDataSecB}">
+								<headerToolbar>
+									<OverflowToolbar id="_IDGenOverflowToolbar2">
+										<content>
+											<ToolbarSpacer id="_IDGenToolbarSpacer2"/>
+											<ToggleButton id="toggleInfoToolbar1" text="Add Row" press="SecBaddRow" enabled="{= ${oneModel1>/form/mode} !== 'display' }" />
+											<ToggleButton id="toggleInfoToolbar4" text="Delete Row" press="SecBdelRow" enabled="{= ${oneModel1>/form/mode} !== 'display' }" />
+										</content>
+									</OverflowToolbar>
+								</headerToolbar>
+								<columns>
+									<Column id="_IDGenColumn5" minScreenWidth="Tablet" demandPopin="true" hAlign="Begin" width="4rem">
+										<Label id="_IDGenLabel14"  text="Personnel Number"  />
+									</Column>
+									<Column id="_IDGenColumn6" minScreenWidth="Tablet" demandPopin="true" hAlign="Begin" width="4rem">
+										<Label id="_IDGenLabel15"  text="Employee Name"  />
+									</Column>
+									<Column id="_IDGenColumn7" minScreenWidth="Tablet" demandPopin="true" hAlign="Begin" width="4rem">
+										<Label id="_IDGenLabel16"  text="Wage Type"  />
+									</Column>
+									<Column id="_IDGenColumn8" minScreenWidth="Tablet" demandPopin="true" hAlign="Begin" width="4rem">
+										<Label id="_IDGenLabel17"  text="Amount"  />
+									</Column>
+									<Column id="_IDGenColumn9" minScreenWidth="Tablet" demandPopin="true" hAlign="Begin" width="4rem">
+										<Label id="_IDGenLabel19"  text="Units/Hours"  />
+									</Column>
+									<Column id="_IDGenColum11" width="4rem">
+										<Label id="_IDGenLabel20"  text=""/>
+									</Column>
+								</columns>
+								<items>
+									<ColumnListItem id="_IDGenColumnListItem2" fieldGroupIds="checkSecB">
+										<Input id="_IDGenInput6" value="{oneModel1>PersonID}" required="true" change="onPerChange" editable="{= ${oneModel1>/form/mode} !== 'display' }" tooltip="Enter the Supply Teacher SAP no here" />
+										<Input id="_IDGenInput7" value="{oneModel1>empName}" editable="false" tooltip="Enter the employee name here" />
+										<ComboBox id="_IDGenInput20" value="{oneModel1>PayComponentCode}" required="true" enabled="{= ${oneModel1>/form/mode} !== 'display' }" items="{path: 'oneModel1>/dropdownWageB', templateShareable: false}" change="onWageChange" tooltip="Select the correct wage type for the claim being made" >
+											<items>
+												<core:Item key="{oneModel1>externalCode}" text="{oneModel1>externalCode} - {oneModel1>name}" />
+											</items>
+										</ComboBox>
+										<Input id="_IDGenInput9" value="{oneModel1>Value}" required="{oneModel1>enableRate}" type="Number" enabled="{= ${oneModel1>/form/mode} !== 'display' }" editable="{oneModel1>enableRate}" liveChange="onAmountChange" tooltip="Enter the amount being claimed" />
+										<Input id="_IDGenInput10" value="{oneModel1>NumberOfUnits}" required="{oneModel1>enableUnit}" type="Number" enabled="{= ${oneModel1>/form/mode} !== 'display' }" editable="{oneModel1>enableUnit}" liveChange="onUnitChange" tooltip="Enter the units or hours (in decimal)" />
+										<Button id="_IDGenButton6" type="Emphasized" text="Show" press="onShowBut" enabled="{= ${oneModel1>/form/mode} !== 'display' }" tooltip="Add comments about this claim here" ></Button>
+									</ColumnListItem>
+								</items>
+							</Table>
+						</Panel>
+						<Panel id="_IDGenPanel6" headerText="Your Comments - Internal Organisation use only" expandable="true" expanded="true">
+							<l:VerticalLayout id="_IDGenVerticalLayout2">
+								<Label id="_IDGenLabel8" text="Authorisation and rejection comments:" visible="false" showColon="true"/>
+								<TextArea id="_IDGenTextArea2" enabled="false" visible="false" width="1000px" height="60px"/>
+								<Label id="_IDGenLabel18" text="Your Comments - Internal Organisation use only" showColon="true" visible="true"/>
+								<TextArea id="_IDGenTextArea3" width="1000px" height="60px" visible="true" enabled="true"/>
+								<Toolbar id="_IDGenToolbar2">
+									<ToolbarSpacer id="_IDGenToolbarSpacer5"/>
+									<Button id="toggleInfoToolbar2" text="Add Comments" press="onAddComment" type="Emphasized" tooltip="Click to save entered comments"
+											 />
+									<!-- <Button id="toggleInfoToolbar5" text="Delete Comments" press="ondelComment" type="Emphasized" enabled="{= ${oneModel1>/form/mode} !== 'display' }" /> -->
+								</Toolbar>
+							</l:VerticalLayout>
+						</Panel>
+						<Panel id="_IDGenPanel2" headerText="Section C - Notify Approver" expandable="true" expanded="true">
+							<content>
+								<CheckBox id="checkbox1" editable="{= ${oneModel1>/form/mode} !== 'display' }"
+											text="Please tick this box if you require an email to be generated to you approver notifying this form is awaiting approval."></CheckBox>
+								<MessageStrip id="_IDGenMessageStrip2" 
+											text="Data Protection Act 2018 and General Data Protection Regulation(GDPR) - The information you supply on this form will be used to manage and maintain your employment relationship. It may also be used for the wider purpose of providing statistical data used to assist with monitoring provision and/or determining areas of need in order to target future provision. The information will be treated as confidential except where such information has to be disclosed by law to relevant statuory bodies and in circumstances specific to the employment relationship.If you would like more information please contact the Business Service centre."></MessageStrip>
+							</content>
+						</Panel>
+					</l:VerticalLayout>
+				</IconTabFilter>
+				<IconTabFilter id="_IDGenIconTabFilter2" text="History" key="History">
+					<Panel id="_IDGenPanel9" expandable="false" stickyHeader="true" headerText="Schools Claims Form" width="auto" class="sapUiResponsiveMargin" >
+                        <Table id="_IDGenTable4" width="auto" delete="deleteRow" mode="MultiSelect" items="{oneModel1>/historyTable}">
+                            <headerToolbar>
+                                <Toolbar id="_IDGenToolbar5" width="auto" design="Solid" style="Standard">
+                                    <Label id="_HIDGenLabel1" labelFor="_HIDGenFormId1" text="Form Id"/>
+                                    <Input id="_HIDGenFormId1" width="auto" enabled="false"/>
+                                    <Label id="_HIDGenLabel2" labelFor="_HIDGenType1" text="Type"/>
+                                    <Input id="_HIDGenType1" width="auto" enabled="false" value="CF01"/>
+                                </Toolbar>
+                            </headerToolbar>
+                            <columns>
+                                <Column id="_HIDGenColumn1" demandPopin="true" minScreenWidth="Tablet">
+                                    <Text id="_HIDGenText1" text="{i18n>HCol1}"/>
+                                </Column>
+                                    <Column id="_HIDGenColumn2" demandPopin="true" minScreenWidth="Tablet">
+                                    <Text id="_HIDGenText2" text="{i18n>HCol2}"/>
+                                </Column>
+                                <Column id="_HIDGenColumn3" demandPopin="true" minScreenWidth="Tablet">
+                                    <Text id="_HIDGenText3" text="{i18n>HCol3}"/>
+                                </Column>
+                                <Column id="_HIDGenColumn4" demandPopin="true" minScreenWidth="Tablet">
+                                    <Text id="_HIDGenText4" text="{i18n>HCol4}"/>
+                                </Column>
+                                <Column id="_HIDGenColumn5" demandPopin="true" minScreenWidth="Tablet">
+                                    <Text id="_HIDGenText5" text="{i18n>HCol5}"/>
+                                </Column>
+                                <Column id="_HIDGenColumn6" demandPopin="true" minScreenWidth="Tablet">
+                                    <Text id="_HIDGenText6" text="{i18n>HCol6}"/>
+                                </Column>
+                                <Column id="_HIDGenColumn7" demandPopin="true" minScreenWidth="Tablet">
+                                    <Text id="_HIDGenText7" text="{i18n>HCol7}"/>
+                                </Column>
+                                <Column id="_HIDGenColumn8" demandPopin="true" minScreenWidth="Tablet">
+                                    <Text id="_HIDGenText8" text="{i18n>HCol8}"/>
+                                </Column>
+                                <!-- <Column id="_HIDGenColumn9" demandPopin="true" minScreenWidth="Tablet">
+                                    <Text id="_HIDGenText9" text="{i18n>HCol9}"/>
+                                </Column> -->
+                            </columns>
+                            <items>
+                                <ColumnListItem id="_IDGenColumnListItem6">
+                                    <cells>
+                                        <Input id="_HIDGenInput1" editable="false" value="{oneModel1>SeqNumber}" tooltip="Sequence Number" />
+                                        <Input id="_HIDGenInput2" editable="false" value="{oneModel1>Initiator}" tooltip="Initiator" />
+                                        <Input id="_HIDGenInput3" editable="false" value="{oneModel1>StartedOn}" tooltip="Started On" />
+                                        <Input id="_HIDGenInput4" editable="false" value="{oneModel1>OrganizationName}" tooltip="Organization Name" />
+                                        <Input id="_HIDGenInput5" editable="false" value="{oneModel1>Description}" tooltip="Description" />
+                                        <Input id="_HIDGenInput6" editable="false" value="{oneModel1>Status}" tooltip="Status" />
+                                        <Input id="_HIDGenInput7" editable="false" value="{oneModel1>FormOwner}" tooltip="Form Owner" />
+                                        <Input id="_HIDGenInput8" editable="false" value="{oneModel1>AvailableFrom}" tooltip="Available From" />
+                                        <!-- <Input id="_HIDGenInput9" editable="false" value="{AllData>createdOn}" tooltip="Created On" /> -->
+                                    </cells>
+                                </ColumnListItem>
+                            </items>
+                        </Table>
+                    </Panel>
+				</IconTabFilter>
+			</items>
+		</IconTabBar>
+		<footer>
+			<Toolbar id="_IDGenToolbar1">
+				<Button id="_IDGenButton4" type="Emphasized" icon="sap-icon://print" text="Print" press="onPrint"/>
+				<ToolbarSpacer id="_IDGenToolbarSpacer4"/>
+				<Button id="_IDGenButton12" icon="sap-icon://cancel" type="Emphasized" text="Cancel" press="onCancel" />
+				<Button id="_IDGenButton1"  type="Emphasized" icon="sap-icon://delete" text="Delete" press="onDelete"/>
+				<Button id="IdDraft" type="Emphasized" icon="sap-icon://save" text="Save as draft"  press="onSave"/>
+				<Button id="IdSave" type="Emphasized" icon="sap-icon://accept" text="Submit" press="onSubmit" />
+			</Toolbar>
+		</footer>
+		<PDFViewer id="pdf" showDownloadButton="true" visible="false"  />
+	</Page>
+</mvc:View>

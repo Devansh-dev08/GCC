@@ -1,0 +1,10 @@
+<core:FragmentDefinition xmlns:core="sap.ui.core" xmlns="sap.m" xmlns:form="sap.ui.layout.form">
+<Dialog id="_IDGenChDialog1">
+<content>
+<!-- <Label id="Label1" text="comment"/> -->
+<TextArea id="Text1" width="1000px"></TextArea>
+</content>
+<Button id="Button1" text="Save" press="onPress7"></Button>
+<Button id="Button2" text="Close" press="onPress9"></Button>
+</Dialog>
+</core:FragmentDefinition>

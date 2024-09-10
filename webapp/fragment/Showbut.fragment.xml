@@ -1,0 +1,16 @@
+<core:FragmentDefinition
+	xmlns:core="sap.ui.core"
+	xmlns="sap.m"
+	xmlns:form="sap.ui.layout.form">
+	<Dialog title="Comments" class=" sapUiNoContentPadding sapUiSizeCompact" verticalScrolling="true" type="Standard">
+		<content>
+			<VBox alignItems="Start" justifyContent="Start" class="sapUiResponsiveMargin">
+				<Label text="Add Your Comments:" />
+				<TextArea value="{oneModel1>/rowComment}" enabled="{= ${oneModel1>/form/mode} !== 'display' }" width="1000px" />
+				</VBox>
+			</content>
+			<endButton>
+				<Button text="Close" press="onDialClose1" />
+			</endButton>
+		</Dialog>
+	</core:FragmentDefinition>

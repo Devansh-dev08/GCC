@@ -1,0 +1,756 @@
+<mvc:View xmlns:smartmultiinput="sap.ui.comp.smartmultiinput" 
+xmlns:smartform="sap.ui.comp.smartform" 
+xmlns:mvc="sap.ui.core.mvc" 
+xmlns:core="sap.ui.core" 
+xmlns:l="sap.ui.layout" 
+xmlns="sap.m" 
+controllerName="pd01qa.controller.View1" displayBlock="true">
+    <Page id="page">
+        <content>
+            <IconTabBar id="_IDGenIconTabBar1" backgroundDesign="Solid" expandable="true" select="onTabChange">
+                <items>
+                    <IconTabFilter id="_IDGenIconTabFilter1" text="Form" key="Form">
+                        <VBox id="_IDGenVBox1" class="sapUiSmallMargin">
+                            <!--  Begin of INTRODUCTION  -->
+                            <Panel id="_IDGenPanel1" expandable="true" expanded="true" stickyHeader="true" 
+                                    headerText="{i18n>Intro}" width="auto" class="sapUiResponsiveMargin">
+                                <FormattedText id="_IDGenText1" htmlText="" />
+                            </Panel>
+                            <!--  End Of INTRODUCTION  -->
+
+                            <!-- Begin OF HEADER  -->
+                            <Panel id="_IDGenPanel2" stickyHeader="true" headerText="{i18n>head}" width="auto" class="sapUiResponsiveMargin">
+                                <HBox id="_IDGenHBox1" width="auto" justifyContent="Start" class="sapUiMediumMarginBegin sapUiSmallMarginEnd">
+                                    <!--  Initiator details  -->
+                                    <HBox id="_IDGenHBox2" width="550px">
+                                        <Label id="_IDGenLabel1" text="{i18n>Initi}" width="130px" labelFor="_IDGenInput1" showColon="true" class="sapUiSmallMarginTop sapUiTinyMarginBottom"/>
+                                        <Input id="_IDGenInput1" value="{InitData>/initInfoP/salutationLabel} {InitData>/initInfoP/firstNameInit} {InitData>/initInfoP/lastNameInit}" width="auto" editable="false" class="sapUiTinyMargin sapUiTinyMarginEnd"/>
+                                    </HBox>
+                                    <!--  Form ID  -->
+                                    <HBox id="_IDGenHBox3">
+                                        <Label id="_IDGenLabel2" text="{i18n>Form}" width="130px" labelFor="_IDGenInput2" showColon="true" class="sapUiSmallMarginTop sapUiTinyMarginBottom"/>
+                                        <Input id="_IDGenInput2" width="auto" editable="false" class="sapUiTinyMargin sapUiTinyMarginEnd"/>
+                                    </HBox>
+                                </HBox>
+                                <HBox id="_IDGenHBox4" width="auto" justifyContent="Start" class="sapUiSmallMarginEnd sapUiMediumMarginBegin">
+                                    <!--  School Name  -->
+                                    <HBox id="_IDGenHBox5" width="550px">
+                                        <Label id="_IDGenLabel3" text="{i18n>School}" width="130px" labelFor="orgInput" showColon="true" class="sapUiSmallMarginTop sapUiTinyMarginBottom"/>
+                                        <Input id="orgInput" width="230px" editable="false" class="sapUiTinyMargin sapUiTinyMarginEnd"/>
+                                    </HBox>
+                                    <!--  Form Date  -->
+                                    <HBox id="_IDGenHBox6">
+                                        <Label id="_IDGenLabel4" text="{i18n>Date}" width="130px" labelFor="_IDGenInput4" showColon="true" class="sapUiSmallMarginTop sapUiTinyMarginBottom"/>
+                                        <DatePicker id="_IDGenInput4" width="auto" value="{path: 'InitData>/FormCreationDate', formatter: '.formatter._formatDate'}" editable="false" class="sapUiTinyMargin sapUiTinyMarginEnd" />
+                                    </HBox>
+                                </HBox>
+                            </Panel>
+                            <!--  END OF HEADER  -->
+
+                            <!-- Begin of SECTION A - Change CheckBoxes -->
+                            <Panel id="_IDGenPanel3" expandable="true" expanded="true" stickyHeader="true" headerText="{i18n>SectionA}" width="auto" class="sapUiResponsiveMargin">
+                                <HBox id="_IDGenHBox7" width="450px" class="sapUiMediumMarginBegin sapUiSmallMarginTop">
+                                    <Label id="_IDGenLabel5" required="true" text="{i18n>dateChange}" labelFor="datepicker01" showColon="true" width="200px" class="sapUiTinyMarginTop sapUiTinyMarginBottom"/>
+                                    <DatePicker editable="{= ${InitData>/disable/mode} !== 'display'}" id="datepicker01" change="onDateChange"
+                                        tooltip="{i18n>dateOfChange}" displayFormat="dd MMM yyyy" />
+                                </HBox>
+                                <HBox id="_IDGenHBox8" width="auto" class="sapUiMediumMarginBegin">
+                                    <Label id="_IDGenLabel6" required="true" text="{i18n>employee}" labelFor="_IDGenSelect1" showColon="true" class="sapUiTinyMarginTop sapUiTinyMarginBottom" width="200px"/>
+                                    <ComboBox editable="{= ${InitData>/disable/mode} !== 'display'}" id="_IDGenSelect2" width="500px" value="" tooltip="{i18n>employeeWithChange}" items="{InitData>/dropdownInfoP}" change="oEmployeeSelect">
+                                        <items>
+                                            <core:Item id="_IDGenItem1" key="{InitData>personIdExternal}" text="{InitData>lastName} {InitData>firstName} {InitData>userId} {InitData>jobInfo}"/>
+                                        </items>
+                                    </ComboBox>
+                                </HBox>
+                                <FlexBox id="_empDetailsConfirmFlexB" height="auto" alignItems="Center" justifyContent="End">
+                                    <Button id="_confirmButtonIDEmp" text="Confirm Employee Details" press="onConfirmButtonPress" type="Emphasized" class="sapUiTinyMarginTop sapUiSmallMarginBegin sapUiSmallMarginEnd" tooltip="{i18n>confirmTip}"/>
+                                </FlexBox>
+                                <!--  CHECKBOX  -->
+                                <VBox id="_IDGenVBox12" visible="false">
+                                    <Text id="_IDGenText3" text="Indicate the changes you would like to make" renderWhitespace="true" class="sapUiSmallMarginTop"/>
+                                    <HBox id="_IDGenHBox9" width="auto" justifyContent="Start">
+                                        <HBox id="_IDGenHBox10" width="230px">
+                                            <Label id="_IDGenLabel7" text="Change Of Address" labelFor="ChangeOfAddCheckbox" design="Bold" class="sapUiSmallMarginTop sapUiTinyMarginBottom"/>
+                                            <CheckBox id="ChangeOfAddCheckbox" select="OnCoAddress" tooltip="{i18n>CoAddressCheck}" editable="{= ${InitData>/disable/mode} !== 'display'}" class="sapUiTinyMarginTop sapUiSmallMarginBegin"/>
+                                        </HBox>
+                                        <HBox id="_IDGenHBox11" width="230px" class="sapUiSmallMarginEnd">
+                                            <Label id="_IDGenLabel8" text="Change Of Bank Details" labelFor="ChangeOfBankCheckbox" design="Bold" class="sapUiSmallMarginTop sapUiTinyMarginBottom"/>
+                                            <CheckBox id="ChangeOfBankCheckbox" select="OnCoBankDetails" tooltip="{i18n>CoBankCheck}" editable="{= ${InitData>/disable/mode} !== 'display'}" class="sapUiTinyMarginTop sapUiSmallMarginBegin"/>
+                                        </HBox>
+                                        <HBox id="_IDGenHBox12" width="230px" class="sapUiSmallMarginBegin">
+                                            <Label id="_IDGenLabel9" text="Change Of Name" labelFor="ChangeOfNameCheckbox" design="Bold" class="sapUiSmallMarginTop sapUiTinyMarginBottom "/>
+                                            <CheckBox id="ChangeOfNameCheckbox" select="OnCoNameStatus" tooltip="{i18n>CoNameCheck}" editable="{= ${InitData>/disable/mode} !== 'display'}" class="sapUiTinyMarginTop sapUiSmallMarginBegin"/>
+                                        </HBox>
+                                    </HBox>
+                                </VBox>
+                            </Panel>
+                            <!--  End of SECTION A  -->
+
+                            <!--  Begin Of SECTION B - Address changes -->
+                            <Panel id="_PanelSecB" visible="false" expandable="true" expanded="true" stickyHeader="true" headerText="{i18n>SectionB}" width="auto" class="sapUiResponsiveMargin">
+                                <Text id="_IDGenText4" text="Indicate the address type you would like to make change" renderWhitespace="true" class="sapUiSmallMarginTop"/>
+                                <!--  CHECKBOXES  -->
+                                <HBox id="_IDGenHBox13" width="auto" justifyContent="Start">
+                                    <HBox id="_IDGenHBox14" width="230px">
+                                        <Label id="_IDGenLabel10" text="Permanent Address" labelFor="_IDGenCheckBox4" design="Bold" class="sapUiSmallMarginTop sapUiTinyMarginBottom"/>
+                                        <CheckBox id="_IDGenCheckBox4" select="OnCoPermanentAdd" tooltip="{i18n>CoPermanentAddress}" editable="{= ${InitData>/disable/mode} !== 'display'}" class="sapUiTinyMarginTop sapUiSmallMarginBegin"/>
+                                    </HBox>
+                                    <HBox id="_IDGenHBox15" width="230px" class="sapUiSmallMarginEnd">
+                                        <Label id="_IDGenLabel11" text="First Emergency Address" labelFor="_IDGenCheckBox5" design="Bold" class="sapUiSmallMarginTop sapUiTinyMarginBottom"/>
+                                        <CheckBox id="_IDGenCheckBox5" select="OnCoFirstEmergencyAdd" tooltip="{i18n>CoFirstAddress}" editable="{= ${InitData>/disable/mode} !== 'display'}" class="sapUiTinyMarginTop sapUiSmallMarginBegin"/>
+                                    </HBox>
+                                    <HBox id="_IDGenHBox16" width="230px" class="sapUiSmallMarginBegin">
+                                        <Label id="_IDGenLabel12" text="Second Emergency Address" labelFor="_IDGenCheckBox6" design="Bold" class="sapUiSmallMarginTop sapUiTinyMarginBottom "/>
+                                        <CheckBox id="_IDGenCheckBox6" select="OnCoSecondEmergencyAdd" tooltip="{i18n>CoSecondAddress}" editable="{= ${InitData>/disable/mode} !== 'display'}" class="sapUiTinyMarginTop sapUiSmallMarginBegin"/>
+                                    </HBox>
+                                </HBox>
+                                <!--  ADDRESS CHANGE FORMS  -->
+                                <HBox id="_addressHBox" justifyContent="Start">
+                                    <l:VerticalLayout id="_IDGenVerticalLayout1" class="equalColumns grid-flexBox">
+                                        <!--  Permanent address  -->
+                                        <FlexBox id="_permAddressFlexBox" visible="false" class="columns" backgroundDesign="Solid">
+                                            <!--  ______Display_____________________  -->
+                                            <VBox id="_IDGenVBox3" justifyContent="Start">
+                                                <layoutData>
+                                                    <FlexItemData id="_IDGenFlexItemData1" growFactor="0" baseSize="0" backgroundDesign="Solid" styleClass="sapUiTinyMargin grid1" minWidth="550px"/>
+                                                </layoutData>
+                                                <HBox id="_IDGenHBox18" width="auto">
+                                                    <Label id="_IDGenLabel20" text="Address Type" labelFor="_IDGenLabel21" width="230px" design="Bold"/>
+                                                    <Label id="_IDGenLabel21" text="Permanent Address" design="Bold" width="auto"/>
+                                                </HBox>
+                                                <HBox id="_IDGenHBox19" width="70%" class="sapUiMediumMarginTop labelMargin">
+                                                    <Label id="_IDGenLabel22" text="Current Details" design="Bold"/>
+                                                </HBox>
+
+                                                <HBox id="_IDGenHBox20" width="auto" class="sapUiMediumMarginTop">
+                                                    <Label id="_IDGenLabel23" text="{i18n>Street}" labelFor="input1" 
+                                                        width="230px" class="sapUiTinyMarginTop"/>
+                                                    <Input id="input1" width="230px" editable="false"/>
+                                                </HBox>
+                                                <HBox id="_IDGenHBox21" width="auto">
+                                                    <Label id="_IDGenLabel24" text="{i18n>secondAddress}" labelFor="input2" width="230px" class="sapUiTinyMarginTop"/>
+                                                    <Input id="input2" width="230px" editable="false"/>
+                                                </HBox>
+                                                <!--  <HBox id="_IDGenHBox22" width="auto">
+                                                            <Label 
+                                                                id="_IDGenLabel25" text="{i18n>district}" labelFor="input3" 
+                                                                width="230px" class = "sapUiTinyMarginTop"/>
+                                                            <Input id="input3" value="" width="230px" editable="false"/>
+                                                        </HBox>  -->
+                                                <HBox id="_IDGenHBox23" width="auto">
+                                                    <Label id="_IDGenLabel26" text="{i18n>city}" labelFor="input4" width="230px" class="sapUiTinyMarginTop"/>
+                                                    <Input id="input4" width="230px" editable="false"/>
+                                                </HBox>
+                                                <HBox id="_IDGenHBox24" width="auto">
+                                                    <Label id="_IDGenLabel27" text="{i18n>county}" labelFor="input5" width="230px" class="sapUiTinyMarginTop"/>
+                                                    <ComboBox id="input5" width="230px" editable="false"/>
+                                                </HBox>
+                                                <HBox id="_IDGenHBox25" width="auto">
+                                                    <Label id="_IDGenLabel28" text="{i18n>postCode}" labelFor="input6" width="230px" class="sapUiTinyMarginTop"/>
+                                                    <Input id="input6" width="170px" editable="false"/>
+                                                </HBox>
+                                                <HBox id="_IDGenHBox26" width="auto">
+                                                    <Label id="_IDGenLabel29" text="{i18n>homeTelePer}" labelFor="input7" width="230px" class="sapUiTinyMarginTop"/>
+                                                    <Input id="input7" width="230px" editable="false"/>
+                                                </HBox>
+                                                <HBox id="_IDGenHBox27" width="auto">
+                                                    <Label id="_IDGenLabel30" text="{i18n>mobileTele}" labelFor="_IDGenInput40" width="230px" class="sapUiTinyMarginTop"/>
+                                                    <Input id="_IDGenInput40" width="230px" editable="false"/>
+                                                </HBox>
+                                                <HBox id="_IDGenHBox28" width="auto">
+                                                    <Label id="_IDGenLabel31" text="{i18n>email}" labelFor="_IDGenInput41" width="230px" class="sapUiTinyMarginTop"/>
+                                                    <Input id="_IDGenInput41" width="230px" editable="false"/>
+                                                </HBox>
+                                            </VBox>
+                                            <!--  ______Update______________________  -->
+                                            <VBox id="_IDGenVBox4" width="auto" justifyContent="Start">
+                                                <layoutData>
+                                                    <FlexItemData id="_IDGenFlexItemData2" growFactor="0" baseSize="0" backgroundDesign="Solid" styleClass="sapUiTinyMargin grid1" minWidth="550px"/>
+                                                </layoutData>
+                                                <HBox id="_IDGenHBox29" width="auto">
+                                                    <Label id="_IDGenLabel32" text=" " labelFor="_IDGenLabel33" width="230px" design="Bold"/>
+                                                    <Label id="_IDGenLabel33" text=" " design="Bold" width="auto"/>
+                                                </HBox>
+                                                <HBox id="_IDGenHBox30" width="70%" class="sapUiMediumMarginTop labelMargin">
+                                                    <Label id="_IDGenLabe34" text="New Details" design="Bold"/>
+                                                </HBox>
+                                                <HBox id="_IDGenHBox31" width="auto" class="sapUiMediumMarginTop">
+                                                    <Label id="_IDGenLabel34" text="{i18n>Street}" labelFor="_IDGenInput5" required="true" width="230px" class="sapUiTinyMarginTop"/>
+                                                    <Input id="_IDGenInput5" width="230px" editable="{= ${InitData>/disable/mode} !== 'display'}" tooltip="{i18n>streetTip}"/>
+                                                </HBox>
+                                                <HBox id="_IDGenHBox32" width="auto">
+                                                    <Label id="_IDGenLabel35" text="{i18n>secondAddress}" labelFor="_IDGenInput6" width="230px" class="sapUiTinyMarginTop"/>
+                                                    <Input id="_IDGenInput6" width="230px" editable="{= ${InitData>/disable/mode} !== 'display'}" tooltip="{i18n>secondAddLine}"/>
+                                                </HBox>
+                                                <!--  <HBox id="_IDGenHBox33" width="auto">
+                                                            <Label 
+                                                                id="_IDGenLabel36" text="{i18n>district}" labelFor="_IDGenInput7" 
+                                                                required="false" width="230px" class = "sapUiTinyMarginTop"/>
+                                                            <Input
+                                                                id="_IDGenInput7" width="230px" 
+                                                                editable="{= ${InitData>/disable/mode} !== 'display'}"
+                                                                tooltip = "{i18n>districtTip}"/>
+                                                        </HBox>  -->
+                                                <HBox id="_IDGenHBox34" width="auto">
+                                                    <Label id="_IDGenLabel37" text="{i18n>city}" labelFor="_IDGenInput8" required="false" width="230px" class="sapUiTinyMarginTop"/>
+                                                    <Input id="_IDGenInput8" width="230px" editable="{= ${InitData>/disable/mode} !== 'display'}" tooltip="{i18n>cityTip}"/>
+                                                </HBox>
+                                                <HBox id="_IDGenHBox35" width="auto">
+                                                    <Label id="_IDGenLabel38" text="{i18n>county}" labelFor="_IDGenInput9" required="false" width="230px" class="sapUiTinyMarginTop"/>
+                                                    <ComboBox id="_IDGenSelect3" width="230px" value="" editable="{= ${InitData>/disable/mode} !== 'display'}"
+                                                            tooltip="{i18n>countyTip}" items="{path: 'InitData>/countyDrop',length: 500, sorter: { path: 'countyLabel' }}">
+                                                        <items>
+                                                            <core:Item id="_IDGenItem2" key="{InitData>externalCode}" text="{InitData>countyLabel}"/>
+                                                        </items>
+                                                    </ComboBox>
+                                                </HBox>
+                                                <HBox id="_IDGenHBox36" width="auto">
+                                                    <Label id="_IDGenLabel39" text="{i18n>postCode}" labelFor="_IDGenInput9" required="true" width="230px" class="sapUiTinyMarginTop"/>
+                                                    <Input id="_IDGenInput9" width="170px" editable="{= ${InitData>/disable/mode} !== 'display'}" valueStateText="Postal code should be of 6-8 letters" tooltip="{i18n>postCodeTip}" change="onPostChange" maxLength="8" />
+                                                </HBox>
+                                                <HBox id="_IDGenHBox37" width="auto">
+                                                    <Label id="_IDGenLabel40" text="{i18n>homeTelePer}" labelFor="_IDGenInput10" width="230px" class="sapUiTinyMarginTop"/>
+                                                    <Input id="_IDGenInput10" width="230px" type="Number" editable="{= ${InitData>/disable/mode} !== 'display'}" tooltip="{i18n>homeTeleTip}" maxLength="11" change="onTeleChange" liveChange="onLiveTeleChange"/>
+                                                </HBox>
+                                                <HBox id="_IDGenHBox38" width="auto">
+                                                    <Label id="_IDGenLabel41" text="{i18n>mobileTele}" required="true" labelFor="_IDGenInput11" width="230px" class="sapUiTinyMarginTop"/>
+                                                    <Input id="_IDGenInput11" width="230px" type="Number" editable="{= ${InitData>/disable/mode} !== 'display'}" tooltip="{i18n>mobileTeleTip}" maxLength="11" change="onTeleChange" liveChange="onLiveTeleChange" />
+                                                </HBox>
+                                                <HBox id="_IDGenHBox39" width="auto">
+                                                    <Label id="_IDGenLabel42" text="{i18n>email}" labelFor="_IDGenInput12" width="230px" class="sapUiTinyMarginTop"/>
+                                                    <Input id="_IDGenInput12" width="230px" type="Email" editable="{= ${InitData>/disable/mode} !== 'display'}" 
+                                                        tooltip="{i18n>emailTip}" change = "onEmailChange"/>
+                                                </HBox>
+                                                <HBox id="_IDGenHBox40" width="auto">
+                                                    <Label id="_IDGenLabel43" text="{i18n>confirmEmail}" labelFor="_IDGenInput13" width="230px" class="sapUiTinyMarginTop"/>
+                                                    <Input id="_IDGenInput13" width="230px" type="Email" editable="{= ${InitData>/disable/mode} !== 'display'}" 
+                                                        tooltip="{i18n>confirmEmailTip}" change="onEmailChangePermanent"/>
+                                                </HBox>
+                                            </VBox>
+                                        </FlexBox>
+
+                                        <!--  First Emergency Address  -->
+                                        <FlexBox id="_firstEmergencyFlexBox" visible="false" class="columns" backgroundDesign="Solid">
+                                            <!--  _________DISPLAY__________  -->
+                                            <VBox id="_IDGenVBox5" justifyContent="Start">
+                                                <layoutData>
+                                                    <FlexItemData id="_IDGenFlexItemData3" growFactor="0" baseSize="0" backgroundDesign="Solid" styleClass="sapUiTinyMargin grid1" minWidth="550px"/>
+                                                </layoutData>
+                                                <HBox id="_IDGenHBox41" width="auto">
+                                                    <Label id="_IDGenLabel44" text="Address Type" labelFor="_IDGenLabel45" width="230px" design="Bold"/>
+                                                    <Label id="_IDGenLabel45" text="First Emergency Address" design="Bold" width="auto"/>
+                                                </HBox>
+                                                <HBox id="_IDGenHBox42" width="70%" class="sapUiMediumMarginTop labelMargin">
+                                                    <Label id="_IDGenLabel46" text="Current Details" design="Bold"/>
+                                                </HBox>
+                                                <HBox id="_IDGenHBox43" width="auto" class="sapUiMediumMarginTop">
+                                                    <Label id="_IDGenLabel47" text="{i18n>Street}" labelFor="_IDGenInput42" width="230px" class="sapUiTinyMarginTop"/>
+                                                    <Input id="_IDGenInput42" width="230px" editable="false"/>
+                                                </HBox>
+                                                <HBox id="_IDGenHBox44" width="auto">
+                                                    <Label id="_IDGenLabel48" text="{i18n>secondAddress}" labelFor="_IDGenInput43" width="230px" class="sapUiTinyMarginTop"/>
+                                                    <Input id="_IDGenInput43" width="230px" editable="false"/>
+                                                </HBox>
+                                                <!--  <HBox id="_IDGenHBox45" width="auto">
+                                                            <Label 
+                                                                id="_IDGenLabel49" text="{i18n>district}" labelFor="_IDGenInput44" 
+                                                                width="230px" class = "sapUiTinyMarginTop"/>
+                                                            <Input id="_IDGenInput44" value="" width="230px" editable="false"/>
+                                                        </HBox>  -->
+                                                <HBox id="_IDGenHBox46" width="auto">
+                                                    <Label id="_IDGenLabel50" text="{i18n>city}" labelFor="_IDGenInput45" width="230px" class="sapUiTinyMarginTop"/>
+                                                    <Input id="_IDGenInput45" width="230px" editable="false"/>
+                                                </HBox>
+                                                <HBox id="_IDGenHBox47" width="auto">
+                                                    <Label id="_IDGenLabel51" text="{i18n>county}" labelFor="_IDGenInput46" width="230px" class="sapUiTinyMarginTop"/>
+                                                    <ComboBox id="_IDGenInput46" width="230px" editable="false"/>
+                                                </HBox>
+                                                <HBox id="_IDGenHBox48" width="auto">
+                                                    <Label id="_IDGenLabel52" text="{i18n>postCode}" labelFor="_IDGenInput47" width="230px" class="sapUiTinyMarginTop"/>
+                                                    <Input id="_IDGenInput47" width="170px" editable="false"/>
+                                                </HBox>
+                                                <HBox id="_IDGenHBox51" width="auto">
+                                                    <Label id="_IDGenLabel55" text="{i18n>nextOfKin}" labelFor="_IDGenInput48" width="230px" class="sapUiTinyMarginTop"/>
+                                                    <Input id="_IDGenInput48" width="230px" editable="false"/>
+                                                </HBox>
+                                                <HBox id="_IDGenHBoxSur" width="auto">
+                                                    <Label id="_IDGenLabelSur" text="{i18n>nextOfKinSur}" labelFor="_IDGenInputSur" width="230px" class="sapUiTinyMarginTop"/>
+                                                    <Input id="_IDGenInputSur" width="230px" editable="false"/>
+                                                </HBox>
+                                                <HBox id="_IDGenHBoxRel" width="auto">
+                                                    <Label id="_IDGenLabelRel" text="{i18n>relationship}" labelFor="_IDGenInputRel" width="230px" class="sapUiTinyMarginTop"/>
+                                                    <Input id="_IDGenInputRel" width="230px" editable="false"/>
+                                                </HBox>
+                                                <HBox id="_IDGenHBox49" width="auto">
+                                                    <Label id="_IDGenLabel53" text="{i18n>homeTele}" labelFor="_IDGenInput49" width="230px" class="sapUiTinyMarginTop"/>
+                                                    <Input id="_IDGenInput49" width="230px" editable="false"/>
+                                                </HBox>
+                                                <!--  <HBox id="_IDGenHBox50" width="auto">
+                                                            <Label 
+                                                                id="_IDGenLabel54" text="{i18n>mobileTele}" labelFor="_IDGenInput50" 
+                                                                width="230px" class = "sapUiTinyMarginTop"/>
+                                                            <Input
+                                                                id="_IDGenInput50" value="{InitData>/firstEmergencyP/phone}" 
+                                                                width="230px" editable="false"/>
+                                                        </HBox>  -->
+                                            </VBox>
+                                            <!--  _________UPDATE__________  -->
+                                            <VBox id="_IDGenVBox6" width="auto" justifyContent="Start">
+                                                <layoutData>
+                                                    <FlexItemData id="_IDGenFlexItemData4" growFactor="0" baseSize="0" backgroundDesign="Solid" styleClass="sapUiTinyMargin grid1" minWidth="550px"/>
+                                                </layoutData>
+                                                <HBox id="_IDGenHBox52" width="auto">
+                                                    <Label id="_IDGenLabel56" text=" " labelFor="_IDGenLabel33" width="230px" design="Bold"/>
+                                                    <Label id="_IDGenLabel57" text=" " design="Bold" width="auto"/>
+                                                </HBox>
+                                                <HBox id="_IDGenHBox53" width="70%" class="sapUiMediumMarginTop labelMargin">
+                                                    <Label id="_IDGenLabe58" text="New Details" design="Bold"/>
+                                                </HBox>
+                                                <HBox id="_IDGenHBox54" width="auto" class="sapUiMediumMarginTop">
+                                                    <Label id="_IDGenLabel59" text="{i18n>Street}" labelFor="_IDGenInput14" required="true" width="230px" class="sapUiTinyMarginTop"/>
+                                                    <Input id="_IDGenInput14" width="230px" editable="{= ${InitData>/disable/mode} !== 'display'}" tooltip="{i18n>streetTip}"/>
+                                                </HBox>
+                                                <HBox id="_IDGenHBox55" width="auto">
+                                                    <Label id="_IDGenLabel60" text="{i18n>secondAddress}" labelFor="_IDGenInput15" width="230px" class="sapUiTinyMarginTop"/>
+                                                    <Input id="_IDGenInput15" width="230px" editable="{= ${InitData>/disable/mode} !== 'display'}" tooltip="{i18n>secondAddLine}"/>
+                                                </HBox>
+                                                <!--  <HBox id="_IDGenHBox56" width="auto">
+                                                            <Label 
+                                                                id="_IDGenLabel61" text="{i18n>district}" labelFor="_IDGenInput16" 
+                                                                required="false" width="230px" class = "sapUiTinyMarginTop"/>
+                                                            <Input
+                                                                id="_IDGenInput16" width="230px" 
+                                                                editable="{= ${InitData>/disable/mode} !== 'display'}"
+                                                                tooltip = "{i18n>districtTip}"/>
+                                                        </HBox>  -->
+                                                <HBox id="_IDGenHBox57" width="auto">
+                                                    <Label id="_IDGenLabel62" text="{i18n>city}" labelFor="_IDGenInput17" required="false" width="230px" class="sapUiTinyMarginTop"/>
+                                                    <Input id="_IDGenInput17" width="230px" editable="{= ${InitData>/disable/mode} !== 'display'}" tooltip="{i18n>cityTip}"/>
+                                                </HBox>
+                                                <HBox id="_IDGenHBox58" width="auto">
+                                                    <Label id="_IDGenLabel63" text="{i18n>county}" labelFor="_IDGenSelect4" required="false" width="230px" class="sapUiTinyMarginTop"/>
+                                                    <ComboBox id="_IDGenSelect4" width="230px" value="" editable="{= ${InitData>/disable/mode} !== 'display'}" 
+                                                            tooltip="{i18n>countyTip}" items="{path: 'InitData>/countyDrop',length: 500, sorter: { path: 'countyLabel' }}">
+                                                        <items>
+                                                            <core:Item id="_IDGenItem3" key="{InitData>externalCode}" text="{InitData>countyLabel}"/>
+                                                        </items>
+                                                    </ComboBox>
+                                                </HBox>
+                                                <HBox id="_IDGenHBox59" width="auto">
+                                                    <Label id="_IDGenLabel64" text="{i18n>postCode}" labelFor="_IDGenInput18" required="true" width="230px" class="sapUiTinyMarginTop"/>
+                                                    <Input id="_IDGenInput18" width="170px" editable="{= ${InitData>/disable/mode} !== 'display'}" tooltip="{i18n>postCodeTip}" valueStateText="Postal code should be of 6-8 letters" change="onPostChange" maxLength="8" />
+                                                </HBox>
+                                                <HBox id="_IDGenHBox62" width="auto">
+                                                    <Label id="_IDGenLabel67" text="{i18n>nextOfKin}" labelFor="_IDGenInput21" required="true" width="230px" class="sapUiTinyMarginTop"/>
+                                                    <Input id="_IDGenInput21" width="230px" editable="{= ${InitData>/disable/mode} !== 'display'}" tooltip="{i18n>kinFnameTip}"/>
+                                                </HBox>
+                                                <HBox id="_IDGenHBoxSurne" width="auto">
+                                                    <Label id="_IDGenLabelSurne" text="{i18n>nextOfKinSur}" labelFor="_IDGenInputSurne" required="true" width="230px" class="sapUiTinyMarginTop"/>
+                                                    <Input id="_IDGenInputSurne" width="230px" editable="{= ${InitData>/disable/mode} !== 'display'}" tooltip="{i18n>kinLnameTip}"/>
+                                                </HBox>
+                                                <HBox id="_IDGenHBox63" width="auto">
+                                                    <Label id="_IDGenLabel68" text="{i18n>relationship}" labelFor="_IDGenComboBox1" required="true" width="230px" class="sapUiTinyMarginTop"/>
+                                                    <ComboBox id="_IDGenComboBox1" width="230px" value="" editable="{= ${InitData>/disable/mode} !== 'display'}" tooltip="{i18n>relationshipTip}" items="{InitData>/relationDrop}">
+                                                        <items>
+                                                            <core:Item id="_IDGenItem11" key="{InitData>optionId}" text="{InitData>relationLabel}"/>
+                                                        </items>
+                                                    </ComboBox>
+                                                </HBox>
+                                                <HBox id="_IDGenHBox60" width="auto">
+                                                    <Label id="_IDGenLabel65" text="{i18n>homeTele}" labelFor="_IDGenInput19" width="230px" required="true" class="sapUiTinyMarginTop"/>
+                                                    <Input id="_IDGenInput19" width="230px" type="Number" editable="{= ${InitData>/disable/mode} !== 'display'}" tooltip="{i18n>homeTeleTip}" maxLength="11" change="onTeleChange" liveChange="onLiveTeleChange" />
+                                                </HBox>
+                                                <!--  <HBox id="_IDGenHBox61" width="auto">
+                                                            <Label 
+                                                                id="_IDGenLabel66" text="{i18n>mobileTele}" labelFor="_IDGenInput20" 
+                                                                width="230px" required="true" class = "sapUiTinyMarginTop"/>
+                                                            <Input
+                                                                id="_IDGenInput20" width="230px" 
+                                                                editable="{= ${InitData>/disable/mode} !== 'display'}"
+                                                                tooltip = "{i18n>mobileTeleTip}" maxLength="11" change="onTeleChange" />
+                                                        </HBox>  -->
+                                            </VBox>
+                                        </FlexBox>
+
+                                        <!-- Second Emergency Address   -->
+                                        <FlexBox id="_secondEmergencyFlexBox" visible="false" class="columns" backgroundDesign="Solid">
+                                            <!--  ______Display_____________________  -->
+                                            <VBox id="_IDGenVBox7" justifyContent="Start">
+                                                <layoutData>
+                                                    <FlexItemData id="_IDGenFlexItemData5" growFactor="0" baseSize="0" backgroundDesign="Solid" styleClass="sapUiTinyMargin grid1" minWidth="550px"/>
+                                                </layoutData>
+                                                <HBox id="_IDGenHBox64" width="auto">
+                                                    <Label id="_IDGenLabel69" text="Address Type" labelFor="_IDGenLabel70" width="230px" design="Bold"/>
+                                                    <Label id="_IDGenLabel70" text="Second Emergency Address" design="Bold" width="auto"/>
+                                                </HBox>
+                                                <HBox id="_IDGenHBox65" width="70%" class="sapUiMediumMarginTop labelMargin">
+                                                    <Label id="_IDGenLabel71" text="Current Details" design="Bold"/>
+                                                </HBox>
+                                                <HBox id="_IDGenHBox66" width="auto" class="sapUiMediumMarginTop">
+                                                    <Label id="_IDGenLabel72" text="{i18n>Street}" labelFor="_IDGenInput51" width="230px" class="sapUiTinyMarginTop"/>
+                                                    <Input id="_IDGenInput51" width="230px" editable="false"/>
+                                                </HBox>
+                                                <HBox id="_IDGenHBox67" width="auto">
+                                                    <Label id="_IDGenLabel73" text="{i18n>secondAddress}" labelFor="_IDGenInput52" width="230px" class="sapUiTinyMarginTop"/>
+                                                    <Input id="_IDGenInput52" width="230px" editable="false"/>
+                                                </HBox>
+                                                <!--  <HBox id="_IDGenHBox68" width="auto">
+                                                            <Label 
+                                                                id="_IDGenLabel74" text="{i18n>district}" labelFor="_IDGenInput53" 
+                                                                width="230px" class = "sapUiTinyMarginTop"/>
+                                                            <Input
+                                                                id="_IDGenInput53" value="" width="230px" editable="false"/>
+                                                        </HBox>  -->
+                                                <HBox id="_IDGenHBox69" width="auto">
+                                                    <Label id="_IDGenLabel75" text="{i18n>city}" labelFor="_IDGenInput54" width="230px" class="sapUiTinyMarginTop"/>
+                                                    <Input id="_IDGenInput54" width="230px" editable="false"/>
+                                                </HBox>
+                                                <HBox id="_IDGenHBox70" width="auto">
+                                                    <Label id="_IDGenLabel76" text="{i18n>county}" labelFor="_IDGenInput55" width="230px" class="sapUiTinyMarginTop"/>
+                                                    <ComboBox id="_IDGenInput55" width="230px" editable="false"/>
+                                                </HBox>
+                                                <HBox id="_IDGenHBox71" width="auto">
+                                                    <Label id="_IDGenLabel77" text="{i18n>postCode}" labelFor="_IDGenInput56" width="230px" class="sapUiTinyMarginTop"/>
+                                                    <Input id="_IDGenInput56" width="230px" editable="false"/>
+                                                </HBox>
+                                                <HBox id="_IDGenHBox72" width="auto">
+                                                    <Label id="_IDGenLabel78" text="{i18n>nextOfKin}" labelFor="_IDGenInput57" width="230px" class="sapUiTinyMarginTop"/>
+                                                    <Input id="_IDGenInput57" width="230px" editable="false"/>
+                                                </HBox>
+                                                <HBox id="_IDGenHBoxSurSec" width="auto">
+                                                    <Label id="_IDGenLabelSurSec" text="{i18n>nextOfKinSur}" labelFor="_IDGenInputSurSec" width="230px" class="sapUiTinyMarginTop"/>
+                                                    <Input id="_IDGenInputSurSec" width="230px" editable="false"/>
+                                                </HBox>
+                                                <HBox id="_IDGenHBoxRelSec" width="auto">
+                                                    <Label id="_IDGenLabelRelSec" text="{i18n>relationship}" labelFor="_IDGenInputRelSec" width="230px" class="sapUiTinyMarginTop"/>
+                                                    <Input id="_IDGenInputRelSec" width="230px" editable="false"/>
+                                                </HBox>
+                                                <HBox id="_IDGenHBox73" width="auto">
+                                                    <Label id="_IDGenLabel79" text="{i18n>homeTele}" labelFor="_IDGenInput58" width="230px" class="sapUiTinyMarginTop"/>
+                                                    <Input id="_IDGenInput58" width="230px" editable="false"/>
+                                                </HBox>
+                                                <!--  <HBox id="_IDGenHBox74" width="auto" >
+                                                            <Label 
+                                                                id="_IDGenLabel80" text="{i18n>mobileTele}" labelFor="_IDGenInput59" 
+                                                                width="230px" class = "sapUiTinyMarginTop"/>
+                                                            <Input
+                                                                id="_IDGenInput59" value="{InitData>/secondEmergencyP/phone}"
+                                                                width="230px" editable="false"/>
+                                                        </HBox>  -->
+                                            </VBox>
+                                            <!--  ______Update______________________  -->
+                                            <VBox id="_IDGenVBox8" width="auto" justifyContent="Start">
+                                                <layoutData>
+                                                    <FlexItemData id="_IDGenFlexItemData6" growFactor="0" baseSize="0" backgroundDesign="Solid" styleClass="sapUiTinyMargin grid1" minWidth="550px"/>
+                                                </layoutData>
+                                                <HBox id="_IDGenHBox75" width="auto">
+                                                    <Label id="_IDGenLabel81" text=" " labelFor="_IDGenLabel82" width="230px" design="Bold"/>
+                                                    <Label id="_IDGenLabel82" text=" " design="Bold" width="auto"/>
+                                                </HBox>
+                                                <HBox id="_IDGenHBox76" width="70%" class="sapUiMediumMarginTop labelMargin">
+                                                    <Label id="_IDGenLabe83" text="New Details" design="Bold"/>
+                                                </HBox>
+                                                <HBox id="_IDGenHBox77" width="auto" class="sapUiMediumMarginTop">
+                                                    <Label id="_IDGenLabel84" text="{i18n>Street}" labelFor="_IDGenInput23" required="true" width="230px" class="sapUiTinyMarginTop"/>
+                                                    <Input id="_IDGenInput23" width="230px" editable="{= ${InitData>/disable/mode} !== 'display'}" tooltip="{i18n>streetTip}"/>
+                                                </HBox>
+                                                <HBox id="_IDGenHBox78" width="auto">
+                                                    <Label id="_IDGenLabel85" text="{i18n>secondAddress}" labelFor="_IDGenInput24" width="230px" class="sapUiTinyMarginTop"/>
+                                                    <Input id="_IDGenInput24" width="230px" editable="{= ${InitData>/disable/mode} !== 'display'}" tooltip="{i18n>secondAddLine}"/>
+                                                </HBox>
+                                                <!--  <HBox id="_IDGenHBox79" width="auto">
+                                                            <Label 
+                                                                id="_IDGenLabel86" text="{i18n>district}" labelFor="_IDGenInput25" 
+                                                                required="false" width="230px" class = "sapUiTinyMarginTop"/>
+                                                            <Input
+                                                                id="_IDGenInput25" width="230px" 
+                                                                editable="{= ${InitData>/disable/mode} !== 'display'}"
+                                                                tooltip = "{i18n>districtTip}"/>
+                                                        </HBox>  -->
+                                                <HBox id="_IDGenHBox80" width="auto">
+                                                    <Label id="_IDGenLabel87" text="{i18n>city}" labelFor="_IDGenInput26" required="false" width="230px" class="sapUiTinyMarginTop"/>
+                                                    <Input id="_IDGenInput26" width="230px" editable="{= ${InitData>/disable/mode} !== 'display'}" tooltip="{i18n>cityTip}"/>
+                                                </HBox>
+                                                <HBox id="_IDGenHBox81" width="auto">
+                                                    <Label id="_IDGenLabel88" text="{i18n>county}" labelFor="_IDGenSelect5" required="false" width="230px" class="sapUiTinyMarginTop"/>
+                                                    <ComboBox id="_IDGenSelect5" width="230px" value="" editable="{= ${InitData>/disable/mode} !== 'display'}" 
+                                                            tooltip="{i18n>countyTip}" items="{path: 'InitData>/countyDrop',length: 500, sorter: { path: 'countyLabel' }}">
+                                                        <items>
+                                                            <core:Item id="_IDGenItem4" key="{InitData>externalCode}" text="{InitData>countyLabel}"/>
+                                                        </items>
+                                                    </ComboBox>
+                                                </HBox>
+                                                <HBox id="_IDGenHBox82" width="auto">
+                                                    <Label id="_IDGenLabel89" text="{i18n>postCode}" labelFor="_IDGenInput27" required="true" width="230px" class="sapUiTinyMarginTop"/>
+                                                    <Input id="_IDGenInput27" width="170px" editable="{= ${InitData>/disable/mode} !== 'display'}" tooltip="{i18n>postCodeTip}" valueStateText="Postal code should be of 6-8 letters" change="onPostChange" maxLength="8" />
+                                                </HBox>
+                                                <HBox id="_IDGenHBox83" width="auto">
+                                                    <Label id="_IDGenLabel90" text="{i18n>nextOfKin}" labelFor="_IDGenInput28" required="true" width="230px" class="sapUiTinyMarginTop"/>
+                                                    <Input id="_IDGenInput28" width="230px" editable="{= ${InitData>/disable/mode} !== 'display'}" tooltip="{i18n>kinFnameTip}"/>
+                                                </HBox>
+                                                <HBox id="_IDGenHBoxSurSne" width="auto">
+                                                    <Label id="_IDGenLabelSurSne" text="{i18n>nextOfKinSur}" labelFor="_IDGenInputSurSne" required="true" width="230px" class="sapUiTinyMarginTop"/>
+                                                    <Input id="_IDGenInputSurSne" width="230px" editable="{= ${InitData>/disable/mode} !== 'display'}" tooltip="{i18n>kinLnameTip}"/>
+                                                </HBox>
+                                                <HBox id="_IDGenHBox84" width="auto">
+                                                    <Label id="_IDGenLabel91" text="{i18n>relationship}" labelFor="_IDGenComboBox2" required="true" width="230px" class="sapUiTinyMarginTop"/>
+                                                    <ComboBox id="_IDGenComboBox2" width="230px" value="" editable="{= ${InitData>/disable/mode} !== 'display'}" tooltip="{i18n>relationshipTip}" items="{InitData>/relationDrop}">
+                                                        <items>
+                                                            <core:Item id="_IDGenItem12" key="{InitData>optionId}" text="{InitData>relationLabel}"/>
+                                                        </items>
+                                                    </ComboBox>
+                                                </HBox>
+                                                <HBox id="_IDGenHBox85" width="auto">
+                                                    <Label id="_IDGenLabel92" text="{i18n>homeTele}" labelFor="_IDGenInput30" width="230px" required="true" class="sapUiTinyMarginTop"/>
+                                                    <Input id="_IDGenInput30" width="230px" type="Number" editable="{= ${InitData>/disable/mode} !== 'display'}" tooltip="{i18n>homeTeleTip}" maxLength="11" change="onTeleChange" liveChange="onLiveTeleChange" />
+                                                </HBox>
+                                                <!--  <HBox id="_IDGenHBox86" width="auto">
+                                                            <Label 
+                                                                id="_IDGenLabel93" text="{i18n>mobileTele}" labelFor="_IDGenInput31" 
+                                                                width="230px" required="true" class = "sapUiTinyMarginTop"/>
+                                                            <Input
+                                                                id="_IDGenInput31" width="230px" 
+                                                                editable="{= ${InitData>/disable/mode} !== 'display'}"
+                                                                tooltip = "{i18n>mobileTeleTip}" maxLength="11" change="onTeleChange"/>
+                                                        </HBox>  -->
+                                            </VBox>
+                                        </FlexBox>
+                                    </l:VerticalLayout>
+                                </HBox>
+                            </Panel>
+                            <!--  End Of SECTION B  -->
+
+                            <!--  Begin Of SECTION C - Bank details Changes -->
+                            <Panel id="_PanelSecC" visible="false" expandable="true" expanded="true" stickyHeader="true" headerText="{i18n>SectionC}" width="auto" class="sapUiResponsiveMargin">
+                                <HBox id="_sectionCHBox" visible="true">
+                                    <l:VerticalLayout id="_IDGenVerticalLayout4" class="equalColumns grid-flexBox">
+                                        <FlexBox id="_IDGenFlexBox5" class="columns" backgroundDesign="Solid">
+                                            <!-- ____display___ -->
+                                            <VBox id="_IDGenVBox9" justifyContent="Start">
+                                                <layoutData>
+                                                    <FlexItemData id="_IDGenFlexItemData7" growFactor="0" baseSize="0" backgroundDesign="Solid" styleClass="sapUiTinyMargin grid1" minWidth="550px"/>
+                                                </layoutData>
+                                                <HBox id="_IDGenHBox87" width="70%" class="labelMargin">
+                                                    <Label id="_IDGenLabel94" text="Current Details" design="Bold"/>
+                                                </HBox>
+                                                <HBox id="_IDGenHBox88" width="auto" class="sapUiLargeMarginTop">
+                                                    <Label id="_IDGenLabel95" text="{i18n>sortCode}" labelFor="_IDGenText36" width="230px" class="sapUiTinyMarginTop"/>
+                                                    <Input id="_IDGenText36" width="230px" editable="false"/>
+                                                </HBox>
+                                                <HBox id="_IDGenHBox89" width="auto">
+                                                    <Label id="_IDGenLabel96" text="{i18n>society}" labelFor="_IDGenText37" width="230px" class="sapUiTinyMarginTop"/>
+                                                    <Input id="_IDGenText37" width="230px" editable="false"/>
+                                                </HBox>
+                                                <HBox id="_IDGenHBox90" width="auto">
+                                                    <Label id="_IDGenLabel97" text="{i18n>accNumber}" labelFor="_IDGenText38" width="230px" class="sapUiTinyMarginTop"/>
+                                                    <Input id="_IDGenText38" width="230px" editable="false"/>
+                                                </HBox>
+                                                <HBox id="_IDGenHBox91" width="auto" class="sapUiTinyMarginBottom">
+                                                    <Label id="_IDGenLabel98" text="{i18n>buildingRefNo}" labelFor="_IDGenText39" width="230px" class="sapUiTinyMarginTop"/>
+                                                    <Input id="_IDGenText39" width="230px" editable="false"/>
+                                                </HBox>
+                                            </VBox>
+                                            <!-- ___update___ -->
+                                            <VBox id="_IDGenVBox10" width="auto" justifyContent="Start">
+                                                <layoutData>
+                                                    <FlexItemData id="_IDGenFlexItemData8" growFactor="0" baseSize="0" backgroundDesign="Solid" styleClass="sapUiTinyMargin grid1" minWidth="550px"/>
+                                                </layoutData>
+                                                <HBox id="_IDGenHBox92" width="70%" class="labelMargin sapUiTinyMarginTop">
+                                                    <Label id="_IDGenLabe99" text="New Details" design="Bold"/>
+                                                </HBox>
+                                                <HBox id="_IDGenHBox93" width="auto" class="sapUiTinyMarginTop">
+                                                    <Label id="_IDGenLabelA1" text="{i18n>effectiveDate}" labelFor="_IDGenInput32" required="true" width="230px" class="sapUiTinyMarginTop"/>
+                                                    <ComboBox id="_nextMonthsDrop" width="230px" value="" tooltip="{i18n>nextSeven}" 
+                                                        editable="{= ${InitData>/disable/mode} !== 'display'}" items="{InitData>/nextSevenMonths}" change="oMonthSelect">
+                                                        <items>
+                                                            <core:Item id="_months" key="{InitData>key}" text="{InitData>months}"/>
+                                                        </items>
+                                                    </ComboBox>
+                                                </HBox>
+                                                <HBox id="_IDGenHBox94" width="auto">
+                                                    <Label id="_IDGenLabelA2" text="{i18n>sortCode}" labelFor="_IDGenInput33" required="true" width="230px" class="sapUiTinyMarginTop"/>
+                                                    <Input id="_IDGenInput33" maxLength="6" change="onSortCodeChange" editable="{= ${InitData>/disable/mode} !== 'display'}" tooltip="{i18n>sortCodeTip}"/>
+                                                </HBox>
+                                                <HBox id="_IDGenHBox95" width="auto">
+                                                    <Label id="_IDGenLabelA3" text="{i18n>society}" width="230px" class="sapUiTinyMarginTop"/>
+                                                    <Input id="_IDGenInputA1" width="230px" editable="false"/>
+                                                </HBox>
+                                                <HBox id="_IDGenHBox96" width="auto">
+                                                    <Label id="_IDGenLabelA4" text="{i18n>accNumber}" labelFor="_IDGenInput34" required="true" width="230px" class="sapUiTinyMarginTop"/>
+                                                    <Input id="_IDGenInput34" width="230px" editable="{= ${InitData>/disable/mode} !== 'display'}" tooltip="{i18n>accNumberTip}" maxLength="8"/>
+                                                </HBox>
+                                                <HBox id="_IDGenHBox97" width="auto">
+                                                    <Label id="_IDGenLabelA5" text="{i18n>buildingRefNo}" labelFor="_IDGenInput35" required="false" width="230px" class="sapUiTinyMarginTop"/>
+                                                    <Input id="_IDGenInput35" width="230px" editable="{= ${InitData>/disable/mode} !== 'display'}" tooltip="{i18n>buildingRefNoTip}" maxLength="16"/>
+                                                </HBox>
+                                            </VBox>
+                                        </FlexBox>
+                                    </l:VerticalLayout>
+                                </HBox>
+                            </Panel>
+                            <!--  End Of SECTION C  -->
+
+                            <!--  Begin Of SECTION D - Name details changes -->
+                            <Panel id="_PanelSecD" visible="false" expandable="true" expanded="true" stickyHeader="true" headerText="{i18n>SectionD}" width="auto" class="sapUiResponsiveMargin">
+                                <HBox id="_sectionDHBox" visible="true">
+                                    <l:VerticalLayout id="_IDGenVerticalLayout5" class="equalColumns grid-flexBox">
+                                        <FlexBox id="_IDGenFlexBox6" class="columns" backgroundDesign="Solid">
+                                            <!-- ___display___ -->
+                                            <VBox id="_IDGenVBox11" justifyContent="Start">
+                                                <layoutData>
+                                                    <FlexItemData id="_IDGenFlexItemData9" growFactor="0" baseSize="0" backgroundDesign="Solid" styleClass="sapUiTinyMargin grid1" minWidth="550px"/>
+                                                </layoutData>
+                                                <HBox id="_IDGenHBox98" width="70%" class="labelMargin">
+                                                    <Label id="_IDGenLabelA6" text="Current Details" design="Bold"/>
+                                                </HBox>
+                                                <HBox id="_IDGenHBox99" width="auto" class="sapUiSmallMarginTop">
+                                                    <Label id="_IDGenLabelA7" text="{i18n>title1}" labelFor="_IDGenText40" width="230px" class="sapUiTinyMarginTop"/>
+                                                    <ComboBox id="_IDGenText40" editable="false" width="230px"/>
+                                                </HBox>
+                                                <HBox id="_IDGenHBoxA1" width="auto">
+                                                    <Label id="_IDGenLabelA8" text="{i18n>surname}" labelFor="_IDGenText41" width="230px" class="sapUiTinyMarginTop"/>
+                                                    <Input id="_IDGenText41" editable="false" width="230px"/>
+                                                </HBox>
+                                                <HBox id="_IDGenHBoxA9" width="auto">
+                                                    <Label id="_IDGenLabelA15" text="{i18n>middlename}" labelFor="_IDGenText44" width="230px" class="sapUiTinyMarginTop"/>
+                                                    <Input id="_IDGenText44" editable="false" width="230px"/>
+                                                </HBox>
+                                                <HBox id="_IDGenHBoxA2" width="auto">
+                                                    <Label id="_IDGenLabelA9" text="{i18n>name}" labelFor="_IDGenText42" width="230px" class="sapUiTinyMarginTop"/>
+                                                    <Input id="_IDGenText42" editable="false" width="230px"/>
+                                                </HBox>
+                                                <HBox id="_IDGenHBoxA3" width="auto" class="sapUiTinyMarginBottom">
+                                                    <Label id="_IDGenLabelA10" text="{i18n>knownAs}" labelFor="_IDGenText43" width="230px" class="sapUiTinyMarginTop"/>
+                                                    <Input id="_IDGenText43" width="230px" editable="false"/>
+                                                </HBox>
+                                            </VBox>
+                                            <!-- _____update____  -->
+                                            <VBox id="_IDGenVBox13" width="auto" justifyContent="Start">
+                                                <layoutData>
+                                                    <FlexItemData id="_IDGenFlexItemData10" growFactor="0" baseSize="0" backgroundDesign="Solid" styleClass="sapUiTinyMargin grid1" minWidth="550px"/>
+                                                </layoutData>
+                                                <HBox id="_IDGenHBoxA4" width="70%" class="labelMargin">
+                                                    <Label id="_IDGenLabel99" text="New Details" design="Bold"/>
+                                                </HBox>
+                                                <HBox id="_IDGenHBoxA5" width="auto" class="sapUiSmallMarginTop">
+                                                    <Label id="_IDGenLabelA11" text="{i18n>title1}" labelFor="_IDGenInput36" required="true" width="230px" class="sapUiTinyMarginTop"/>
+                                                    <ComboBox id="_IDGenSelect6" width="230px" value="" editable="{= ${InitData>/disable/mode} !== 'display'}" items="{InitData>/salutaionDrop}" tooltip="{i18n>titleTip}">
+                                                        <items>
+                                                            <core:Item id="_IDGenItem10" key="{InitData>salutId}" text="{InitData>salutLabel}"/>
+                                                        </items>
+                                                    </ComboBox>
+                                                </HBox>
+                                                <HBox id="_IDGenHBoxA6" width="auto">
+                                                    <Label id="_IDGenLabelA12" text="{i18n>surname}" labelFor="_IDGenInput37" required="true" width="230px" class="sapUiTinyMarginTop"/>
+                                                    <Input id="_IDGenInput37" type="Text" width="230px" editable="{= ${InitData>/disable/mode} !== 'display'}" tooltip="{i18n>surnameTip}"/>
+                                                </HBox>
+                                                <HBox id="_IDGenHBoxA10" width="auto">
+                                                    <Label id="_IDGenLabelA16" text="{i18n>middlename}" labelFor="_IDGenInput50" required="false" width="230px" class="sapUiTinyMarginTop"/>
+                                                    <Input id="_IDGenInput50" type="Text" width="230px" editable="{= ${InitData>/disable/mode} !== 'display'}" tooltip="{i18n>surnameTip}"/>
+                                                </HBox>
+                                                <HBox id="_IDGenHBoxA7" width="auto">
+                                                    <Label id="_IDGenLabelA13" text="{i18n>name}" labelFor="_IDGenInput38" required="true" width="230px" class="sapUiTinyMarginTop"/>
+                                                    <Input id="_IDGenInput38" type="Text" width="230px" editable="{= ${InitData>/disable/mode} !== 'display'}" tooltip="{i18n>nameTip}"/>
+                                                </HBox>
+                                                <HBox id="_IDGenHBoxA8" width="auto" class="sapUiTinyMarginBottom">
+                                                    <Label id="_IDGenLabelA14" text="{i18n>knownAs}" labelFor="_IDGenInput39" required="false" width="230px" class="sapUiTinyMarginTop"/>
+                                                    <Input id="_IDGenInput39" type="Text" width="230px" editable="{= ${InitData>/disable/mode} !== 'display'}" tooltip="{i18n>knownAsTip}"/>
+                                                </HBox>
+                                            </VBox>
+                                        </FlexBox>
+                                    </l:VerticalLayout>
+                                </HBox>
+                            </Panel>
+                            <!--  End Of SECTION D  -->
+
+                            <!--  Begin Of "YOUR COMMENTS"  -->
+                            <Panel id="_PanelComments" expandable="true" expanded="true" stickyHeader="true" width="auto" class="sapUiResponsiveMargin" headerText="Your Comments - Internal Organisation Only">
+                                <VBox id="your_comments_box">
+                                    <!--  Hidden Comment Box  -->
+                                    <VBox id="your_comments_boxA" visible="false">
+                                        <Text id="textcommentA" text="Authorisation and Rejection Comments"/>
+                                        <TextArea id="_IDGenTextAreaA" editable="false" width="100%" tooltip="{i18n>yourCommentsTip}" height="150px" growing="true" growingMaxLines="5"/>
+                                    </VBox>
+                                    <!--  END Of Hidden Comment Box  -->
+                                    <Text id="textcommentB" text="Your Comments" class="sapUiTinyMarginTop"/>
+                                    <TextArea id="_IDGenTextAreaB" width="100%" tooltip="{i18n>yourCommentsTip}" height="60px" growing="true" growingMaxLines="5"/>
+                                    <FlexBox id="_addCommentFBox" height="auto" alignItems="Center" justifyContent="End">
+                                        <Button id="_addComment" text="Add Comments" press="onAddCommentPress" type="Emphasized" class="sapUiTinyMarginTop sapUiSmallMarginBegin sapUiSmallMarginEnd" tooltip="{i18n>confirmTip}"/>
+                                    </FlexBox>
+                                </VBox>
+                            </Panel>
+                            <!--  End Of "YOUR COMMENTS"  -->
+
+                            <MessageStrip id="messagestrip1" showIcon="true" type="Information" text="{i18n>Disclaimer}" 
+                                    class="sapUiResponsiveMargin" />
+                        </VBox>
+                    </IconTabFilter>
+
+                    <IconTabFilter id="_IDGenIconTabFilter2" text="History" key="History">
+                        <Table id="_IDGenTable4" width="auto" delete="deleteRow" mode="MultiSelect" items="{InitData>/historyTable}">
+                            <headerToolbar>
+                                <Toolbar id="_IDGenToolbar5" width="auto" design="Solid" style="Standard">
+                                    <Label id="_HIDGenLabel1" width="100px" labelFor="_HIDGenFormId1" text="Form Id"/>
+                                    <Input id="_HIDGenFormId1" width="180px" class="sapUiSmallMarginEnd" editable="false"/>
+
+                                    <Label id="_HIDGenLabel2" width="100px" labelFor="_HIDGenType1" text="Type"/>
+                                    <Input id="_HIDGenType1" width="180px" value="PD01" editable="false"/>
+                                </Toolbar>
+                            </headerToolbar>
+                            <columns>
+                                <Column id="_HIDGenColumn1" demandPopin="true" minScreenWidth="Tablet">
+                                    <Text id="_HIDGenText1" text="{i18n>HCol1}"/>
+                                </Column>
+                                <Column id="_HIDGenColumn2" demandPopin="true" minScreenWidth="Tablet">
+                                    <Text id="_HIDGenText2" text="{i18n>HCol2}"/>
+                                </Column>
+                                <Column id="_HIDGenColumn3" demandPopin="true" minScreenWidth="Tablet">
+                                    <Text id="_HIDGenText3" text="{i18n>HCol3}"/>
+                                </Column>
+                                <Column id="_HIDGenColumn4" demandPopin="true" minScreenWidth="Tablet">
+                                    <Text id="_HIDGenText4" text="{i18n>HCol4}"/>
+                                </Column>
+                                <Column id="_HIDGenColumn5" demandPopin="true" minScreenWidth="Tablet">
+                                    <Text id="_HIDGenText5" text="{i18n>HCol5}"/>
+                                </Column>
+                                <Column id="_HIDGenColumn6" demandPopin="true" minScreenWidth="Tablet">
+                                    <Text id="_HIDGenText6" text="{i18n>HCol6}"/>
+                                </Column>
+                                <Column id="_HIDGenColumn7" demandPopin="true" minScreenWidth="Tablet">
+                                    <Text id="_HIDGenText7" text="{i18n>HCol7}"/>
+                                </Column>
+                                <Column id="_HIDGenColumn8" demandPopin="true" minScreenWidth="Tablet">
+                                    <Text id="_HIDGenText8" text="{i18n>HCol8}"/>
+                                </Column>
+                            </columns>
+                            <items>
+                                <ColumnListItem id="_IDGenColumnListItem6">
+                                    <cells>
+                                        <Input id="_HIDGenInput1" editable="false" value="{InitData>SeqNumber}" tooltip="SeqNumber" width="4cm"/>
+                                        <Input id="_HIDGenInput2" editable="false" value="{InitData>StartedOn}" tooltip="StartedOn" width="4cm"/>
+                                        <Input id="_HIDGenInput3" editable="false" value="{InitData>Status}" tooltip="Status" width="4cm"/>
+                                        <Input id="_HIDGenInput4" editable="false" value="{InitData>OrganisationName}" tooltip="Organisation Name" width="4cm"/>
+                                        <Input id="_HIDGenInput5" editable="false" value="{InitData>Initiator}" tooltip="Initiator" width="4cm"/>
+                                        <Input id="_HIDGenInput6" editable="false" value="{InitData>Description}" tooltip="Description" width="4cm"/>
+                                        <Input id="_HIDGenInput7" editable="false" value="{InitData>FormOwner}" tooltip="Form Owner" width="4cm"/>
+                                        <Input id="_HIDGenInput8" editable="false" value="{InitData>AvailableFrom}" tooltip="Available From" width="4cm"/>
+                                    </cells>
+                                </ColumnListItem>
+                            </items>
+                        </Table>
+                    </IconTabFilter>
+                </items>
+            </IconTabBar>
+        </content>
+        <footer>
+            <Toolbar id="_IDGenToolbar8" tooltip="Select action required">
+                <Button id="_IDGenButton11" type="Emphasized" icon="sap-icon://print" text="{i18n>Print}" press="onPrint"/>
+                <ToolbarSpacer id="_IDGenToolbarSpacer4"/>
+                <Button id="_IDGenButton12" icon="sap-icon://cancel" type="Emphasized" text="{i18n>Cancel}" press="onCancel"/>
+                <Button id="_IDGenButton8" icon="sap-icon://delete" type="Emphasized" text="{i18n>Delete}" press="onDelete"/>
+                <Button id="_IDGenButton10" icon="sap-icon://save" type="Emphasized" text="{i18n>Save}" press="onSave"/>
+                <Button id="_IDGenButton9" icon="sap-icon://accept" type="Emphasized" text="{i18n>Submit}" press="onSubmit"/>
+            </Toolbar>
+        </footer>
+    </Page>
+</mvc:View>

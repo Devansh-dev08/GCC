@@ -1,0 +1,51 @@
+/* Enter your custom styles here */
+.sapMPanel .sapMPanelHdr,
+.sapMPanel .sapMTB.sapMPanelHeaderTB {
+    background-color: #8cb8da;
+    opacity: 70%;
+    color: black;
+    font-weight: bolder;
+}
+
+.sapMPanelHdr {
+    font-size: 1.1rem;
+}
+
+.sapMPanel .sapMPanelHeadingDiv>.sapMPanelHdr,
+.sapMPanelWrappingDiv,
+.sapMPanelWrappingDivTb {
+    background-color: #8cb8da;
+}
+
+.sapMPanelWrappingDiv .sapUiIcon {
+    color: #000;
+}
+
+.sapMLnk {
+    display: inline;
+}
+
+/* .equalColumns .columns {
+	min-width: 100%;
+} */
+
+.grid-cell {
+    border: 1px solid #000;
+    padding: 10px;
+
+    box-sizing: content-box;
+}
+
+.grid-flexBox .grid1 {
+    border: 1px solid #000;
+    padding-top: 10px;
+    padding-left: 20px;
+}
+
+.grid-flexBox .labelMargin {
+    padding-left: 230px;
+}
+
+.characterSpacing {
+    letter-spacing: 5px;
+}

@@ -1,0 +1,212 @@
+<mvc:View controllerName="com.gcc.eforms.ex02.controller.Main"
+    xmlns:mvc="sap.ui.core.mvc" displayBlock="true"
+    xmlns="sap.m" xmlns:core="sap.ui.core" 
+    xmlns:f="sap.ui.layout.form">
+    <Page>
+        <content>
+         <IconTabBar backgroundDesign="Solid" select="onTabChange" expanded="true" >
+            <items>
+               <IconTabFilter text="{i18n>FormText}" key="{i18n>FormText}">
+                  <VBox class="sapUiSmallMargin">
+                     <!--Begin of INTRODUCTION-->
+                     <Panel expandable="true" expanded="true" stickyHeader="true" headerText="{i18n>Intro}" width="auto" class="sapUiResponsiveMargin">
+                        <HBox>
+                           <FormattedText htmlText="{Model1>/introText}" />
+                        </HBox>
+                     </Panel>
+                     <!-- End Of Introduction -->
+                     <!-- Begin Of Header -->
+                     <Panel expandable="true" expanded="true" stickyHeader="true" headerText="{i18n>Head}" width="auto" class="sapUiResponsiveMargin">
+                        <f:SimpleForm layout="ColumnLayout"  labelSpanM="4" labelSpanL="3" labelSpanXL="3" adjustLabelSpan="false" emptySpanXL="0" emptySpanL="0" emptySpanM="0" emptySpanS="0" columnsM="3" columnsL="3" columnsXL="3" >
+                           <f:content>
+                              <!-- Column 1 - Initiator, org name, end date -->
+                              <Label text="{i18n>Initiator}" showColon="true" />
+                              <Input editable="false" value="{Model1>/initNameP/salutationLabel} {Model1>/initNameP/fullName}" />
+
+                              <Label text="Organisation Name" showColon="true" />
+                              <ComboBox value="{Model1>/OrgNameP}" selectedKey="{Model1>/selectedOrg}" items="{path: 'Model1>/OrgValues', templateShareable:false}" change="onOrgChange" enabled="{= ${Model1>/Param/mode} !== 'display'}" editable="{Model1>/multiOrgFound}" >
+                                 <items>
+                                    <core:Item key="{Model1>key}" text="{Model1>value} ({Model1>key})" />
+                                 </items>
+                              </ComboBox>
+
+                              <Label text="Claim End Date" required="true" showColon="true" />
+                              <DatePicker editable="false" change="onClaimEndDate" value="{path: 'Model1>/ClaimEndDate', formatter: '.formatter.dateFormat'}" />
+                              <!-- End of Column 1 -->
+                              <!-- Column 2 - FormID, Cost Centre -->
+                              <Label text="{i18n>Form}" showColon="true" />
+                              <Input editable="false" value="{Model1>/FormID}" />
+
+                              <Label text="Cost Centre" showColon="true" />
+                              <Input editable="false" value="{Model1>/CostCentreP/costCenter}" />
+                              <!-- End of Column 2 -->
+                              <!-- Column 3 - Form Start Date -->
+                              <Label text="Date" showColon="true" />
+                              <DatePicker editable="false" value="{path: 'Model1>/FormStartDate', formatter: '.formatter.dateFormat'}" />
+
+                              <Label text="Claim Month" showColon="true" required="true" />
+                              <ComboBox editable="{= ${Model1>/form/mode} !== 'display' }" required="true" value="{Model1>/ClaimMonth}" selectedKey="{Model1>/ClaimMonthKey}" items="{path: 'Model1>/PrevSixMonths', templateShareable:false}" change="onMonth" tooltip="{i18n>ClaimMonth}" valueStateText="Claim Month is a required field" fieldGroupIds="checkReqFields" >
+                                 <items>
+                                    <core:Item key="{Model1>key}" text="{Model1>months}" />
+                                 </items>
+                              </ComboBox>
+                              <!-- End of Column 3 -->
+                           </f:content>
+                        </f:SimpleForm>
+                     </Panel>
+                     <!-- End Of Header -->
+                     <!-- Begin Of Section A -->
+                     <Panel headerText="Section A - Mileage Claims" expandable="true" expanded="true" width="auto" class="sapUiResponsiveMargin">
+                        <Table id="_IDGenTable1" mode="MultiSelect" items="{Model1>/SecAData}" width="auto" >
+                           <headerToolbar>
+                              <OverflowToolbar>
+                                 <content>
+                                    <!--  <Title text="Section A - Claim Hours" level="H2"/>  -->
+                                    <ToolbarSpacer />
+                                    <ToggleButton text="Add Row" press="onAddRow" enabled="{= ${Model1>/form/mode} !== 'display' }" />
+                                    <ToggleButton text="Delete Row" press="onDelRow" enabled="{= ${Model1>/form/mode} !== 'display' }" />
+                                 </content>
+                              </OverflowToolbar>
+                           </headerToolbar>
+                           <columns>
+                              <Column minScreenWidth="Tablet" demandPopin="true" hAlign="Center">
+                                 <Label text="Emp.Name/Per no./Position" required="true" labelFor="_IDGenComboBox2" />
+                              </Column>
+                              <Column minScreenWidth="Tablet" demandPopin="true" hAlign="Center">
+                                 <Label text="Cost Centre" labelFor="_IDGenComboBox2" />
+                              </Column>
+                              <Column minScreenWidth="Tablet" demandPopin="true" hAlign="Center">
+                                 <Label text="Internal Order" labelFor="_IDGenComboBox2" />
+                              </Column>
+                              <Column minScreenWidth="Tablet" demandPopin="true" hAlign="Center">
+                                 <Label text="Assigned to" labelFor="_IDGenComboBox2" />
+                              </Column>
+                              <Column minScreenWidth="Tablet" demandPopin="true" hAlign="Center" >
+                                 <Label text="Vehicle Type" required="true" labelFor="_IDGenInput7" />
+                              </Column>
+                              <Column minScreenWidth="Tablet" demandPopin="true" hAlign="Center" >
+                                 <Label text="Vehicle Class" labelFor="_IDGenInput3" />
+                              </Column>
+                              <Column minScreenWidth="Tablet" demandPopin="true" hAlign="Center" width="5rem" >
+                                 <Label text="No of Miles" labelFor="_IDGenInput4" />
+                              </Column>
+                              <Column minScreenWidth="Tablet" demandPopin="true" hAlign="Center" visible="false" >
+                                 <Label text="Amount(£)" labelFor="_IDGenInput41" />
+                              </Column>
+                              <Column width="5rem" hAlign="Center">
+                                 <Label text="" />
+                              </Column>
+                           </columns>
+                           <items>
+                              <ColumnListItem fieldGroupIds="checkReqFields">
+                                 <ComboBox value="{Model1>empName}" enabled="{= ${Model1>/form/mode} !== 'display' }" items="{path: 'Model1>/dropdownEmp', templateShareable:false, length: 10000}" change="onEmplChange" tooltip="{i18n>empSel}" required="true" valueStateText="Employee Name is a required field" >
+                                    <items>
+                                       <core:Item key="{Model1>userId}" text="{Model1>lastName} {Model1>firstName} {Model1>userId} {Model1>jobTitle}" bindingContexts="{Model1>jobTitle}" />
+                                    </items>
+                                 </ComboBox>
+                                 <Input enabled="{= ${Model1>/form/mode} !== 'display' }" value="{Model1>costCentre}" change="onCcChange" tooltip="{i18n>CostCentreTooltip}" liveChange="onCcLiveChange" editable="{Model1>CcEdit}" valueStateText="Cost Center is a required field"/>
+                                 <Input enabled="{= ${Model1>/form/mode} !== 'display' }" value="{Model1>internalOrder}" change="onIoChange" tooltip="{i18n>InternalOrderTooltip}" liveChange="onIoLiveChange" editable="{Model1>IoEdit}" valueStateText="Internal order is a required field" />
+                                 <Input enabled="{= ${Model1>/form/mode} !== 'display' }" value="{Model1>assignedTo}" tooltip="{i18n>AssignedToTooltip}" editable="false" />
+                                 <ComboBox value="{Model1>VehicleType}" items="{path: 'Model1>/dropdownVehType', templateShareable:false}" change="onVehTypeChange" enabled="{= ${Model1>/form/mode} !== 'display' }" editable="{Model1>enableVehicleType}" tooltip="{i18n>vehicleType}" required="{Model1>enableVehicleType}" valueStateText="Vehicle Type is a required field" >
+                                 <items>
+                                       <core:Item key="{Model1>key}" text="{Model1>cust_VehicleType}" />
+                                    </items>
+                                 </ComboBox>
+                                 <ComboBox value="{Model1>VehicleClass}" items="{path: 'Model1>/dropdownVehClass', templateShareable:false}" change="onVehClassChange" enabled="{= ${Model1>/form/mode} !== 'display' }" editable="{Model1>enableVehicleClass}" tooltip="{i18n>vehicleClass}" required="{Model1>enableVehicleClass}" valueStateText="Vehicle Class is a required field" >
+                                 <items>
+                                       <core:Item key="{Model1>cust_VehicleID}" text="{Model1>cust_VehicleClass}" />
+                                    </items>
+                                 </ComboBox>
+                                 <Input value="{Model1>NumberOfMiles}" type="Number"  change="onMilesSecA" enabled="{= ${Model1>/form/mode} !== 'display' }" editable="{Model1>enableMiles}" tooltip="{i18n>NoOfMiles}" required="{Model1>enableMiles}" valueStateText="Number of miles is a required field" />
+                                 <Input value="{Model1>Amount}" type="Number"  change="onAmountSecA" enabled="{= ${Model1>/form/mode} !== 'display' }" editable="{Model1>enableAmount}" visible="false" />
+                                 <Button type="Emphasized" text="Show" press="onShowPress" tooltip="Add comments about this claim here" />
+                              </ColumnListItem>
+                           </items>
+                        </Table>
+                     </Panel>
+                     <!-- End OF Section A -->
+                     <!-- Begin of Comments -->
+                     <Panel expandable="true" expanded="true" width="auto" stickyHeader="true" headerText="{i18n>Comments}" class="sapUiResponsiveMargin">
+                        <VBox>
+                           <Label text="{i18n>AuthComments}" showColon="true" visible="{Model1>/existCommVisibility}" />
+                           <TextArea width="1000px" height="150px" visible="{Model1>/existCommVisibility}" enabled="false" value="{Model1>/existComm}" />
+                           <Label text="Your Comments" showColon="true" class="sapUiSmallMarginTop" />
+                           <TextArea width="1000px" height="60px" growing="true" growingMaxLines="5" tooltip="{i18n>yourComments}" value="{Model1>/userComm}" />
+                           <Button text="Add Comment" press="onAddComment" type="Emphasized" />
+                        </VBox>
+                     </Panel>
+                     <!-- End of Comments -->
+                     <!-- GDPR Message -->
+                     <MessageStrip text="{i18n>message}" class="GDPRMessage" />
+                  </VBox>
+               </IconTabFilter>
+               <IconTabFilter text="History" key="History">
+                  <Panel expandable="false" stickyHeader="true" headerText="Police Expense Report" width="auto" class="sapUiResponsiveMargin" >
+                        <Table width="auto" items="{Model1>/historyTable}">
+                            <headerToolbar>
+                                <Toolbar width="auto" design="Solid" style="Standard">
+                                    <Label text="Form ID" showColon="true" />
+                                    <Input width="auto" value="{Model1>/FormID}" editable="false"/>
+                                    <Label text="Type" showColon="true" />
+                                    <Input width="auto" value="EX02" editable="false" />
+                                </Toolbar>
+                            </headerToolbar>
+                            <columns>
+                                <Column demandPopin="true" minScreenWidth="Tablet" width="80px">
+                                    <Text text="{i18n>HCol1}"/>
+                                </Column>
+                                    <Column demandPopin="true" minScreenWidth="Tablet">
+                                    <Text text="{i18n>HCol2}"/>
+                                </Column>
+                                <Column demandPopin="true" minScreenWidth="Tablet">
+                                    <Text text="{i18n>HCol3}"/>
+                                </Column>
+                                <Column demandPopin="true" minScreenWidth="Tablet">
+                                    <Text text="{i18n>HCol4}"/>
+                                </Column>
+                                <Column demandPopin="true" minScreenWidth="Tablet">
+                                    <Text text="{i18n>HCol5}"/>
+                                </Column>
+                                <Column demandPopin="true" minScreenWidth="Tablet">
+                                    <Text text="{i18n>HCol6}"/>
+                                </Column>
+                                <Column demandPopin="true" minScreenWidth="Tablet">
+                                    <Text text="{i18n>HCol7}"/>
+                                </Column>
+                                <Column demandPopin="true" minScreenWidth="Tablet">
+                                    <Text text="{i18n>HCol8}"/>
+                                </Column>
+                            </columns>
+                            <items>
+                                <ColumnListItem>
+                                    <cells>
+                                        <Text text="{Model1>SeqNumber}" tooltip="Sequence Number" width="60px" />
+                                        <Text text="{Model1>Initiator}" tooltip="Initiator" />
+                                        <Text text="{Model1>StartedOn}" tooltip="Started On" />
+                                        <Text text="{Model1>OrganizationName}" tooltip="Organization Name" />
+                                        <Text text="{Model1>Description}" tooltip="Description" />
+                                        <Text text="{Model1>Status}" tooltip="Status" />
+                                        <Text text="{Model1>FormOwner}" tooltip="Form Owner" />
+                                        <Text text="{Model1>AvailableFrom}" tooltip="Available From" />
+                                        <!-- <Input editable="false" value="{AllData>createdOn}" tooltip="Created On" /> -->
+                                    </cells>
+                                </ColumnListItem>
+                            </items>
+                        </Table>
+                    </Panel>
+               </IconTabFilter>
+            </items>
+         </IconTabBar>
+      </content>
+      <footer>
+         <Toolbar tooltip="Select action required">
+            <Button type="Emphasized" icon="sap-icon://print" text="{i18n>Print}" press="onPrint" />
+            <ToolbarSpacer />
+            <Button icon="sap-icon://cancel" type="Emphasized" text="{i18n>Cancel}" press="onCancel" />
+            <Button icon="sap-icon://delete" type="Emphasized" text="{i18n>Delete}" press="onDelete" visible="{= ${Model1>/form/mode} !== 'display' }" />
+            <Button icon="sap-icon://save" type="Emphasized" text="{= ${Model1>/form/mode} !== 'display' ? ${i18n>Save} : ${i18n>SaveDispText} }" press="onSave" />
+            <Button icon="sap-icon://accept" type="Emphasized" text="{i18n>Submit}" press="onSubmit" visible="{= ${Model1>/form/mode} !== 'display' }" />
+         </Toolbar>
+      </footer>
+    </Page>
+</mvc:View>

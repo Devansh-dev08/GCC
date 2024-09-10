@@ -1,0 +1,39 @@
+<mvc:View controllerName="com.gcc.eforms.settingsapp.settingsapp.controller.MainPage"
+    xmlns:mvc="sap.ui.core.mvc" displayBlock="true"
+    xmlns="sap.m">
+    <Page id="page">
+        <Panel id="_IDGenPanel1" backgroundDesign="Solid" width="auto" class="sapUiResponsiveMargin" headerText="Validations" >
+            <VBox id="_IDGenVBox1" alignItems="Stretch" justifyContent="Start" alignContent="SpaceBetween" objectBindings="{Data>/UpdatedVal}"  >
+                <HBox id="_IDGenHBox1" class="sapUiTinyMarginBottom sapUiTinyMarginTop" >
+                    <Label id="_IDGenLabel1" text="Vendor is Blocked?" class="sapUiSmallMarginEnd sapUiTinyMarginTop" />
+                    <Switch id="_IDGenSwitch1" state="{Data>Vendorblocked}" change="onChange" />
+                </HBox>
+                <HBox id="_IDGenHBox2" class="sapUiTinyMarginBottom" >
+                    <Label id="_IDGenLabel2" text="Future Invoice Date" class="sapUiSmallMarginEnd sapUiTinyMarginTop" />
+                    <Switch id="_IDGenSwitch2" state="{Data>Futureinvoice}" change="onChange" />
+                </HBox>
+                <HBox id="_IDGenHBox3" class="sapUiTinyMarginBottom" >
+                    <Label id="_IDGenLabel3" text="Path to Store Attachment" class="sapUiSmallMarginEnd sapUiTinyMarginTop" width="230px" />
+                    <Input id="_IDGenInput2" value="{Data>Pathattachment}" width="600px" change="onChange" />
+                </HBox>
+                <HBox id="_IDGenHBox4" class="sapUiTinyMarginBottom" >
+                    <Label id="_IDGenLabel4" text="Path to store Invoices Data File" class="sapUiSmallMarginEnd sapUiTinyMarginTop" width="230px" />
+                    <Input id="_IDGenInput1" value="{Data>Pathinvoicedata}" width="600px" change="onChange" />
+                </HBox>
+                <HBox id="_IDGenHBox5" class="sapUiTinyMarginBottom" >
+                    <Label id="_IDGenLabel5" text="Path to store Invoices Header File" class="sapUiSmallMarginEnd sapUiTinyMarginTop" width="230px" />
+                    <Input id="_IDGenInput3" value="{Data>Pathinvoiceheader}" width="600px" change="onChange" />
+                </HBox>
+                <Button id="_IDGenButton3" text="Reset" tooltip="Reset settings" icon="sap-icon://reset" width="10%" press="onReset" enabled="false"  />
+            </VBox>
+        </Panel>
+
+        <footer>
+            <Toolbar id="idToolbar" >
+                <ToolbarSpacer id="idToolbarSpacer" />
+                <Button id="_IDGenButton1" text="Save" press="onSave" icon="sap-icon://save" type="Emphasized" />
+                <Button id="_IDGenButton2" text="Cancel" press="onCancel" icon="sap-icon://cancel" />
+            </Toolbar>
+        </footer>
+    </Page>
+</mvc:View>

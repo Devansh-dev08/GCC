@@ -1,0 +1,44 @@
+<core:FragmentDefinition
+	xmlns="sap.m"
+	xmlns:core="sap.ui.core">
+	<ViewSettingsDialog filterDetailPageOpened="onFragOpen"
+		confirm="handleConfirm" reset="handleReset">
+		<filterItems>
+			<ViewSettingsCustomItem
+				text="Form ID"
+				key="0">
+				<customControl>
+					<Input maxLength="10" width="40%" placeholder="Enter Form ID" value=""></Input>
+				</customControl>
+			</ViewSettingsCustomItem>
+			<ViewSettingsCustomItem
+				text="Status"
+				key="1">
+				<customControl>
+					<Input width="40%" placeholder="Enter Status"></Input>
+				</customControl>
+			</ViewSettingsCustomItem>
+			<ViewSettingsCustomItem
+				text="Date Created"
+				key="2">
+				<customControl>
+					<DatePicker width="40%" placeholder="Enter Date"/>
+				</customControl>
+			</ViewSettingsCustomItem>
+			<ViewSettingsCustomItem
+				text="Initiator"
+				key="3">
+				<customControl>
+					<Input width="40%" placeholder="Enter Initiator"/>
+				</customControl>
+			</ViewSettingsCustomItem>
+			<ViewSettingsCustomItem
+				text="Approver"
+				key="4">
+				<customControl>
+					<Input width="40%" placeholder="Enter Approver"/>
+				</customControl>
+			</ViewSettingsCustomItem>
+		</filterItems>
+	</ViewSettingsDialog>
+</core:FragmentDefinition>

@@ -1,0 +1,7 @@
+{
+  "xsappname": "comgccreportsns01ns01report",
+  "tenant-mode": "dedicated",
+  "description": "Security profile of called application",
+  "scopes": [],
+  "role-templates": []
+}

@@ -1,0 +1,86 @@
+<core:FragmentDefinition
+	xmlns="sap.m"
+	xmlns:core="sap.ui.core">
+	<ViewSettingsDialog filterDetailPageOpened="onFragOpen"
+		confirm="handleConfirm" reset="handleReset">
+		<filterItems>
+			<ViewSettingsCustomItem
+				text="Form ID"
+				key="0">
+				<customControl>
+					<Input maxLength="10" width="40%" placeholder="Enter Form ID" value=""></Input>
+				</customControl>
+			</ViewSettingsCustomItem>
+			<ViewSettingsCustomItem
+				text="Status"
+				key="1">
+				<customControl>
+					<Input width="40%" placeholder="Enter Status"></Input>
+				</customControl>
+			</ViewSettingsCustomItem>
+			<ViewSettingsCustomItem
+				text="Date Created"
+				key="2">
+				<customControl>
+					<DatePicker width="40%" placeholder="Enter Date"/>
+				</customControl>
+			</ViewSettingsCustomItem>
+			<ViewSettingsCustomItem
+				text="Initiator"
+				key="3">
+				<customControl>
+					<Input width="40%" placeholder="Enter Initiator"/>
+				</customControl>
+			</ViewSettingsCustomItem>
+			<ViewSettingsCustomItem
+				text="Approver"
+				key="4">
+				<customControl>
+					<Input width="40%" placeholder="Enter Approver"/>
+				</customControl>
+			</ViewSettingsCustomItem>
+            <ViewSettingsCustomItem
+				text="New Starter Name"
+				key="5">
+				<customControl>
+					<Input width="40%" placeholder="Enter New Starter Name"/>
+				</customControl>
+			</ViewSettingsCustomItem>
+			<ViewSettingsCustomItem
+				text="Position"
+				key="6">
+				<customControl>
+					<Input width="40%" placeholder="Position"/>
+				</customControl>
+			</ViewSettingsCustomItem>
+			<ViewSettingsCustomItem
+				text="Start Date"
+				key="7">
+				<customControl>
+					<DatePicker width="40%" placeholder="Start Date"/>
+				</customControl>
+			</ViewSettingsCustomItem>
+			<ViewSettingsCustomItem
+				text="Grade"
+				key="8">
+				<customControl>
+					<Input width="40%" placeholder="Grade"/>
+				</customControl>
+			</ViewSettingsCustomItem>
+			<ViewSettingsCustomItem
+				text="Scale"
+				key="9">
+				<customControl>
+					<Input width="40%" placeholder="Scale"/>
+				</customControl>
+			</ViewSettingsCustomItem>
+			<ViewSettingsCustomItem
+				text="Hours"
+				key="10">
+				<customControl>
+					<Input width="40%" placeholder="Hours"/>
+				</customControl>
+			</ViewSettingsCustomItem>
+		</filterItems>
+	</ViewSettingsDialog>
+</core:FragmentDefinition>

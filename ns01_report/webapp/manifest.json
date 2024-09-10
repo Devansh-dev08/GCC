@@ -1,0 +1,181 @@
+{
+    "_version": "1.59.0",
+    "sap.app": {
+        "id": "com.gcc.reports.ns01.ns01report",
+        "type": "application",
+        "i18n": "i18n/i18n.properties",
+        "applicationVersion": {
+            "version": "0.0.1"
+        },
+        "title": "{{appTitle}}",
+        "description": "{{appDescription}}",
+        "resources": "resources.json",
+        "sourceTemplate": {
+            "id": "@sap/generator-fiori:basic",
+            "version": "1.12.4",
+            "toolsId": "ad5b9129-11bf-422a-b9b1-eddca88486bb"
+        },
+        "dataSources": {
+            "mainService": {
+                "uri": "/odata/v2/",
+                "type": "OData",
+                "settings": {
+                    "annotations": [],
+                    "localUri": "localService/metadata.xml",
+                    "odataVersion": "2.0"
+                }
+            },
+            "ZSFGTGW_LOG_SRV": {
+                "uri": "/sap/opu/odata/sap/ZSFGTGW_LOG_SRV/",
+                "type": "OData",
+                "settings": {
+                    "annotations": [],
+                    "localUri": "localService/ZSFGTGW_LOG_SRV/metadata.xml",
+                    "odataVersion": "2.0"
+                }
+            },
+            "ZSFGTGW_NS01_SRV": {
+                "uri": "/sap/opu/odata/sap/ZSFGTGW_NS01_SRV",
+                "type": "OData",
+                "settings": {
+                    "annotations": [],
+                    "localUri": "localService/ZSFGTGW_NS01_SRV/metadata.xml",
+                    "odataVersion": "2.0"
+                }
+            }
+        },
+        "crossNavigation": {
+            "inbounds": {
+                "GCC_SemObj_ns01_report-Display": {
+                    "semanticObject": "GCC_SemObj_ns01_report",
+                    "action": "Display",
+                    "title": "{{flpTitle}}",
+                    "icon": "sap-icon://citizen-connect",
+                    "signature": {
+                        "parameters": {},
+                        "additionalParameters": "allowed"
+                    }
+                }
+            }
+        }
+    },
+    "sap.ui": {
+        "technology": "UI5",
+        "icons": {
+            "icon": "",
+            "favIcon": "",
+            "phone": "",
+            "phone@2": "",
+            "tablet": "",
+            "tablet@2": ""
+        },
+        "deviceTypes": {
+            "desktop": true,
+            "tablet": true,
+            "phone": true
+        }
+    },
+    "sap.ui5": {
+        "flexEnabled": true,
+        "dependencies": {
+            "minUI5Version": "1.120.8",
+            "libs": {
+                "sap.m": {},
+                "sap.ui.core": {},
+                "sap.f": {},
+                "sap.suite.ui.generic.template": {},
+                "sap.ui.comp": {},
+                "sap.ui.generic.app": {},
+                "sap.ui.table": {},
+                "sap.ushell": {}
+            }
+        },
+        "contentDensities": {
+            "compact": true,
+            "cozy": true
+        },
+        "models": {
+            "i18n": {
+                "type": "sap.ui.model.resource.ResourceModel",
+                "settings": {
+                    "bundleName": "com.gcc.reports.ns01.ns01report.i18n.i18n"
+                }
+            },
+            "": {
+                "dataSource": "mainService",
+                "preload": true,
+                "settings": {}
+            },
+            "ZSFGTGW_LOG_SRV": {
+                "dataSource": "ZSFGTGW_LOG_SRV",
+                "preload": true,
+                "settings": {
+                    "defaultBindingMode": "TwoWay",
+                    "defaultCountMode": "Inline",
+                    "refreshAfterChange": false,
+                    "metadataUrlParams": {
+                        "sap-value-list": "none"
+                    }
+                }
+            },
+            "ZSFGTGW_NS01_SRV": {
+                "dataSource": "ZSFGTGW_NS01_SRV",
+                "preload": true,
+                "settings": {
+                    "defaultBindingMode": "TwoWay",
+                    "defaultCountMode": "Inline",
+                    "refreshAfterChange": false,
+                    "metadataUrlParams": {
+                        "sap-value-list": "none"
+                    }
+                }
+            }
+        },
+        "resources": {
+            "css": [
+                {
+                    "uri": "css/style.css"
+                }
+            ]
+        },
+        "routing": {
+            "config": {
+                "routerClass": "sap.m.routing.Router",
+                "viewType": "XML",
+                "async": true,
+                "viewPath": "com.gcc.reports.ns01.ns01report.view",
+                "controlAggregation": "pages",
+                "controlId": "app",
+                "clearControlAggregation": false
+            },
+            "routes": [
+                {
+                    "name": "Routereport",
+                    "pattern": ":?query:",
+                    "target": [
+                        "Targetreport"
+                    ]
+                }
+            ],
+            "targets": {
+                "Targetreport": {
+                    "viewType": "XML",
+                    "transition": "slide",
+                    "clearControlAggregation": false,
+                    "viewId": "report",
+                    "viewName": "report"
+                }
+            }
+        },
+        "rootView": {
+            "viewName": "com.gcc.reports.ns01.ns01report.view.App",
+            "type": "XML",
+            "async": true,
+            "id": "App"
+        }
+    },
+    "sap.cloud": {
+        "public": true,
+        "service": "comgccreportsns01ns01report"
+    }
+}

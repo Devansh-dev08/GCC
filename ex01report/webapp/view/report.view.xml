@@ -1,0 +1,146 @@
+<mvc:View
+    height="100%"
+	xmlns:mvc="sap.ui.core.mvc"
+	xmlns="sap.m"
+	xmlns:core="sap.ui.core"
+	xmlns:plugins="sap.m.plugins"
+	xmlns:f="sap.f"
+	xmlns:columnmenu="sap.m.table.columnmenu"
+	xmlns:sap.ui.fl="sap.ui.fl"
+	xmlns:sap.ui.dt="sap.ui.dt"
+	xmlns:vm="sap.ui.fl.variants"
+	xmlns:dnd="sap.ui.core.dnd"
+	xmlns:app="http://schemas.sap.com/sapui5/extension/sap.ui.core.CustomData/1"
+    controllerName="com.gcc.reports.ex01report.controller.report">
+	<f:DynamicPage id="dynamicPage" fitContent="true">
+		<f:header>
+			<f:DynamicPageHeader id="_IDGenDynamicPageHeader1">
+				<Toolbar id="_IDGenToolbar1" >
+					<ToolbarSpacer id="_IDGenToolbarSpacer2" ></ToolbarSpacer>
+					<Button id="_IDGenButton2" text="Go" type="Emphasized" press="onGo" ></Button>
+					<Button id="_IDGenButton3" tooltip="Clear Filters" icon="sap-icon://clear-filter" press="onClearFilter"></Button>
+					<Button id="_IDGenButton4" tooltip="Hide Filters" icon="sap-icon://hide" press="onHideFilter"></Button>
+					<Button id="_IDGenButton6" tooltip="Show Filters" icon="sap-icon://show" press="onShowFilter" visible="false"></Button>
+				</Toolbar>
+				<HBox id="_IDGenHBox1" >
+					<VBox id="_IDGenVBox2" class="sapUiMediumMarginBegin sapUiLargeMarginEnd">
+						<Label id="_IDGenLabel1" labelFor="formID_ID" text="{i18n>formID}" class="sapUiTinyMarginTop" showColon="true"></Label>
+						<Input id="formId_ID" class="sapUiSmallMarginBegin sapUiLargeMarginEnd"/>
+						<Label id="_IDGenLabel6" labelFor="org_ID" showColon="true" text="{i18n>fOrg}" class="sapUiTinyMarginTop"></Label>
+						<ComboBox id="org_ID" class="sapUiSmallMarginBegin sapUiLargeMarginEnd" width="300px" />
+						<!-- <Label id="_IDGenLabel4" labelFor="empId_ID" showColon="true" text="{i18n>employeeId}" class="sapUiTinyMarginTop"></Label><Input id="empId_ID" class="sapUiSmallMarginBegin sapUiLargeMarginEnd"/> -->
+					</VBox>
+					<VBox id="_IDGenVBox3" class="sapUiLargeMarginBegin sapUiLargeMarginEnd">
+						<Label id="_IDGenLabel2" labelFor="startedon_ID" text="{i18n>startedOn}" showColon="true" class="sapUiTinyMarginTop"></Label>
+						<DatePicker id="startedon_ID" class="sapUiSmallMarginBegin sapUiLargeMarginEnd" placeholder=" " displayFormat="dd.MM.yyyy" formatError="yyyy"/>
+						<!-- <Label id="_IDGenLabel5" labelFor="empName_ID" showColon="true" text="{i18n>employeeName}" class="sapUiTinyMarginTop"></Label><Input id="empName_ID" class="sapUiSmallMarginBegin sapUiLargeMarginEnd"/> -->
+					</VBox>
+					<VBox id="_IDGenVBox4" class="sapUiLargeMarginBegin">
+						<Label id="_IDGenLabel3" labelFor="formStatus_ID" text="{i18n>fStatus}" showColon="true" class="sapUiTinyMarginTop"></Label>
+						<MultiComboBox id="formStatus_ID" class=" sapUiSmallMarginEnd">
+                        <items>
+                                <core:Item id="_IDGenItem10" key="E" text="Save as Draft"/>
+                                <core:Item id="_IDGenItem12" key="S" text="Submitted"/>
+                                <core:Item id="_IDGenItem13" key="U" text="Posted"/>
+                                <core:Item id="_IDGenItem15" key="A" text="Approved"/>
+                                <core:Item id="_IDGenItem16" key="R" text="Rejected"/>
+                                <core:Item id="_IDGenItem17" key="B" text="With BSC"/>
+                                <core:Item id="_IDGenItem18" key="M" text="Pending for MSS"/>
+                                <core:Item id="_IDGenItem19" key="T" text="Resubmitted"/>
+                                <core:Item id="_IDGenItem20" key="X" text="Error In Posting"/>
+                                <core:Item id="_IDGenItem21" key="F" text="BSC Approved"/>
+                                <core:Item id="_IDGenItem22" key="G" text="BSC Rejected"/>
+                            </items>
+                        </MultiComboBox>
+					</VBox>
+				</HBox>
+			</f:DynamicPageHeader>
+		</f:header>
+		<f:content>
+			<Table id="persoTable" items="{path: 'AllData>/tableData'}" ariaLabelledBy="title" fixedLayout="Strict"
+		    autoPopinMode="true" growing="true" sticky="ColumnHeaders,HeaderToolbar" popinLayout="GridSmall" width="100%" mode="SingleSelectMaster">
+				<headerToolbar>
+					<OverflowToolbar id="_IDGenOverflowToolbar1" >
+						<Title id="title" text="Absence History Report" level="Auto"/>
+						<ToolbarSeparator id="_IDGenToolbarSeparator1"/>
+						<vm:VariantManagement id="_IDGenVariantManagement1" for="persoTable"/>
+						<ToolbarSpacer id="_IDGenToolbarSpacer1"/>
+						<Button id="_IDGenButton1" icon="sap-icon://action-settings" press="openPersoDialog" tooltip="Settings"/>
+					</OverflowToolbar>
+				</headerToolbar>
+				<dependents>
+					<plugins:ColumnResizer id="_IDGenColumnResizer1" columnResize="onColumnResize"/>
+					<columnmenu:Menu id="menu" beforeOpen="beforeOpenColumnMenu">
+						<columnmenu:QuickSort id="_IDGenQuickSort1" change="onSort">
+							<columnmenu:items>
+								<columnmenu:QuickSortItem id="_IDGenQuickSortItem1"></columnmenu:QuickSortItem>
+							</columnmenu:items>
+						</columnmenu:QuickSort>
+						<columnmenu:items>
+							<columnmenu:ActionItem id="_IDGenActionItem4" icon="sap-icon://filter" label="Filter" press="onColumnHeaderItemPress"/>
+							<!-- <columnmenu:ActionItem id="_IDGenActionItem1" icon="sap-icon://sort" label="Sort" press="onColumnHeaderItemPress"/> -->
+							<columnmenu:ActionItem id="_IDGenActionItem3" icon="sap-icon://table-column" label="Columns" press="onColumnHeaderItemPress"/>
+						</columnmenu:items>
+					</columnmenu:Menu>
+				</dependents>
+				<dragDropConfig>
+					<dnd:DragDropInfo id="_IDGenDragDropInfo1" sourceAggregation="columns" targetAggregation="columns" dropPosition="Between" drop="onColumnMove"/>
+				</dragDropConfig>
+				<noData>
+					<IllustratedMessage id="_IDGenIllustratedMessage1"/>
+				</noData>
+				<columns>
+					<Column id="Form_ID" headerMenu="menu">
+						<header>
+							<Text id="_IDGenText1" text="Form ID"/>
+						</header>
+					</Column>
+					<Column id="Status" headerMenu="menu">
+						<Text id="_IDGenText2" text="Status"/>
+					</Column>
+					<Column id="Date_Created" headerMenu="menu">
+						<Text id="_IDGenText3" text="Date Created"/>
+					</Column>
+					<Column id="Initiator" headerMenu="menu">
+						<Text id="_IDGenText4" text="Initiator"/>
+					</Column>
+					<Column id="Approver" headerMenu="menu">
+						<Text id="_IDGenText5" text="Approver"/>
+					</Column>
+                    <Column id="ClaimEndDate" headerMenu="menu">
+						<Text id="_IDGenText7" text="Claim End Date"/>
+					</Column>
+					<Column id="Personnel_Area" headerMenu="menu">
+						<Text id="_IDGenText6" text="Personnel Area"/>
+					</Column>
+					<Column id="Owner" headerMenu="menu">
+						<Text id="_IDGenText10" text="Owner"/>
+					</Column>
+					<Column id="Started_By" headerMenu="menu">
+						<Text id="_IDGenText11" text="Started By"/>
+					</Column>
+					<Column id="buttons_col" headerMenu="menu">
+						<Text id="_IDGenText12" text="Open Form"/>
+					</Column>
+					<Column id="size_col" hAlign="End" visible="false" headerMenu="menu">
+						<Text id="_IDGenText13" text="Size"/>
+					</Column>
+				</columns>
+				<items>
+					<ColumnListItem id="_IDGenColumnListItem1">
+						<Text id="_IDGenInput1" text="{AllData>Form_ID}"></Text>
+						<Text id="_IDGenInput2" text="{AllData>Status}"></Text>
+						<Text id="_IDGenInput3" text="{AllData>Date_Created}"></Text>
+						<Text id="_IDGenInput4" text="{AllData>Initiator}"></Text>
+						<Text id="_IDGenInput5" text="{AllData>Approver}"></Text>
+                        <Text id="_IDGenInput7" text="{AllData>ClaimEndDate}"></Text>
+						<Text id="_IDGenInput6" text="{AllData>Personnel_Area}"></Text>
+						<Text id="_IDGenInput10" text="{AllData>Owner}" ></Text>
+						<Text id="_IDGenInput11" text="{AllData>Started_By}" ></Text>
+						<Button id="_IDGenButton5" icon="sap-icon://form" tooltip="Open Form" press="onOpenForm"></Button>
+					</ColumnListItem>
+				</items>
+			</Table>
+		</f:content>
+	</f:DynamicPage>
+</mvc:View>

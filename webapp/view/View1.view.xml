@@ -1,0 +1,515 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mvc:View xmlns:mvc="sap.ui.core.mvc" xmlns="sap.m" xmlns:core="sap.ui.core" xmlns:f="sap.ui.layout.form" xmlns:l="sap.ui.layout" xmlns:unified="sap.ui.unified" controllerName="com.gcc.newstarterqa.newstarterqa.controller.View1" displayBlock="true">
+   <Page id="page" showHeader="false">
+      <IconTabBar id="_IDGenIconTabBar1" backgroundDesign="Solid" expandable="true" select="onTabSelect">
+         <items>
+            <IconTabFilter id="_IDGenIconTabFilter1" text="Form" key="Form">
+               <VBox id="_IDGenVBox3" class="sapUiSmallMargin">
+                  <Panel id="_IDGenPanel1" expandable="true" expanded="true" stickyHeader="true" headerText="{i18n>Intro}" width="auto" class="sapUiResponsiveMargin">
+                     <FormattedText id="_IDGenFormattedText1" ></FormattedText>
+                     <Button text="Work Schedules" press="onWorkSchedBut" />
+                  </Panel>
+                  <Panel id="_IDGenPanel2" expandable="true" expanded="true" stickyHeader="true" headerText="{i18n>Head}" width="auto" class="sapUiResponsiveMargin">
+                  <f:SimpleForm layout="ColumnLayout"  labelSpanM="3" labelSpanL="2" labelSpanXL="2" adjustLabelSpan="false" emptySpanXL="0" emptySpanL="0" emptySpanM="0" emptySpanS="0" columnsM="2" columnsL="3" columnsXL="3" >
+                           <f:content>
+                              <!-- Column 1 - Initiator, org name, end date -->
+                           <Label id="_IDGenLabel1" text="{i18n>Initi}" showColon="true" />
+                           <Input id="idInitiator" value="" editable="false" type="Text" width="300px" />
+
+                           <Label id="_IDGenLabel4" text="{i18n>Org}" showColon="true" />
+                           <Input id="_IDGenInput4" value="{oneModel>/jobInfoOrganisation/customString3}" editable="false" width="300px" />
+
+                           <Label id="_IDGenLabel14" text="{i18n>Approver}" showColon="true" />
+                           <Input id="approver" value="" editable="false" width="300px" />
+
+                           <Label id="_IDGenLabel2" text="{i18n>Form}" showColon="true" />
+                           <Input id="_IDGenInput2" editable="false" width="300px" />
+                           
+                           <Label id="_IDGenLabe1l14" text="{i18n>cost}" showColon="true" />
+                           <Input id="_IDGen1Inpu1t4" value="{oneModel>/CostCentreP/costCenter}" editable="false" width="300px" />
+                           
+                           <Label id="_IDGenLabel3" text="{i18n>Date}" showColon="true" />
+                           <DatePicker id="DatePicker01" displayFormat="dd.MM.yyyy" formatError="yyyy" editable="false" placeholder="{i18n>EnterDate}" width="300px" />
+                           </f:content>
+                        </f:SimpleForm>
+                     <HBox id="_IDGenHBox1">
+                        <VBox id="_IDGenVBox21">
+                        </VBox>
+                        <VBox id="_IDGenVBox22">
+                           <!-- <Input id="idInitiator" value="{oneModel>/personalInfo/d/results/0/salutation} {oneModel>/personalInfo/d/results/0/firstName} {oneModel>/personalInfo/d/results/0/lastName}" width="100%" enabled="false" type="Text" class="sapUiSmallMarginBeginEnd"/>
+                                 -->
+                        </VBox>
+                        <VBox id="_IDGenVBox23">
+                        </VBox>
+                        <VBox id="_IDGenVBox24">
+                        </VBox>
+                        <VBox id="_IDGenVBox25">
+                        </VBox>
+                        <VBox id="_IDGenVBox26">
+                        </VBox>
+                     </HBox>
+                  </Panel>
+                  <Panel id="_IDGenPanel3" expandable="true" expanded="true" stickyHeader="true" headerText="{i18n>SectionA}" width="auto" class="sapUiResponsiveMargin">
+                     <content>
+                        <f:SimpleForm id="SimpleFormChange354wide" editable="true" layout="ResponsiveGridLayout" labelSpanXL="5" labelSpanL="3" labelSpanM="4" labelSpanS="12" emptySpanXL="0" emptySpanL="4" emptySpanM="0" emptySpanS="0" columnsXL="2" columnsL="1" columnsM="1" width="auto" >
+                           <f:content >
+                              <Label id="_IDGenLabel6" text="{i18n>inYourOrg}" class="sapUiTinyMarginBottom" required="true" textAlign="End" />
+                              <ComboBox id="_IDGenComboBox1" change="onChangeCurrentlyEmployed" width="80%" required="true" tooltip="{i18n>wherehasyouremployee}" >
+                                 <core:Item id="_IDGenItem" key="X" text="Yes" />
+                                 <core:Item id="_IDGenItem1" key="N" text="No" />
+                              </ComboBox>
+                              <Label visible="{= ${oneModel>/disable/mode} === 'display'}" id="_IDGenLabel64" text="{i18n>employee}" class="sapUiTinyMarginBegin" textAlign="Left" />
+                              <!-- <ComboBox visible="false" id="_IDGenComboBox41" items="{oneModel>/PerPersonal/d/results/}" change="oEmployeeSelect" class="sapUiTinyMarginBeginEnd" width="80%" required="true"><core:Item id="_IDGenItem4" key="salutation" text="{oneModel>salutation} {oneModel>firstName} {oneModel>lastName} {oneModel>personIdExternal}"  /></ComboBox> -->
+                              <ComboBox id="_IDGenComboBox41" visible="{= ${oneModel>/disable/mode} === 'display'}" required="true" change="oEmployeeSelect" items="{path: 'oneModel>/employeeList', length: 10000}" class="sapUiTinyMarginBeginEnd" width="80%" tooltip="{i18n>SelEmployee}" >
+                                 <core:Item id="_IDGenItem4" key="{oneModel>personIdExternal}" text="{oneModel>lastName} {oneModel>firstName} {oneModel>userId} {oneModel>jobInfo}" />
+                              </ComboBox>
+                              <Label visible="{= ${oneModel>/disable/mode} === 'display'}" id="empCame" text="Where has your new employee come from" class="sapUiTinyMarginBegin" required="true" textAlign="End" />
+                              <Input id="idempCame1" width="80%" visible="false" class="sapUiTinyMarginBeginEnd" value="Multiple Employment (same department)" editable="false" tooltip="{i18n>comeFrom}" />
+                              <Label visible="false" id="empCame3" text="Where has your new employee come from" class="sapUiTinyMarginBegin" required="true" textAlign="End" />
+                              <ComboBox visible="false" items="{oneModel>/empCameFrom}" id="idempCame" change="onChangeOrg" class="sapUiTinyMarginBeginEnd" width="80%" tooltip="{i18n>comeFrom}">
+                                 <core:Item id="_IDGenItem9" key="{oneModel>event}" text="{oneModel>name}" />
+                              </ComboBox>
+                              <Label visible="{= ${oneModel>/disable/mode} === 'display'}" id="_IDGenLabel621" text="{i18n>PreviousEmployer}" class="sapUiTinyMarginBegin" textAlign="End" />
+                              <Input visible="{= ${oneModel>/disable/mode} === 'display'}" id="_IDGenInput10" value="" class="sapUiTinyMarginBeginEnd " width="80%" tooltip="{i18n>pervEmployer}" />
+                              <Label visible="{= ${oneModel>/disable/mode} === 'display'}" id="_IDGenLabel6421" text="{i18n>contracttype}" class="sapUiTinyMarginBegin" textAlign="End" />
+                              <ComboBox visible="{= ${oneModel>/disable/mode} === 'display'}" id="_IDGenComboBox411" items="{path: 'oneModel>/oContractType/d/results/', length: 1000}" change="onChangeContractType" class="sapUiTinyMarginBeginEnd " width="80%" required="true" tooltip="{i18n>contractType}">
+                                 <core:Item id="_IDGenItem41" key="{oneModel>cust_WorkContract}" text="{oneModel>cust_Text}" />
+                              </ComboBox>
+                              <Label visible="{= ${oneModel>/disable/mode} === 'display'}" id="_IDGenLabel6411" text="{i18n>Postitle}" class="sapUiTinyMarginBegin" width="auto" textAlign="End" />
+                              <!-- {oneModel>/jobInfo1/d/results/0/customString1} -->
+                              <Input visible="{= ${oneModel>/disable/mode} === 'display'}" id="_IDGenInput11" width="80%" required="true" class="sapUiTinyMarginBeginEnd " value="" tooltip="{i18n>positionTitle}" />
+                              <Label visible="{= ${oneModel>/disable/mode} === 'display'}" id="_IDGenLabel611" text="{i18n>posCost}" class="sapUiTinyMarginBegin" textAlign="End" />
+                              <Input visible="{= ${oneModel>/disable/mode} === 'display'}" id="_IDGenInput112" class="sapUiTinyMarginBeginEnd " required="true" editable="false" width="80%" />
+                           </f:content>
+                        </f:SimpleForm>
+                        <HBox id="_IDGenHBox3" justifyContent="End">
+                           <Button id="_IDGenButton122" type="Emphasized" text="{i18n>confirmEmpDetails}" press="onConfirmEmpDetails" visible="true" />
+                        </HBox>
+                     </content>
+                  </Panel>
+                  <Panel id="_IDGenPanel4" expandable="true" visible="{= ${oneModel>/disable/mode} === 'bsc' || ${oneModel>/disable/mode} === 'display'}" expanded="true" stickyHeader="true" headerText="{i18n>SectionB}" width="auto" class="sapUiResponsiveMargin">
+                     <content>
+                        <f:SimpleForm id="SimpleFormChange354wide1" editable="true" layout="ResponsiveGridLayout" title="" labelSpanXL="4" labelSpanL="3" labelSpanM="4" labelSpanS="12" adjustLabelSpan="false" emptySpanXL="0" emptySpanL="4" emptySpanM="0" emptySpanS="0" columnsXL="2" columnsL="1" columnsM="1" singleContainerFullSize="false">
+                           <f:content>
+                              <Label id="titleB" text="{i18n>titleB}" class="sapUiTinyMarginBegin" />
+                              <!-- <Input id="titleB1" enabled="false" value="{oneModel>/personalInfo/d/results/0/salutation} " class="sapUiTinyMarginBeginEnd " width="80%" required="true"/>
+                                -->
+                              <!-- <ComboBox visible="true" id="titleB1"  items="{oneModel>/salutaionP/d/results/}" change="onChangeTitle" class="sapUiTinyMarginBeginEnd " width="80%" required="true"><core:Item  id="title" key="{oneModel>id}" text="{oneModel>externalCode}"  /></ComboBox> -->
+                              <ComboBox visible="true" fieldGroupIds="sectionB" id="titleB1" items="{oneModel>/title/}" change="onChangeOrg" class="sapUiTinyMarginBeginEnd " width="80%" required="true" tooltip="{i18n>title}" >
+                                 <core:Item id="titleSal" key="{oneModel>externalCode}" text="{oneModel>label_en_GB}" />
+                              </ComboBox>
+                              <Label id="foreName" text="{i18n>foreName}" class="sapUiTinyMarginBegin" />
+                              <Input id="foreName1" fieldGroupIds="sectionB" editable="{= ${oneModel>/disable/mode} !== 'display'}" value="{oneModel>/personalInfo/firstName}" class="sapUiTinyMarginBeginEnd " width="80%" required="true" tooltip="{i18n>firstName}" />
+                              <Label id="middelname" text="{i18n>middlename}" class="sapUiTinyMarginBegin" />
+                              <Input id="middelname1" editable="{= ${oneModel>/disable/mode} !== 'display'}" value="{oneModel>/personalInfo/middleName}" class="sapUiTinyMarginBeginEnd " width="80%" tooltip="{i18n>middleName}" />
+                              <Label id="surname" text="{i18n>surname}" class="sapUiTinyMarginBegin" />
+                              <Input id="surname1" editable="{= ${oneModel>/disable/mode} !== 'display'}" value="{oneModel>/personalInfo/lastName}" class="sapUiTinyMarginBeginEnd " width="80%" fieldGroupIds="sectionB" required="true" tooltip="{i18n>lastName}" />
+                              <Label id="contStartDate" text="{i18n>contStartDate}" class="sapUiTinyMarginBegin" />
+                              <DatePicker id="contStartDate1" class="sapUiTinyMarginBeginEnd" width="80%" fieldGroupIds="sectionB" required="true" editable="{= ${oneModel>/disable/mode} !== 'display'}" placeholder="{i18n>EnterDate}" value="" displayFormat="dd.MM.YYYY" tooltip="{i18n>contServ}" />
+                              <!-- <Label id="empAdd" text="{i18n>empAdd}" class="sapUiTinyMarginBegin" /> -->
+                              <Label id="AddressTitle" text="Employee Address" />
+                              <!-- <Input id="empAdd1" editable="{= ${oneModel>/disable/mode} !== 'display'}" width="80%" class="sapUiTinyMarginBeginEnd " value="" /> -->
+                              <Label id="streetHouseNo" text="{i18n>streetHouseNo}" class="sapUiTinyMarginBegin" required="true" />
+                              <Input id="streetHouseNo1" editable="{= ${oneModel>/disable/mode} !== 'display'}" class="sapUiTinyMarginBeginEnd " value="{oneModel>/homeAddress/address1}" width="80%" required="true" fieldGroupIds="sectionB" tooltip="{i18n>address1}" />
+                              <Label id="2ndadd" text="{i18n>2ndadd}" class="sapUiTinyMarginBegin" />
+                              <Input id="2ndadd1" editable="{= ${oneModel>/disable/mode} !== 'display'}" value="{oneModel>/homeAddress/address2}" class="sapUiTinyMarginBeginEnd " width="80%" tooltip="{i18n>address2}" />
+                              <Label id="city" text="{i18n>city}" class="sapUiTinyMarginBegin" />
+                              <Input id="city1" editable="{= ${oneModel>/disable/mode} !== 'display'}" class="sapUiTinyMarginBeginEnd " width="80%" value="{oneModel>/homeAddress/city}" tooltip="{i18n>city}" />
+                              <Label id="country" text="County" class="sapUiTinyMarginBegin" />
+                              <ComboBox editable="{oneModel>/editable}" visible="true" id="country1" selectedKey="" items="{path: 'oneModel>/county/', length: 1000}" change="onChangeOrg" class="sapUiTinyMarginBeginEnd " width="80%" fieldGroupIds="sectionB" required="true" tooltip="{i18n>county}" >
+                                 <core:Item id="SecBCounty" key="{oneModel>optionId}" text="{oneModel>label_en_GB}" />
+                              </ComboBox>
+                              <Label id="postcode" text="{i18n>postcode}" class="sapUiTinyMarginBegin" />
+                              <Input id="postcode1" change="validatePostCode" editable="{= ${oneModel>/disable/mode} !== 'display'}" class="sapUiTinyMarginBeginEnd " width="80%" fieldGroupIds="sectionB" required="true" value="{oneModel>/homeAddress/zipCode}" tooltip="{i18n>postcode}" />
+                              <Label id="homeTelephone" text="{i18n>homeTelephone}" class="sapUiTinyMarginBegin" />
+                              <Input id="homeTelephone1" type="Number" liveChange="validateTelePhoneLiveChange" maxLength="11" valueStateText="This is not a valid telephone number" change="validateTelePhone" editable="{= ${oneModel>/disable/mode} !== 'display'}" value="{oneModel>/phoneB}" class="sapUiTinyMarginBeginEnd " width="80%" fieldGroupIds="sectionB" required="true" tooltip="{i18n>homeTelephone}" />
+                              <Label id="mobileTelephone" text="{i18n>mobileTelephone}" class="sapUiTinyMarginBegin" />
+                              <Input type="Number" liveChange="validatePhoneLiveChange" maxLength="10" id="mobileTelephone1" valueStateText="This is not a valid mobile number" change="validatePhone" editable="{= ${oneModel>/disable/mode} !== 'display'}" value="{oneModel>/phoneP}" class="sapUiTinyMarginBeginEnd " width="80%" fieldGroupIds="sectionB" required="true" tooltip="{i18n>mobTelephone}" />
+                              <Label id="emailAdd" text="{i18n>emailAdd}" class="sapUiTinyMarginBegin" />
+                              <Input id="emailAdd1" type="Email" editable="{= ${oneModel>/disable/mode} !== 'display'}" change="validateEmail" value="{oneModel>/email}" class="sapUiTinyMarginBeginEnd " width="80%" tooltip="{i18n>email}" />
+                           </f:content>
+                        </f:SimpleForm>
+                        <HBox id="_IDGenHBox11o">
+                           <VBox id="_IDGenVBox9">
+                              <Label id="Dob1" text="{i18n>Dob1}" class="sapUiTinyMarginTop" textAlign="End" />
+                              <Label id="Nationality" text="{i18n>Nationality}" class="sapUiSmallMarginTop" textAlign="End" />
+                              <Label id="Disability" text="{i18n>Disability}" class="sapUiTinyMarginTop" textAlign="End" />
+                              <Label id="DBS" text="{i18n>DBS}" class="sapUiTinyMarginTop" textAlign="End" />
+                              <Label id="TeachRegNum" text="{i18n>TeachRegNum}" class="sapUiSmallMarginTop" textAlign="End" />
+                              <Label id="BankSort" text="{i18n>BankSort}" class="sapUiTinyMarginTop" required="true" textAlign="End" />
+                              <Label id="BankAccNum" text="{i18n>BankAccNum}" class="sapUiTinyMarginTop" required="true" />
+                           </VBox>
+                           <VBox id="_IDGenVBox10">
+                              <DatePicker id="Dob11" displayFormat="dd.MM.yyyy" formatError="yyyy" class="sapUiTinyMarginBeginEnd" width="80%" required="true" placeholder="{i18n>EnterDate}" value="" afterValueHelpOpen="DOBRestrict10years" tooltip="{i18n>DobTool}"  />
+                              <ComboBox id="Nationality1" selectedKey="{oneModel>/defaultNationality}" items="{path: 'oneModel>/nationality/', length: 1000}" change="onChangeOrg" class="sapUiTinyMarginBeginEnd " width="80%" required="true" tooltip="{i18n>nationalityTool}" >
+                                 <core:Item id="Nationality1Drop" key="{oneModel>externalCode}" text="{oneModel>label_en_US}" />
+                              </ComboBox>
+                              <ComboBox id="Disability1" selectedKey="" items="{oneModel>/Disability/}" change="onChangeOrg" class="sapUiTinyMarginBeginEnd " width="80%" required="true"  value="{oneModel>/globalInfo/disability}" tooltip="{i18n>disabilityTool}" >
+                                 <core:Item id="Disability1Drop" key="{oneModel>optionId}" text="{oneModel>label_en_GB}" />
+                              </ComboBox>
+                              <Input id="DBS1" class="sapUiTinyMarginBeginEnd " value="{oneModel>/workPermit/documentNumber}" width="80%" tooltip="{i18n>DBSTool}"  />
+                              <Input id="TeachRegNum1" value="{oneModel>/jobInfo/customString6}" class="sapUiTinyMarginBeginEnd " width="80%" tooltip="{i18n>TeacherTool}"  />
+                              <Input id="BankSort1" valueStateText="This is not a valid Bank Sort number"  liveChange="onLiveChangeBankSort" change="onSortCodeChange" class="sapUiTinyMarginBeginEnd" value="{oneModel>/PaymentInformationDetailV3/routingNumber} " width="80%" tooltip="{i18n>sortCodeTool}"  />
+                              <Input id="BankAccNum1" valueStateText="This is not a valid Bank Account number" liveChange="" change="onBankAccChange" class="sapUiTinyMarginBeginEnd" value="{oneModel>/PaymentInformationDetailV3/accountNumber} " width="80%" required="true" tooltip="{i18n>accountNoTool}"  />
+                           </VBox>
+                           <VBox id="_IDGenVBox11">
+                              <Label id="nationalIns" text="{i18n>nationalIns}" class="sapUiTinyMarginTop" />
+                              <Label id="Ethicity" text="{i18n>Ethicity}" class="sapUiTinyMarginTop" required="true" />
+                              <Label id="Gender" text="{i18n>Gender}" class="sapUiSmallMarginTop" required="true" />
+                              <Label id="ClearDate" text="{i18n>ClearDate}" class="sapUiTinyMarginTop" />
+                              <Label id="issuDate" text="{i18n>issuDate}" class="sapUiTinyMarginTop" />
+                              <Label id="BankName" text="{i18n>BankName}" class="sapUiSmallMarginTop" />
+                              <Label id="BuildingSoc" text="{i18n>BuildingSoc}" class="sapUiTinyMarginTop" />
+                           </VBox>
+                           <VBox id="_IDGenVBox12">
+                              <Input id="nationalIns1" value="{oneModel>/national/nationalId}" class="sapUiTinyMarginBeginEnd " change="onNIChange" width="80%" tooltip="{i18n>nationalIdTool}"  />
+                              <ComboBox id="Ethicity1" selectedKey="" items="{oneModel>/Ethnicity/}" change="onChangeOrg" fieldGroupIds="sectionB" class="sapUiTinyMarginBeginEnd " width="80%" required="true"  value="{oneModel>/globalInfo/ethnicity}" tooltip="{i18n>ethnicityTool}" >
+                                 <core:Item id="EthicityDrop" key="{oneModel>optionId}" text="{oneModel>label_en_GB}"  />
+                              </ComboBox>
+                              <Select id="Gender1" class="sapUiTinyMarginBeginEnd" width="80%" forceSelection="false" fieldGroupIds="sectionB" required="true" tooltip="{i18n>genderTool}" >
+                                 <items>
+                                    <core:Item id="_IDGenItem6df" text="Male" key="M" />
+                                    <core:Item id="_IDGenItem7sdfsd" text="Female" key="F" />
+                                 </items>
+                              </Select>
+                              <!-- <Input id="Gender1" width="80%"  class="sapUiTinyMarginBeginEnd " value="{oneModel>/personalInfo/gender} "/>  -->
+                              <DatePicker id="ClearDate1" displayFormat="dd.MM.yyyy" formatError="yyyy" class="sapUiTinyMarginBeginEnd" width="80%" placeholder="{i18n>EnterDate}" value="" editable="{= ${oneModel>/disable/mode} !== 'display'}" tooltip="{i18n>clearanceTool}"  />
+                              <DatePicker id="issuDate1" displayFormat="dd.MM.yyyy" formatError="yyyy" class="sapUiTinyMarginBeginEnd" width="80%" placeholder="{i18n>EnterDate}" value="" editable="{= ${oneModel>/disable/mode} !== 'display'}" tooltip="{i18n>issueTool}"  />
+                              <Input id="BankName1" value="{oneModel>/bankName/bankName} " class="sapUiTinyMarginBeginEnd " editable="false" width="80%" tooltip="{i18n>bankNameTool}"  />
+                              <Input id="BuildingSoc1" value="{oneModel>/PaymentInformationDetailV3/cust_BuildingSocRollNo} " class="sapUiTinyMarginBeginEnd " width="80%" tooltip="{i18n>buildingSocTool}"  />
+                           </VBox>
+                        </HBox>
+                        <Label id="addEmergencyContact" text="{i18n>addEmergencyContact}" class="sapUiTinyMarginTop" />
+                        <CheckBox id="addEmergencyContact1" editable="{= ${oneModel>/disable/mode} !== 'display'}" class="sapUiTinyMarginBeginEnd" select="onAddEmergency" tooltip="{i18n>firstEmergency}" />
+                        <VBox id="idAddEmergency" visible="{= ${oneModel>/disable/mode} === 'display'}">
+                           <Title id="_IDGenTfitle1" text="First Emergency Address" class="sapUiTinyMarginTop" />
+                           <HBox id="_IDGenHBox122221">
+                              <VBox id="_IDGenfVBox27">
+                                 <Label id="_IDGenfLabel11" text="Street and House No" class="sapUiTinyMarginTop" required="true" />
+                                 <Label id="_IDGenfLabel12" text="2nd Address line" class="sapUiTinyMarginTop" />
+                                 <Label id="_IDGenfLabel14" text="City" class="sapUiSmallMarginTop" />
+                                 <Label id="_IDGenLabel15" text="County" class="sapUiSmallMarginTop" />
+                                 <Label id="_IDGenLabel16" text="Postcode" class="sapUiTinyMarginTop" required="true" />
+                                 <Label id="_IDGefnLabel17" text="First Name" class="sapUiSmallMarginTop" required="true" />
+                                 <Label id="_IDGefnLabel17s" text="Surname" class="sapUiTinyMarginTop" required="true" />
+                                 <Label id="_IDGefnLabel18" text="Relation" class="sapUiSmallMarginTop" required="true" />
+                                 <Label id="_IDGenLabel19" text="Contact Telephone Number" required="true" class="sapUiSmallMarginTop" />
+                                 <!-- <Label id="_IDGenLabel20" text="Mobile Telephone Numnber" required="true" class="sapUiSmallMarginTop" /> -->
+                              </VBox>
+                              <VBox id="_IDGenVBox28">
+                                 <Input id="_IDGefnInput11" width="80%" editable="{= ${oneModel>/disable/mode} !== 'display'}" value="{oneModel>/PerEmergencyContactsPrimary/address1}" fieldGroupIds="sectionB" required="true" tooltip="{i18n>addr1Emer}"   />
+                                 <Input id="_IDGefnInput12" width="80%" editable="{= ${oneModel>/disable/mode} !== 'display'}" value="{oneModel>/PerEmergencyContactsPrimary/address2}" tooltip="{i18n>addr2Emer}"  />
+                                 <Input id="_IDGefnInput14" width="80%" editable="{= ${oneModel>/disable/mode} !== 'display'}" value="{oneModel>/PerEmergencyContactsPrimary/city}" tooltip="{i18n>cityEmer}"  />
+                                 <ComboBox visible="true" id="_IDGenItem6" editable="{= ${oneModel>/disable/mode} !== 'display'}" items="{path: 'oneModel>/county/', length: 1000}" change="onChangeOrg" width="80%" fieldGroupIds="sectionB" required="true" tooltip="{i18n>countyEmer}" >
+                                    <core:Item id="emergency1County" key="{oneModel>optionId}" text="{oneModel>label_en_GB}" />
+                                 </ComboBox>
+                                 <Input id="_IDGenInput15" width="80%" editable="{= ${oneModel>/disable/mode} !== 'display'}" change="validatePostCode" fieldGroupIds="sectionB" required="true" class="" value="{oneModel>/PerEmergencyContactsPrimary/zipCode}" tooltip="{i18n>postcodeEmer}"  />
+                                 <Input id="_IDGenInput16" width="80%" editable="{= ${oneModel>/disable/mode} !== 'display'}" class="" value="{oneModel>/PerEmergencyContacts/name}" fieldGroupIds="sectionB" required="true" tooltip="{i18n>firstNameEmer}"  />
+                                 <Input id="_IDGenInput16s" width="80%" editable="{= ${oneModel>/disable/mode} !== 'display'}" class="" value="{oneModel>/PerEmergencyContacts/customString1}" fieldGroupIds="sectionB" required="true" tooltip="{i18n>firstNameEmer}"  />
+                                 <ComboBox id="_IDGenInput17" width="80%" editable="{= ${oneModel>/disable/mode} !== 'display'}" value="{oneModel>/EmergencyRelation}" items="{path : 'oneModel>/relationDropdown', length : 250}" fieldGroupIds="sectionB" required="true" tooltip="{i18n>relationEmer}" >
+                                    <items>
+                                       <core:Item id="_IDGenItem35" key="{oneModel>optionId}" text="{oneModel>label_en_GB}" />
+                                    </items>
+                                 </ComboBox>
+                                 <!-- <Input id="_IDGenInput17" width="80%"  class="" value="{oneModel>/PerEmergencyContactsPrimaryRelation1/id}"/> -->
+                                 <Input id="_IDGenInput18" width="80%" required="true" editable="{= ${oneModel>/disable/mode} !== 'display'}" fieldGroupIds="sectionB" type="Number" liveChange="validateTelePhoneLiveChange" maxLength="11" valueStateText="This is not a valid telephone number" change="validateTelePhone" value="{= ${oneModel>/PerEmergencyContacts/phone} !== '' ? ${oneModel>/PerEmergencyContacts/phone} : '' }" tooltip="{i18n>phoneEmer}"  />
+                                 <!-- <Input id="_IDGenInput19" width="80%" required="true" editable="{= ${oneModel>/disable/mode} !== 'display'}" fieldGroupIds="sectionB" type="Number" liveChange="validatePhoneLiveChange" maxLength="10" valueStateText="This is not a valid mobile number" change="validatePhone" value="{= ${oneModel>/PerEmergencyContacts/phone} !== '' ? ${oneModel>/PerEmergencyContacts/phone} : '' }" /> -->
+                              </VBox>
+                           </HBox>
+                           <HBox id="_IDGenHBox191">
+                              <Label id="_IDGenLabel21" text=" Add second Emergency Contact Details" class="sapUiTinyMarginTopBottom" />
+                              <CheckBox id="_IDGenCheckBox2" editable="{= ${oneModel>/disable/mode} !== 'display'}" class="" select="onChangeEmergencySecond" tooltip="{i18n>secondEmergency}" />
+                           </HBox>
+                           <VBox id="idSecondEmergency" visible="{= ${oneModel>/disable/mode} === 'display'}">
+                              <Title id="_IDGenTfitle12" text="Second Emergency Address" class="sapUiTinyMarginTop" />
+                              <HBox id="_IDGenHBox1222212">
+                                 <VBox id="_IDGenfVBox272">
+                                    <Label id="_IDGenfLabel112" text="Street and House No" class="sapUiTinyMarginTop" required="true" />
+                                    <Label id="_IDGenfLabel122" text="2nd Address line" class="sapUiTinyMarginTop" />
+                                    <Label id="_IDGenfLabel142" text="City" class="sapUiTinyMarginTop" />
+                                    <Label id="_IDGenLabel152" text="County" class="sapUiSmallMarginTop" />
+                                    <Label id="_IDGenLabel162" text="Postcode" class="sapUiSmallMarginTop" required="true" />
+                                    <Label id="_IDGefnLabel172" text="First Name" class="sapUiSmallMarginTop" required="true" />
+                                    <Label id="_IDGefnLabel172s" text="Surname" class="sapUiSmallMarginTop" required="true" />
+                                    <Label id="_IDGefnLabel182" text="Relation" class="sapUiSmallMarginTop" required="true" />
+                                    <Label id="_IDGenLabel192" text="Contact Telephone Number" required="true" class="sapUiTinyMarginTop" />
+                                    <!-- <Label id="_IDGenLabel202" text="Mobile Telephone Numnber" required="true" class="sapUiTinyMarginTop" /> -->
+                                 </VBox>
+                                 <VBox id="_IDGenVBox282">
+                                    <Input id="_IDGefnInput112" width="80%" editable="{= ${oneModel>/disable/mode} !== 'display'}" fieldGroupIds="sectionB" value="{oneModel>/PerEmergencyContactsSecond/address1}" required="true" tooltip="{i18n>addr1Emer}" />
+                                    <Input id="_IDGefnInput122" width="80%" editable="{= ${oneModel>/disable/mode} !== 'display'}" value="{oneModel>/PerEmergencyContactsSecond/address2}" tooltip="{i18n>addr2Emer}" />
+                                    <Input id="_IDGefnInput142" width="80%" editable="{= ${oneModel>/disable/mode} !== 'display'}" value="{oneModel>/PerEmergencyContactsSecond/city}" tooltip="{i18n>cityEmer}" />
+                                    <!-- <ComboBox visible="false" id="idree4d2" change="" class="sapUiTinyMarginBeginEnd" width="80%" required="true"  ><core:Item id="_IDGenItem5"  key="county" text="{oneModel>/PerEmergencyContactsSecond/d/country}"  /></ComboBox> -->
+                                    <ComboBox visible="true" id="idree4d2" editable="{= ${oneModel>/disable/mode} !== 'display'}" items="{path: 'oneModel>/county/', length: 1000}" change="onChangeOrg" width="80%" fieldGroupIds="sectionB" required="true" tooltip="{i18n>countyEmer}" >
+                                       <core:Item id="emergency2County" key="{oneModel>optionId}" text="{oneModel>label_en_GB}" />
+                                    </ComboBox>
+                                    <Input id="_IDGenInput152" width="80%" editable="{= ${oneModel>/disable/mode} !== 'display'}" change="validatePostCode" fieldGroupIds="sectionB" required="true" value="{oneModel>/PerEmergencyContactsSecond/zipCode}" tooltip="{i18n>postcodeEmer}" />
+                                    <Input id="_IDGenInput162" width="80%" editable="{= ${oneModel>/disable/mode} !== 'display'}" value="{oneModel>/PerEmergencyContacts1/name}" fieldGroupIds="sectionB" required="true" tooltip="{i18n>firstNameEmer}" />
+                                    <Input id="_IDGenInput162s" width="80%" editable="{= ${oneModel>/disable/mode} !== 'display'}" value="{oneModel>/PerEmergencyContacts1/customString1}" fieldGroupIds="sectionB" required="true" tooltip="{i18n>firstNameEmer}" />
+                                    <ComboBox id="_IDGenInput172" width="80%" editable="{= ${oneModel>/disable/mode} !== 'display'}" value="{oneModel>/EmergencyRelation1}" items="{path : 'oneModel>/relationDropdown', length : 250}" fieldGroupIds="sectionB" required="true" tooltip="{i18n>relationEmer}" >
+                                       <items>
+                                          <core:Item id="_IDGenItem3df5" key="{oneModel>optionId}" text="{oneModel>label_en_GB}" />
+                                       </items>
+                                    </ComboBox>
+                                    <!-- <Input id="_IDGenInput172" width="80%" value="{oneModel>/PerEmergencyContactsPrimaryRelation2/id}"/> -->
+                                    <Input id="_IDGenInput182" width="80%" type="Number" editable="{= ${oneModel>/disable/mode} !== 'display'}" fieldGroupIds="sectionB" value="{= ${oneModel>/PerEmergencyContacts1/phone} !== '' ? ${oneModel>/PerEmergencyContacts1/phone} : '' }" liveChange="validateTelePhoneLiveChange" maxLength="11" valueStateText="This is not a valid telephone number" change="validateTelePhone" tooltip="{i18n>phoneEmer}" />
+                                    <!-- <Input id="_IDGenInput192" width="80%" type="Number" editable="{= ${oneModel>/disable/mode} !== 'display'}" fieldGroupIds="sectionB" value="{= ${oneModel>/PerEmergencyContacts1/phone} !== '' ? ${oneModel>/PerEmergencyContacts1/1/phone} : '' }" liveChange="validatePhoneLiveChange" maxLength="10" valueStateText="This is not a valid mobile number" change="validatePhone" /> -->
+                                 </VBox>
+                              </HBox>
+                           </VBox>
+                        </VBox>
+                     </content>
+                  </Panel>
+                  <Panel id="_IDGenPanel45" visible="{= ${oneModel>/disable/mode} === 'bsc' || ${oneModel>/disable/mode} === 'display'}" expandable="true" expanded="true" stickyHeader="true" headerText="{i18n>SectionC}" width="auto" class="sapUiResponsiveMargin">
+                     <content>
+                        <FlexBox id="_IDGenFlexBox3" alignItems="Center" justifyContent="Start" alignContent="Center">
+                           <Label id="_IDGenLabel7" text="Type of Contract" required="true" />
+                           <ComboBox fieldGroupIds="sectionE" visible="true" id="_IDGenComboBox17" selectedKey="" items="{oneModel>/oContractType1/}" change="onContractChange" class="sapUiTinyMarginBeginEnd " width="80%" required="true" tooltip="{i18n>contractTypeTool}" >
+                              <core:Item id="_IDGenItem412" key="{oneModel>optionId}" text="{oneModel>label_en_GB}" />
+                           </ComboBox>
+                           <Label id="_IDGenLabel8" text="Start Date" class="sapUiTinyMarginTop" required="true" />
+                           <DatePicker change="onStartDateChange" fieldGroupIds="sectionE" id="_IDGenDatePicker1" displayFormat="dd.MM.yyyy" formatError="yyyy" class="sapUiTinyMarginBeginEnd" width="200px" placeholder="{i18n>EnterDate}" tooltip="{i18n>startDateTool}" />
+                           <Label id="_IDGenLabel81" text="End Date" class="sapUiTinyMarginTop" required="true" visible="false" />
+                           <DatePicker change="onDateGeneralChange" fieldGroupIds="sectionE" id="_IDGenDatePicker2" displayFormat="dd.MM.yyyy" formatError="yyyy" class="sapUiTinyMarginBeginEnd" width="200px" placeholder="{i18n>EndDate}" visible="false" tooltip="{i18n>endDateTool}" />
+                        </FlexBox>
+                        <FlexBox id="_IDGenFlexBox4" alignItems="Center" justifyContent="Start" alignContent="Center">
+                           <Label id="_IDGenLabel9" text="Grade" required="true" />
+                           <ComboBox fieldGroupIds="sectionE" visible="true" id="_IDGenComboBox2" items="{oneModel>/grade/}" change="onSelectPayScaleGroup" class="sapUiTinyMarginBeginEnd " width="80%" required="true" tooltip="{i18n>gradeTool}" >
+                              <core:Item id="_IDGenItem4123" key="{oneModel>code}" text="{oneModel>externalName_en_GB}" />
+                           </ComboBox>
+                           <Label id="_IDGenLabel10" text="Starting Scale Point" required="true" class="sapUiLargeMarginBegin" />
+                           <ComboBox change="onChangeGeneral" fieldGroupIds="sectionE" id="_IDGenComboBox3" items="{oneModel>/scalePoint/}" class="sapUiTinyMarginBeginEnd" width="40%" required="true" editable="false" tooltip="{i18n>scaleTool}" >
+                              <core:Item id="idWorkingWeeksItem" key="{oneModel>code}" text="{oneModel>externalName_en_GB}" />
+                           </ComboBox>
+                        </FlexBox>
+                        <FlexBox id="_IDGenFlexBox5" alignItems="Center" justifyContent="Start" alignContent="Center">
+                           <Label id="_IDGenLabel13" text="Is this a claim only position?" required="true" />
+                           <ComboBox fieldGroupIds="sectionE" id="_IDGenComboBox6" change="onChangeClaimPosition" class="sapUiTinyMarginBegin" width="50%" required="true" tooltip="{i18n>claimPosTool}" >
+                              <core:Item id="1dfd" key="yes" text="Yes" />
+                              <core:Item id="1dfd1" key="No" text="No" />
+                           </ComboBox>
+                        </FlexBox>
+                        <FlexBox visible="{= ${oneModel>/disable/mode} === 'bsc' || ${oneModel>/disable/mode} === 'display'}" id="idHoursPerWeek1" alignItems="Center" justifyContent="Start" alignContent="Center">
+                           <Label id="idHoursPerWeek" text="Hours per week(In Decimals)" required="true" />
+                           <Input change="onChangeGeneral" id="Hoursperweek" class="sapUiTinyMarginBegin" tooltip="{i18n>hoursTool}" />
+                        </FlexBox>
+                        <FlexBox visible="{= ${oneModel>/disable/mode} === 'bsc' || ${oneModel>/disable/mode} === 'display'}" id="idfte1" alignItems="Center" justifyContent="Start" alignContent="Center">
+                           <Label id="idFTElabel" text="FTE" required="true" />
+                           <Input id="idFTE" class="sapUiTinyMarginBegin sapUiMediumMarginEnd" width="80px" change="onFTEChange" maxLength="6" />
+                           <Label id="idFTEperclabel" text="FTE percentage" required="true" />
+                           <Input id="idFTEperc" class="sapUiTinyMarginBegin" editable="false" width="80px"  />
+                        </FlexBox>
+                        <FlexBox visible="{= ${oneModel>/disable/mode} === 'bsc' || ${oneModel>/disable/mode} === 'display'}" id="idWeekYear1" alignItems="Center" justifyContent="Start" alignContent="Center">
+                           <Label id="idWeekYear" text="Weeks Per Year" />
+                           <ComboBox id="idWeekYeardrop" items="{oneModel>/workingWeeks/}" change="onWorkingChange" class="sapUiTinyMarginBeginEnd" width="40%" required="true" tooltip="{i18n>weeksPerTool}" >
+                              <core:Item id="idWeekYearItem" key="{oneModel>externalCode}" text="{oneModel>cust_TTOWeeks}" />
+                           </ComboBox>
+                           <Label id="idWorkingWeeks" text="Additional Working Weeks" />
+                           <ComboBox class="sapUiTinyMarginBegin" id="idWorkingWeeksdrop" width="50%" required="true" tooltip="{i18n>additionalTool}" change="onAddWorkChange" >
+                              <core:Item id="12" key="0" text="0" />
+                              <core:Item id="13" key="1" text="1" />
+                              <core:Item id="14" key="2" text="2" />
+                              <core:Item id="15" key="3" text="3" />
+                              <core:Item id="16" key="4" text="4" />
+                              <core:Item id="17" key="5" text="5" />
+                              <core:Item id="18" key="6" text="6" />
+                              <core:Item id="19" key="7" text="7" />
+                           </ComboBox>
+                        </FlexBox>
+                        <FlexBox id="_IDGenFlexBox2" alignItems="Center" justifyContent="Start" alignContent="Center">
+                           <Label id="_IDGenLab5el11" text="Is there a Probationary Period" required="true" />
+                           <ComboBox fieldGroupIds="sectionE" class="sapUiTinyMarginBegin" id="_IDGenInput141" change="probationPeriodChange" width="50%" required="true" tooltip="{i18n>ProbationTool}" >
+                              <core:Item id="propertionaryYes" key="Yes" text="Yes" />
+                              <core:Item id="propertionaryNo" key="No" text="No" />
+                           </ComboBox>
+                        </FlexBox>
+                        <FlexBox id="_IDGenFlexBox1" alignItems="Center" justifyContent="Start" alignContent="Center">
+                           <Label id="probationEndDate" visible="{= ${oneModel>/disable/mode} === 'display'}" required="true" text="Probationary Period End Date" />
+                           <DatePicker class="sapUiTinyMarginBegin" visible="{= ${oneModel>/disable/mode} === 'display'}" id="probationEndDatePic" displayFormat="dd.MM.yyyy" formatError="yyyy" width="200px" placeholder="{i18n>EnterDate}" />
+                        </FlexBox>
+                        <HBox id="_IDGenHBox15">
+                           <HBox id="_IDGenHBox16">
+                              <VBox id="_IDGenVBox17">
+                                 <!-- <Label id="_IDGenLab5el1d1" text="FTE (Teachers in Decimal)" required="true" class="sapUiSmallMarginTop"/> -->
+                              </VBox>
+                           </HBox>
+                           <!-- <HBox id="_IDGenHBox17"><VBox id="_IDGenVBox19"><Label id="_IDGenLab5el1gd1" text="FTE (Teachers as %)" class="sapUiSmallMarginTop"/></VBox><VBox id="_IDGenVBox20"><Input id="_IDGenInput14fg1f" enabled="false" width="50%" class="sapUiSmallMarginTop"/></VBox></HBox> -->
+                        </HBox>
+                        <HBox id="_IDGenHBox8">
+                           <Label id="_IDGen9Label11" text="Allowance" class="sapUiTinyMarginEnd" />
+                           <!-- Allowance -->
+                           <ComboBox id="_IDGenComboBox8" items="{oneModel>/Allowance/}" change="onChangeAllowance" class="sapUiTinyMarginBeginEnd " width="80%" required="true" tooltip="{i18n>allowanceTool}" >
+                              <core:Item id="allo" key="{oneModel>externalCode}" text="{oneModel>externalCode} - {oneModel>description}" />
+                           </ComboBox>
+                           <Label id="_IDGenLabel129" text="Amount" class="sapUiTinyMarginBeginEnd" />
+                           <Input id="_IDGenInput191" enabled="{oneModel>/enableRate}" type="Number" change="onChangeAmount" tooltip="{i18n>amountTool}" />
+                           <Label id="_IDGenLabel913" text="Number/Unit" class="sapUiTinyMarginBeginEnd" />
+                           <Input id="_IDGenInput12" enabled="{oneModel>/enableUnit}" type="Number" change="onChangeUnit" tooltip="{i18n>unitTool}" />
+                        </HBox>
+                        <HBox id="_IDGenHBox82">
+                           <Label id="_IDGen9Label112" text="Allowance" class="sapUiTinyMarginEnd" />
+                           <!-- Allowance -->
+                           <ComboBox id="_IDGenComboBox82" items="{oneModel>/Allowance/}" change="onChangeAllowance1" class="sapUiTinyMarginBeginEnd " width="80%" required="true" tooltip="{i18n>allowanceTool}" >
+                              <core:Item id="allo2" key="{oneModel>externalCode}" text="{oneModel>externalCode} - {oneModel>description}" />
+                           </ComboBox>
+                           <Label id="_IDGenLabel1292" text="Amount" class="sapUiTinyMarginBeginEnd" />
+                           <Input id="_IDGenInput1912" enabled="{oneModel>/enableRate1}" type="Number" change="onChangeAmount" tooltip="{i18n>amountTool}" />
+                           <Label id="_IDGenLabel9132" text="Number/Unit" class="sapUiTinyMarginBeginEnd" />
+                           <Input id="_IDGenInput122" enabled="{oneModel>/enableUnit1}" type="Number" change="onChangeUnit" tooltip="{i18n>unitTool}" />
+                        </HBox>
+                        <HBox id="_IDGenHBox83">
+                           <Label id="_IDGen9Label113" text="Allowance" class="sapUiTinyMarginEnd" />
+                           <!-- Allowance -->
+                           <ComboBox id="_IDGenComboBox83" items="{oneModel>/Allowance/}" change="onChangeAllowance2" class="sapUiTinyMarginBeginEnd " width="80%" required="true" tooltip="{i18n>allowanceTool}">
+                              <core:Item id="allo3" key="{oneModel>externalCode}" text="{oneModel>externalCode} - {oneModel>description}" />
+                           </ComboBox>
+                           <Label id="_IDGenLabel1293" text="Amount" class="sapUiTinyMarginBeginEnd" />
+                           <Input id="_IDGenInput1913" enabled="{oneModel>/enableRate2}" type="Number" change="onChangeAmount" tooltip="{i18n>amountTool}" />
+                           <Label id="_IDGenLabel9133" text="Number/Unit" class="sapUiTinyMarginBeginEnd" />
+                           <Input id="_IDGenInput123" enabled="{oneModel>/enableUnit2}" type="Number" change="onChangeUnit" tooltip="{i18n>unitTool}" />
+                        </HBox>
+                     </content>
+                  </Panel>
+                  <Panel id="_IDGenPanel451" visible="false" expandable="true" expanded="true" stickyHeader="true" headerText="{i18n>SectionD}" width="auto" class="sapUiResponsiveMargin">
+                     <HBox id="_IDGenHBox10">
+                        <HBox id="_IDGenVBoxg4">
+                           <VBox id="_IDGenVBox4">
+                              <Label id="_IDGgenLabel11" text="Personal Number" class="sapUiTinyMargin" showColon="true" />
+                              <Label id="_IDGegnLabel13" text="LEA School Name" class="sapUiTinyMargin" showColon="true" />
+                              <Label id="_IDGenLgabel15" text="PA20 End Date" class="sapUiTinyMargin" showColon="true" />
+                              <Label id="_IDGegnLabel16" text="Select option" class="sapUiTinyMargin" showColon="true" />
+                           </VBox>
+                           <VBox id="_IDGenVBox5">
+                              <Input id="idPersonalNum" width="40%" value="" editable="false" />
+                              <Input id="idLEASCHOOL" width="50%" value="" class="sapUiTinyMarginTop" editable="false" />
+                              <DatePicker id="idPA20" liveChange="onChangeEndDate" displayFormat="dd.MM.yyyy" formatError="yyyy" width="40%" enabled="true" placeholder="{i18n>EnterDate}" class="sapUiTinyMarginTop sapUiSmallMarginEnd" editable="false" />
+                              <ComboBox id="idSelectOption" class="sapUiTinyMarginTop" change="" width="450px" required="true" tooltip="{i18n>selectOptTool}">
+                                 <core:Item id="_IDGenItem7" key="1" text="Mover between LEA schools with no break in service" />
+                                 <core:Item id="_IDGenItem8" key="2" text="New starter(LEA) with a break in service or P45 already sent" />
+                              </ComboBox>
+                           </VBox>
+                        </HBox>
+                        <HBox id="_IDGenHBox9" class="sapUiMediumMarginStart">
+                           <VBox id="_IDGenVBox7">
+                              <Label id="_IDGgenLabel12" text="Position Title" class="sapUiTinyMargin" showColon="true" />
+                              <Label id="_IDGeggnLabel14" text="Number of Hours" class="sapUiTinyMargin" showColon="true" />
+                           </VBox>
+                           <VBox id="_IDGenVBox6">
+                              <Input id="idPosTitleD" width="100%" value="{oneModel>/jobInfo/customString1}" editable="false"  />
+                              <Input id="idNumberHoursD" width="30%" value="{oneModel>/jobInfo/standardHours}" class="sapUiTinyMarginTop" editable="false"  />
+                           </VBox>
+                        </HBox>
+                     </HBox>
+                  </Panel>
+                  <Panel id="_IDGenPanel4d51" visible="{= ${oneModel>/disable/mode} === 'bsc' }" expandable="true" expanded="true" stickyHeader="true" headerText="{i18n>SectionE}" width="auto" class="sapUiResponsiveMargin">
+                     <HBox id="_IDGenHBox11r">
+                        <VBox id="_IDGenHBox11">
+                           <Label id="idSelectTypePos" text="Please select Type of Position" class="sapUiTinyMargin" required="true" />
+                           <Label id="selectPosition" text="Select Position" class="sapUiTinyMargin" required="true" />
+                           <Label id="idPos" text="Position Cost Centre" class="sapUiTinyMarginBegin" />
+                           <Label id="idJobT" text="Job Title" class="sapUiTinyMargin" />
+                           <Label id="idEmpSub" text="Employee Sub Group" class="sapUiTinyMargin" />
+                           <Label id="idGrade1" text="Grade" class="sapUiTinyMargin" />
+                        </VBox>
+                        <VBox id="selectPositionHBox">
+                           <ComboBox fieldGroupIds="sectionBSC" visible="true" id="idSelectTypePos1" items="{oneModel>/positionType/}" change="onPositionTypeChange" class=" " width="400px" required="true" tooltip="{i18n>typePositionTool}">
+                              <core:Item id="position" key="{oneModel>code}" text="{oneModel>posType}" />
+                           </ComboBox>
+                           <ComboBox fieldGroupIds="sectionBSC" id="selectPositionCombobox" enabled="false" items="{oneModel>/Positions/}" change="onPositionChange" class=" " width="400px" required="true" tooltip="{i18n>PositionTool}">
+                              <core:Item id="selectPositionComboboxItem" key="{oneModel>code}" text="{oneModel>code} {oneModel>externalName_en_GB} {oneModel>jobTitle}" />
+                           </ComboBox>
+                           <Input id="idPositionCostCentre" class="" width="100%" enabled="false" value="{oneModel>/costCenter/costCenter}" />
+                           <Input id="idJobTitle" class="" width="100%" enabled="false" value="" />
+                           <Input id="idEmployeeSubGroup" class="" width="100%" enabled="false" />
+                           <Input id="idGrade" class="" width="100%" enabled="false" />
+                        </VBox>
+                     </HBox>
+                     <HBox id="_IDGednHBox3" justifyContent="End">
+                        <Button id="_IDGenButton1d22" type="Emphasized" text="REFRESH" press="onFresh" />
+                     </HBox>
+                  </Panel>
+                  <Panel id="_IDGenPanel4dh51" visible="true" expandable="true" expanded="true" stickyHeader="true" headerText="{i18n>SectionComm}" width="auto" class="sapUiResponsiveMargin">
+                     <VBox id="_IDGenVBox8">
+                        <Label id="_IDGenLabeldf11" text="Authorisation and Rejection Comments" showColon="true" visible="false" />
+                        <TextArea id="_IDGenTextArea1" editable="true" width="1000px" height="150px" visible="false" enabled="false" />
+                        <Label id="_IDGenLabeldfd11" text="Your Comments" showColon="true" class="sapUiSmallMarginTop" />
+                        <TextArea id="_IDGenTextArea2" editable="true" width="1000px" height="60px" growing="true" growingMaxLines="5" />
+                        <Button id="_IDGenButtond1d22" type="Emphasized" text="Add Comments" press="onAddComment" />
+                     </VBox>
+                  </Panel>
+                  <Panel id="_IDGenPanel4dhd51" visible="true" expandable="true" expanded="true" stickyHeader="true" headerText="{i18n>SecNotify}" width="auto" class="sapUiResponsiveMargin">
+                     <content>
+                        <CheckBox id="_IDGenCheckBox1" text="Please tick this box if you require an email to be generated to your approver notifying this form is awaiting approval" />
+                        <MessageStrip id="_IDGenTexd1" text="{i18n>testData}" />
+                     </content>
+                  </Panel>
+               </VBox>
+            </IconTabFilter>
+            <IconTabFilter id="_IDGenIconTabFilter2" text="History" key="History">
+               <Panel id="_IDGenPanel7" expandable="false" stickyHeader="true" headerText="New Starter Form History" width="auto" class="sapUiResponsiveMargin">
+                  <Table id="_IDGenTable4" width="auto" delete="deleteRow" mode="MultiSelect" items="{oneModel>/historyTable}">
+                     <headerToolbar>
+                        <Toolbar id="_IDGenToolbar5" width="auto" design="Solid" style="Standard">
+                           <Label id="_HIDGenLabel1" labelFor="_HIDGenFormId1" text="Form Id" />
+                           <Input id="_HIDGenFormId1" width="auto" enabled="false" />
+                           <Label id="_HIDGenLabel2" labelFor="_HIDGenType1" text="Type" />
+                           <Input id="_HIDGenType1" width="auto" enabled="false" value="NS01" />
+                        </Toolbar>
+                     </headerToolbar>
+                     <columns>
+                        <Column id="_HIDGenColumn1" demandPopin="true" minScreenWidth="Tablet">
+                           <Text id="_HIDGenText1" text="{i18n>HCol1}" />
+                        </Column>
+                        <Column id="_HIDGenColumn2" demandPopin="true" minScreenWidth="Tablet">
+                           <Text id="_HIDGenText2" text="{i18n>HCol2}" />
+                        </Column>
+                        <Column id="_HIDGenColumn3" demandPopin="true" minScreenWidth="Tablet">
+                           <Text id="_HIDGenText3" text="{i18n>HCol3}" />
+                        </Column>
+                        <Column id="_HIDGenColumn4" demandPopin="true" minScreenWidth="Tablet">
+                           <Text id="_HIDGenText4" text="{i18n>HCol4}" />
+                        </Column>
+                        <Column id="_HIDGenColumn5" demandPopin="true" minScreenWidth="Tablet">
+                           <Text id="_HIDGenText5" text="{i18n>HCol5}" />
+                        </Column>
+                        <Column id="_HIDGenColumn6" demandPopin="true" minScreenWidth="Tablet">
+                           <Text id="_HIDGenText6" text="{i18n>HCol6}" />
+                        </Column>
+                        <Column id="_HIDGenColumn7" demandPopin="true" minScreenWidth="Tablet">
+                           <Text id="_HIDGenText7" text="{i18n>HCol7}" />
+                        </Column>
+                        <Column id="_HIDGenColumn8" demandPopin="true" minScreenWidth="Tablet">
+                           <Text id="_HIDGenText8" text="{i18n>HCol8}" />
+                        </Column>
+                     </columns>
+                     <items>
+                        <ColumnListItem id="_IDGenColumnListItem6">
+                           <cells>
+                              <Input id="_HIDGenInput1" editable="false" value="{oneModel>SeqNumber}" tooltip="Sequence Number" />
+                              <Input id="_HIDGenInput2" editable="false" value="{oneModel>Initiator}" tooltip="Initiator" />
+                              <Input id="_HIDGenInput3" editable="false" value="{oneModel>StartedOn}" tooltip="Started On" />
+                              <Input id="_HIDGenInput4" editable="false" value="{oneModel>OrganizationName}" tooltip="Organization Name" />
+                              <Input id="_HIDGenInput5" editable="false" value="{oneModel>Description}" tooltip="Description" />
+                              <Input id="_HIDGenInput6" editable="false" value="{oneModel>Status}" tooltip="Status" />
+                              <Input id="_HIDGenInput7" editable="false" value="{oneModel>FormOwner}" tooltip="Form Owner" />
+                              <Input id="_HIDGenInput8" editable="false" value="{oneModel>AvailableFrom}" tooltip="Available From" />
+                           </cells>
+                        </ColumnListItem>
+                     </items>
+                  </Table>
+               </Panel>
+            </IconTabFilter>
+         </items>
+      </IconTabBar>
+      <footer>
+         <Toolbar id="_IDGenToolbar8">
+            <Button id="PrintFrame" type="Emphasized" icon="sap-icon://print" text="{i18n>Print}" press="onPrint" />
+            <ToolbarSpacer id="_IDGenToolbarSpacer4" />
+            <Button id="cancel" icon="sap-icon://cancel" type="Emphasized" text="{i18n>Cancel}" press="onCancel" />
+            <Button id="delete" icon="sap-icon://delete" type="Emphasized" text="{i18n>Delete}" press="onDelete" />
+            <Button id="save" icon="sap-icon://save" type="Emphasized" text="Save to Draft" press="onSave" />
+            <Button id="submit" icon="sap-icon://accept" type="Emphasized" text="{i18n>Submit}" press="onSubmit" />
+         </Toolbar>
+      </footer>
+   </Page>
+</mvc:View>

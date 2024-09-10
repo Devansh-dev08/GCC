@@ -1,0 +1,99 @@
+/* Enter your custom styles here */
+.sapMPanel .sapMPanelHdr,
+.sapMPanel .sapMTB.sapMPanelHeaderTB {
+    background-color: #8cb8da;
+    opacity: 70%;
+    color: black;
+    font-weight: bolder;
+}
+
+/* .sapMPanel.sapMPanelExpandable .sapMPanelHdr,
+.sapMPanel.sapMPanelExpandable .sapMTB.sapMPanelHeaderTB {
+    padding-left: 5px;
+} */
+
+.sapMPanelHdr {
+    font-size: 1.1rem;
+}
+
+.sapMPanel .sapMPanelHeadingDiv>.sapMPanelHdr,
+.sapMPanelWrappingDiv,
+.sapMPanelWrappingDivTb {
+    background-color: #8cb8da;
+}
+
+.sapMPanelWrappingDiv .sapUiIcon {
+    color: #000;
+}
+
+/* .hhhh{
+    display: inline;
+}*/
+
+.link09 .text09 ._IDGenPanel1 {
+    display: inline;
+}
+
+.sapMText {
+    text-align: left;
+    display: inline;
+}
+
+.sapMLnk {
+    display: inline;
+}
+
+.sapMListTblCell.cellBorderRight {
+    border-right: 1px solid lightgray;
+}
+
+.sapMListTblCell.cellBorderLeft {
+    border-left: 1px solid lightgray;
+}
+
+:root {
+    --margin: 20px;
+}
+
+.headerDetails {
+    margin: var(--margin) var(--margin) 0 var(--margin);
+}
+
+.wsTable {
+    margin-left: var(--margin);
+    margin-right: var(--margin);
+}
+
+.previewWSBut {
+    margin-left: var(--margin);
+    margin-top: 2px;
+}
+
+.fontHeader {
+    font-size: 1rem;
+}
+
+tr[data-dataWs="Hours"] .sapMListTblCell {
+    background: #f5f6f7c5;
+}
+
+tr[data-dataWs="Hours"] .sapMListTblCell .sapMText {
+    font-weight: bold;
+    font-size: 1rem;
+}
+
+/* tr[data-dataWs="Hours"] td[aria-colindex="1"].sapMListTblCell {
+    background-color: red;
+} */
+
+/* span[data-p13ndata="hi"].sapMListTblCell {
+    background-color: blue;
+} */
+
+/* .sapMListTblCell:has(td[class*="colorChange"]) {
+    background-color: lightgray;
+} */
+
+.sapMListTblCell:has(span[data-p13ndata="true"]) {
+    background-color: white !important;
+}

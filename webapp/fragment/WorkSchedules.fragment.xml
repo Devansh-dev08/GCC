@@ -1,0 +1,97 @@
+<core:FragmentDefinition xmlns:rowmodes="sap.ui.table.rowmodes" xmlns:core="sap.ui.core" xmlns:table="sap.ui.table"
+	xmlns="sap.m">
+	<Dialog title="Create Work Schedules" class="sapUiNoContentPadding" verticalScrolling="true" type="Standard" initialFocus="_IDGenText1" resizable="true" contentWidth="auto">
+		<content>
+        <HBox justifyContent="Start" class="headerDetails">
+            <HBox width="50%" justifyContent="Start">
+                <Label text="Start Date" showColon="true" class="sapUiTinyMarginEnd fontHeader" design="Bold" />
+                <Text id="_IDGenText1" text="{ path: 'WSModel>/WSStartDate', formatter: '.formatter.dateFormat' }" class="fontHeader" />
+            </HBox>
+            <HBox width="50%" justifyContent="Start">
+                <Label text="Hours Per Week" showColon="true" class="sapUiTinyMarginEnd fontHeader" design="Bold" />
+                <Text text="{WSModel>/WSHoursPerWeek}" class="fontHeader" />
+            </HBox>
+        </HBox>
+        <!-- Table for entering hours worked -->
+		<Table alternateRowColors="true" items="{WSModel>/WSItems}" columns="{WSModel>/WSColumns}" width="auto" class="wsTable" >
+            <headerToolbar>
+		        <Toolbar>
+                    <ToolbarSpacer />
+                    <Button text="Add" type="Accept" press="onWSAddButton" visible="{= ${WSModel>/PreviewTableShow} !== true}" />
+                    <Button text="Delete" type="Reject" press="onWSDelButton" visible="{WSModel>/DelButShow}" />
+                </Toolbar>
+            </headerToolbar>
+            <columns>
+		        <Column width="{WSModel>width}" styleClass="{WSModel>styleClass}" minScreenWidth="Tablet" popinDisplay="WithoutHeader" >
+                    <Text text="{WSModel>header}" />
+                </Column>
+		    </columns>
+            <items>
+                <ColumnListItem vAlign="Middle" >
+                    <cells>
+                        <Text text="{WSModel>ScheduleDay}" textAlign="Center" />
+                        <Text text="{WSModel>Day}" />
+                        <Input value="{WSModel>HoursWorked}" change="onWSHoursWork" placeholder="Enter Hours (0-24)" valueStateText="Enter correct value (between 0 to 24)" editable="{= ${WSModel>/PreviewTableShow} !== true}" />
+                    </cells>
+                </ColumnListItem>
+            </items>
+        </Table>
+        <Button text="{WSModel>/PreviewText}" class="previewWSBut" press="onWSPreviewBut" type="Emphasized" />
+        <!-- Table for previewing schedules -->
+        <Table id="_IDGenTable1" items="{WSModel>/WSPreviewItems}" columns="{WSModel>/WSPreviewColumns}" width="auto" rememberSelections="true" class="sapUiResponsiveMargin" visible="{WSModel>/PreviewTableShow}">
+            <columns>
+		        <Column width="{WSModel>width}" styleClass="{WSModel>styleClass}" minScreenWidth="Tablet" popinDisplay="WithoutHeader" hAlign="Center" >
+                    <Text text="{WSModel>header}" />
+                </Column>
+		    </columns>
+            <items>
+                <ColumnListItem vAlign="Middle" >
+                <customData>
+                    <core:CustomData key="dataWS" writeToDom="true" value="{WSModel>Type}" />
+                </customData>
+                    <cells>
+                        <Text text="{WSModel>Monday/Monday}" textAlign="Center" >
+                        <customData>
+                            <core:CustomData key="p13nData" value="{WSModel>Monday/dataFound}" writeToDom="true" />
+                        </customData>
+                        </Text>
+                        <Text text="{WSModel>Tuesday/Tuesday}" textAlign="Center" >
+                            <customData>
+                                <core:CustomData key="p13nData" value="{path: 'WSModel>Tuesday/dataFound}', formatter: '.formatter.WSDataFormat'}" writeToDom="true" />
+                            </customData>
+                        </Text>
+                        <Text text="{WSModel>Wednesday/Wednesday}" textAlign="Center" >
+                        <customData>
+                                <core:CustomData key="p13nData" value="{WSModel>Wednesday/dataFound}" writeToDom="true" />
+                            </customData>
+                            </Text>
+                        <Text text="{WSModel>Thursday/Thursday}" textAlign="Center" >
+                        <customData>
+                                <core:CustomData key="p13nData" value="{WSModel>Thursday/dataFound}" writeToDom="true" />
+                            </customData>
+                            </Text>
+                        <Text text="{WSModel>Friday/Friday}" textAlign="Center" >
+                        <customData>
+                                <core:CustomData key="p13nData" value="{WSModel>Friday/dataFound}" writeToDom="true" />
+                            </customData>
+                            </Text>
+                        <Text text="{WSModel>Saturday/Saturday}" textAlign="Center" >
+                        <customData>
+                                <core:CustomData key="p13nData" value="{WSModel>Saturday/dataFound}" writeToDom="true" />
+                            </customData>
+                            </Text>
+                        <Text text="{WSModel>Sunday/Sunday}" textAlign="Center" >
+                        <customData>
+                            <core:CustomData key="p13nData" value="{WSModel>Sunday/dataFound}" writeToDom="true" />
+                        </customData>
+                        </Text>
+                    </cells>
+                </ColumnListItem>
+            </items>
+        </Table>
+		</content>
+		<endButton>
+			<Button text="Cancel" press="onWorkSchedulesClose" />
+		</endButton>
+	</Dialog>
+</core:FragmentDefinition>

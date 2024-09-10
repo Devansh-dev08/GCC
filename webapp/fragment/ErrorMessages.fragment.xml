@@ -1,0 +1,31 @@
+<core:FragmentDefinition
+	xmlns="sap.ui.table"
+	xmlns:m="sap.m"
+	xmlns:f="sap.ui.layout.form"
+	xmlns:mvc="sap.ui.core.mvc"
+	xmlns:core="sap.ui.core">
+	<m:Dialog draggable="true" title="Error Messages" titleAlignment="Start" icon="sap-icon://status-error" contentWidth="auto" >
+		<m:content>
+			<m:MessageStrip type="Error" text="Error Messages in the uploaded file" showIcon="true" class="sapUiResponsiveMargin" />
+			<Table alternateRowColors="true" selectionMode="None" rows="{excelData>/ErrorMessages}" class="sapUiResponsiveMargin" width="auto" >
+				<columns>
+					<Column width="7rem" hAlign="End" >
+						<m:Label text="Row number" />
+						<template>
+							<m:Text text="{excelData>Item}" textAlign="Right" />
+						</template>
+					</Column>
+					<Column >
+						<m:Label text="Message" width="13rem" />
+						<template>
+							<m:Label text="{excelData>Message}"  />
+						</template>
+					</Column>
+				</columns>
+			</Table>
+		</m:content>
+		<m:endButton>
+			<m:Button text="Close" press="onMessageClose" />
+		</m:endButton>
+	</m:Dialog>
+</core:FragmentDefinition>

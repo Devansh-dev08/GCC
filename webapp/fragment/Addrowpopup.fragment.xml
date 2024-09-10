@@ -1,0 +1,83 @@
+<core:FragmentDefinition
+	xmlns="sap.m"
+	xmlns:f="sap.ui.layout.form"
+	xmlns:mvc="sap.ui.core.mvc"
+	xmlns:core="sap.ui.core">
+	<Dialog draggable="true" title="" titleAlignment="Start" resizable="true" fieldGroupIds="fragmentReq" >
+		<VBox class="sapUiResponsiveMargin" >
+			<HBox >
+				<VBox class="sapUiSmallMarginEnd" >
+					<Label text="Vendor" showColon="true" required="true" />
+					<Input width="150px" value="{excelData>/addRow/Vendor}" required="true" change="onVendorChange" valueStateText="Enter a valid Vendor" />
+				</VBox>
+				<VBox class="sapUiSmallMarginEnd" >
+					<Label text="Vendor Name" showColon="true" required="true" />
+					<Input width="150px" value="{excelData>/addRow/VendorName}" editable="false" />
+				</VBox>
+			</HBox>
+			<HBox >
+				<VBox >
+					<Label text="Invoice Date" showColon="true" class="sapUiSmallMarginEnd" required="true" />
+					<DatePicker class="sapUiSmallMarginEnd" width="150px" value="{excelData>/addRow/InvoiceDate}" maxDate="{excelData>/addRow/MaxInvDate}" required="true" valueStateText="Enter a valid date" change="onInvoiceChange" displayFormat="dd.MM.yyyy" />
+				</VBox>
+				<VBox >
+					<Label text="Reference" showColon="true" class="sapUiSmallMarginEnd" required="true" />
+					<Input class="sapUiSmallMarginEnd" width="150px" value="{excelData>/addRow/Reference}" change="onReferenceChange" required="true" />
+				</VBox>
+			</HBox>
+		</VBox>
+		<Table xmlns="sap.m" mode="MultiSelect" items="{excelData>/addRow/items}" class="sapUiResponsiveMargin" width="auto" >
+			<headerToolbar>
+				<Toolbar width="auto" design="Solid" style="Standard" >
+					<ToolbarSpacer />
+					<Button text="Add Row" type="Emphasized" press="_AddRowPop" icon="sap-icon://add" />
+					<Button text="Delete Row" type="Emphasized" press="_DelRowPop" icon="sap-icon://delete" />
+				</Toolbar>
+			</headerToolbar>
+			<columns>
+				<Column hAlign="Center" >
+					<Label text="Cost Center/WBS/Internal Order" required="true" />
+				</Column>
+				<Column hAlign="Center">
+					<Label text="Cost Centre Description" required="true" />
+				</Column>
+				<Column hAlign="Center">
+					<Label text="Budget Manager" required="true" />
+				</Column>
+				<Column hAlign="Center">
+					<Label text="Ledger Code" required="true" />
+				</Column>
+				<Column hAlign="Center">
+					<Label text="General Ledger Description" required="true" />
+				</Column>
+				<Column hAlign="Center">
+					<Label text="Item Value (excl VAT)" required="true" />
+				</Column>
+				<Column hAlign="Center">
+					<Label text="Tax Code" required="true" />
+				</Column>
+				<Column hAlign="Center">
+					<Label text="Item Description" required="true" />
+				</Column>
+			</columns>
+			<items>
+				<ColumnListItem >
+					<Input value="{excelData>Cciowbs}" required="true" change="onCcChage" valueStateText="Enter a valid Cost Center/WBS/Internal Order" />
+					<Input value="{excelData>CciowbsName}" editable="false" />
+					<Input value="{excelData>BudgetHold}" editable="false" />
+					<Input type="Number" value="{excelData>LedgerCode}" required="true" change="onGlChage" valueStateText="Enter a valid G/L code" />
+					<Input value="{excelData>GLDesc}" editable="false" />
+					<Input type="Number" value="{excelData>ItemVal}" required="true" change="onItemValChange" />
+					<Input value="{excelData>VATCode}" required="true" change="onVATChage" maxLength="2" />
+					<Input value="{excelData>ItemDesc}" required="true" change="onItemDescChange" />
+				</ColumnListItem>
+			</items>
+		</Table>
+		<beginButton>
+			<Button text="Cancel" press="_onCloseFrag" />
+		</beginButton>
+		<endButton>
+			<Button text="Save" press="_onSaveFrag" type="Emphasized" />
+		</endButton>
+	</Dialog>
+</core:FragmentDefinition>

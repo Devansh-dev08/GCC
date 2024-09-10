@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="1.0" xmlns:edmx="http://schemas.microsoft.com/ado/2007/06/edmx" xmlns:m="http://schemas.microsoft.com/ado/2007/08/dataservices/metadata" xmlns:sap="http://www.sap.com/Protocols/SAPData">
+    <edmx:DataServices m:DataServiceVersion="2.0">
+        <Schema Namespace="ZCONSOL_INV_SRV" xml:lang="en" sap:schema-version="1" xmlns="http://schemas.microsoft.com/ado/2008/09/edm">
+            <Annotation Term="Core.SchemaVersion" String="1.0.0" xmlns="http://docs.oasis-open.org/odata/ns/edm"/>
+            <EntityType Name="zinv_header" sap:content-version="1">
+                <Key>
+                    <PropertyRef Name="GuidId"/>
+                </Key>
+                <Property Name="BudgetHolder" Type="Edm.String" Nullable="false" MaxLength="100" sap:unicode="false" sap:label="Budget Holder" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
+                <Property Name="GuidId" Type="Edm.String" Nullable="false" MaxLength="100" sap:unicode="false" sap:label="GUID ID" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
+                <NavigationProperty Name="zinv_hdr_to_itemsNav" Relationship="ZCONSOL_INV_SRV.zinv_hdr_to_items" FromRole="FromRole_zinv_hdr_to_items" ToRole="ToRole_zinv_hdr_to_items"/>
+            </EntityType>
+            <EntityType Name="zinv_items" sap:content-version="1">
+                <Key>
+                    <PropertyRef Name="GuidId"/>
+                    <PropertyRef Name="Vendor"/>
+                </Key>
+                <Property Name="GuidId" Type="Edm.String" Nullable="false" MaxLength="100" sap:unicode="false" sap:label="GUID ID" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
+                <Property Name="Vendor" Type="Edm.String" Nullable="false" MaxLength="10" sap:unicode="false" sap:label="Vendor" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
+                <Property Name="VendorName" Type="Edm.String" Nullable="false" MaxLength="200" sap:unicode="false" sap:label="Vendor Name" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
+                <Property Name="InvoiceDate" Type="Edm.String" Nullable="false" MaxLength="20" sap:unicode="false" sap:label="Invoice Date" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
+                <Property Name="Reference" Type="Edm.String" Nullable="false" MaxLength="100" sap:unicode="false" sap:label="Reference" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
+                <Property Name="CostCentre" Type="Edm.String" Nullable="false" MaxLength="10" sap:unicode="false" sap:label="Cost Center" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
+                <Property Name="CcName" Type="Edm.String" Nullable="false" MaxLength="100" sap:unicode="false" sap:label="Cost Center Description" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
+                <Property Name="BudgetManager" Type="Edm.String" Nullable="false" MaxLength="100" sap:unicode="false" sap:label="Budget Manager" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
+                <Property Name="GlCode" Type="Edm.String" Nullable="false" MaxLength="10" sap:unicode="false" sap:label="G/L Account" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
+                <Property Name="GlName" Type="Edm.String" Nullable="false" MaxLength="100" sap:unicode="false" sap:label="G/L Account Description" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
+                <Property Name="ItemValue" Type="Edm.String" Nullable="false" MaxLength="10" sap:unicode="false" sap:label="Character Field with Length 10" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
+                <Property Name="Vat" Type="Edm.String" Nullable="false" MaxLength="10" sap:unicode="false" sap:label="Character Field with Length 10" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
+                <Property Name="ItemDesc" Type="Edm.String" Nullable="false" MaxLength="100" sap:unicode="false" sap:label="Character 100" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
+            </EntityType>
+            <Association Name="zinv_hdr_to_items" sap:content-version="1">
+                <End Type="ZCONSOL_INV_SRV.zinv_header" Multiplicity="1" Role="FromRole_zinv_hdr_to_items"/>
+                <End Type="ZCONSOL_INV_SRV.zinv_items" Multiplicity="*" Role="ToRole_zinv_hdr_to_items"/>
+                <ReferentialConstraint>
+                    <Principal Role="FromRole_zinv_hdr_to_items">
+                        <PropertyRef Name="GuidId"/>
+                    </Principal>
+                    <Dependent Role="ToRole_zinv_hdr_to_items">
+                        <PropertyRef Name="GuidId"/>
+                    </Dependent>
+                </ReferentialConstraint>
+            </Association>
+            <EntityContainer Name="ZCONSOL_INV_SRV_Entities" m:IsDefaultEntityContainer="true" sap:supported-formats="atom json xlsx">
+                <EntitySet Name="zinv_headerSet" EntityType="ZCONSOL_INV_SRV.zinv_header" sap:creatable="false" sap:updatable="false" sap:deletable="false" sap:pageable="false" sap:content-version="1"/>
+                <EntitySet Name="zinv_itemsSet" EntityType="ZCONSOL_INV_SRV.zinv_items" sap:creatable="false" sap:updatable="false" sap:deletable="false" sap:pageable="false" sap:content-version="1"/>
+                <AssociationSet Name="zinv_hdr_to_itemsSet" Association="ZCONSOL_INV_SRV.zinv_hdr_to_items" sap:creatable="false" sap:updatable="false" sap:deletable="false" sap:content-version="1">
+                    <End EntitySet="zinv_headerSet" Role="FromRole_zinv_hdr_to_items"/>
+                    <End EntitySet="zinv_itemsSet" Role="ToRole_zinv_hdr_to_items"/>
+                </AssociationSet>
+            </EntityContainer>
+            <atom:link rel="self" href="https://s4hdev1.sap.gloscc.gov.uk:44300/sap/opu/odata/sap/ZCONSOL_INV_SRV/$metadata" xmlns:atom="http://www.w3.org/2005/Atom"/>
+            <atom:link rel="latest-version" href="https://s4hdev1.sap.gloscc.gov.uk:44300/sap/opu/odata/sap/ZCONSOL_INV_SRV/$metadata" xmlns:atom="http://www.w3.org/2005/Atom"/>
+        </Schema>
+    </edmx:DataServices>
+</edmx:Edmx>

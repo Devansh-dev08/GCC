@@ -1,0 +1,25 @@
+/* Enter your custom styles here */
+
+.sapMPanel .sapMPanelHeadingDiv>.sapMPanelHdr{
+    background: #8cb8da;
+}
+
+.sapMTB-Solid-CTX.sapMTB {
+    background-color: #8cb8da;
+}
+
+.removeBG .sapMInputBaseInner {
+    background: white;
+}
+
+tr[data-excelData=""] {
+    background: #f5f5f6;
+}
+
+tr[data-excelData=""]  .removeBG .sapMInputBaseInner {
+    background: #f5f5f6;
+}
+
+tr[aria-selected=true] .removeBG .sapMInputBaseInner {
+    background: #ebf8ff;
+}

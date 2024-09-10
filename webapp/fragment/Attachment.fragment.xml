@@ -1,0 +1,50 @@
+<core:FragmentDefinition
+	xmlns="sap.m"
+	xmlns:upload="sap.m.upload"
+	xmlns:mvc="sap.ui.core.mvc"
+	xmlns:core="sap.ui.core">
+	<Dialog contentHeight="50%" contentWidth="70%" draggable="true" resizable="true" title="Add Attachment">
+		<content>
+			<upload:UploadSet
+				id="UploadSet2"
+				showIcons="true"
+				uploadEnabled="true"
+				multiple="false"
+				uploadButtonInvisible="false"
+				sameFilenameAllowed="false"
+				instantUpload="true"
+				terminationEnabled="true"
+				beforeUploadStarts="onBeforeUploadStarts"
+				afterItemRemoved="onFileDelete"
+				uploadUrl="/sap/opu/odata/sap/ZRTRGTGW_CONS_INV_SRV/zrtgtgw_ci_fileSet"
+				mode="None"
+				items="{excelData>/AttachmentItems}">
+				<upload:toolbar>
+					<OverflowToolbar>
+						<ToolbarSpacer/>
+					</OverflowToolbar>
+				</upload:toolbar>
+				<upload:items>
+					<upload:UploadSetItem
+						fileName="{excelData>fileName}"
+						mediaType="{excelData>mediaType}"
+						url="{excelData>url}"
+						thumbnailUrl="{excelData>thumbnailUrl}"
+						uploadState="{excelData>uploadState}"
+						statuses="{path: 'excelData>statuses', templateShareable: false}">
+						<upload:statuses>
+						<ObjectStatus
+								title="{excelData>title}"
+								text="{excelData>text}"
+								active="false"/>
+					</upload:statuses>
+								</upload:UploadSetItem>
+								</upload:items>
+			</upload:UploadSet>
+            	<List id="progressList"/>
+		</content>
+		<endButton>
+			<Button text="Close" press="onAttachClose" />
+		</endButton>
+	</Dialog>
+</core:FragmentDefinition>

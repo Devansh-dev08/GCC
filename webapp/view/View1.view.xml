@@ -86,7 +86,7 @@
 								</columns>
 								<items>
 									<ColumnListItem id="_IDGenColumnListItem1" fieldGroupIds="checkSecA" >
-										<ComboBox id="_IDGenInput1" value="{oneModel1>empName}" required="true" enabled="{= ${oneModel1>/form/mode} !== 'display' }" items="{path: 'oneModel1>/dropdownEmp', templateShareable:false}" change="onEmplChange" tooltip="Select the contract the employee is claiming against for your organisation">
+										<ComboBox id="_IDGenInput1" value="{oneModel1>empName}" required="true" enabled="{= ${oneModel1>/form/mode} !== 'display' }" items="{path: 'oneModel1>/dropdownEmp', templateShareable:false, length: 10000}" change="onEmplChange" tooltip="Select the contract the employee is claiming against for your organisation">
 											<items>
 												<core:Item key="{oneModel1>userId}" text="{oneModel1>lastName} {oneModel1>firstName} {oneModel1>userId} {oneModel1>jobTitle}" />
 											</items>

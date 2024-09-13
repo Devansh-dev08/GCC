@@ -58,10 +58,31 @@ sap.ui.define([
                     }
                 });
 
+                // Removing employee sub group 05, 21
+                var sub05, sub21;
+                await $.ajax({
+                    url: serviceUrl + "/odata/v2/PickListValueV2?$filter=PickListV2_id eq 'employee-type' and status eq 'A'&$format=json",
+                    type: 'GET',
+                    contentType: "application/json",
+                    success: function (data) {
+                        for (let a = 0; a < data.d.results.length; a++) {
+                            if (data.d.results[a].externalCode == "05") {
+                                sub05 = data.d.results[a].optionId;
+                            }
+                            if (data.d.results[a].externalCode == "21") {
+                                sub21 = data.d.results[a].optionId;
+                            }
+                        }
+                    },
+                    error: function (e) {
+                        console.log(`Error: ${JSON.parse(e.responseText)}`);
+                    }
+                });
+
                 // Getting all the employees from the personnel area
                 let employeeData = [];
                 await $.ajax({
-                    url: serviceUrl + `/odata/v2/EmpJob?$filter=customString3 eq '${orgCode}' and emplStatus ne '${discarded}' and emplStatus ne '${terminated}' and emplStatus ne '${retired}' and emplStatus ne '${suspended}' and emplStatus ne '${reportedNoShow}' and endDate gt datetime'${FirstDateISO}T00:00:00'&toDate=${LastDateISO}&$format=json`,
+                    url: serviceUrl + `/odata/v2/EmpJob?$filter=customString3 eq '${orgCode}' and emplStatus ne '${discarded}' and emplStatus ne '${terminated}' and emplStatus ne '${retired}' and emplStatus ne '${suspended}' and emplStatus ne '${reportedNoShow}' and employmentType ne '${sub05}' and employmentType ne '${sub21}' and endDate gt datetime'${FirstDateISO}T00:00:00' and&toDate=${LastDateISO}&$format=json`,
                     type: 'GET',
                     contentType: "application/json",
                     success: function (data) {
@@ -300,7 +321,7 @@ sap.ui.define([
                     .then(() => {
                         if (!oModel2.getData().email) {
                             oModel2.setData(mock);
-                            var useremail = "devansh.agarwal@hcl.com";
+                            var useremail = "test00021407@noemail.gloucestershire.gov.uk";
                         }
                         else {
                             var useremail = oModel2.getData().email;
@@ -850,7 +871,7 @@ sap.ui.define([
                             var personnelArea = data.d.results[0].customString3;
                             var perSubArea = data.d.results[0].customString4;
                             var subGroupCode = data.d.results[0].employmentType
-                            var subGroup = that.getView().getModel("oneModel1").getProperty("/EmpSubGrp").filter((el) => el.optionId == subGroupCode)[0].externalCode;
+                            var subGroup = this.getView().getModel("oneModel1").getProperty("/EmpSubGrp").filter((el) => el.optionId == subGroupCode)[0].externalCode;
                             var url = serviceUrl + "/odata/v2/cust_ZFLM_WAGTYPES_SC?$filter=externalName eq '" + personnelArea + "' and cust_PersSubarea eq '" + perSubArea + "' and cust_ESG eq '" + subGroup + "' and cust_FSection eq 'A' &$format=json";
                             $.ajax({
                                 url: url,
@@ -863,7 +884,7 @@ sap.ui.define([
                                     }
                                     else {
                                         var wage = data;
-                                        this.wageCheck(wage, date1);
+                                        this.wageCheck(wage);
                                         for (let i = 0; i < data.d.results.length; i++) {
                                             $.ajax({
                                                 url: serviceUrl + "/odata/v2/FOPayComponent?$filter=externalCode eq '" + data.d.results[i].cust_WageType + "' &$format=json",
@@ -902,7 +923,7 @@ sap.ui.define([
                 //     success: function (data) {
             },
 
-            wageCheck: function (wage, date) {
+            wageCheck: function (wage) {
                 for (let i = 0; i < wage.d.results.length; i++) {
                     if (wage.d.results[i].cust_MinYears == "X") {
 

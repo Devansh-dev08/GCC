@@ -16,34 +16,32 @@ sap.ui.define([
         var flag = "0";
         var errText = [];
         var initiatorCode = "", modeFlag = false;
-        // var DepURL = "https://gccdev.launchpad.cfapps.eu10.hana.ondemand.com/bc211adf-f1bc-4fc8-8396-fdc2344cf2f8.pd01qa.pd01qa-0.0.1/";
-        var DepURL = "";
+        var prefix = "";
 
         return Controller.extend("pd01qa.controller.View1", {
             formatter: formatter,
             onInit: function () {
-                var data = [];
                 var link = this.getOwnerComponent().getModel("i18n").getResourceBundle().getText("SchoolsnetLink")
                 var text = this.getOwnerComponent().getModel("i18n").getResourceBundle().getText("IntroText1")
                 this.getView().byId("_IDGenText1").setHtmlText("<p>" + text + "<a title=" + link + " href=\"" + link + "\"</a> e-Forms pages.</p>")
-                var oModel = new JSONModel(data);
+                var oModel = new JSONModel();
                 this.getView().setModel(oModel, "InitData");
                 this.getView().getModel("InitData").setProperty("/dropdownInfoP", []);
                 this.getView().getModel("InitData").setProperty("/jobInfoP", {});
                 this.getView().getModel("InitData").setProperty("/homeAddressP", {});
 
-                DepURL = sap.ui.require.toUrl(this.getOwnerComponent().getManifestEntry('/sap.app/id').replaceAll('.', '/')) + "/";
+                prefix = sap.ui.require.toUrl(this.getOwnerComponent().getManifestEntry('/sap.app/id').replaceAll('.', '/')) + "/";
 
                 //getting the paramter from the app url
                 this.getOwnerComponent().getRouter().getRoute("RouteView1").attachPatternMatched(this._onRouteMatched, this);
             },
 
             _onRouteMatched: async function (oEvent) {
-                var query = oEvent.getParameter('arguments')["?query"];
+                this.query = oEvent.getParameter('arguments')["?query"];
                 var that = this;
                 // making the model
                 var oModel = this.getView().getModel("InitData");
-                const url = this.getBaseURL() + "/user-api/currentUser";
+                const url = prefix + "user-api/currentUser";
 
                 var mock = {
                     firstname: "Dummy",
@@ -58,331 +56,87 @@ sap.ui.define([
                     .then(async () => {
                         if (!oModel1.getData().email) {
                             oModel1.setData(mock);
-                            var useremail = "devansh.agarwal@hcl.com";
+                            var useremail = "test00171345@noemail.gloucestershire.gov.uk";
                         }
                         else {
                             var useremail = oModel1.getData().email;
                         }
-                        if (query != undefined) {
-                            oModel.setProperty("/disable", query);
-                            this.getView().setModel(oModel, "InitData");
-
-                            await $.ajax({
-                                url: DepURL + "odata/v2/PerEmail?$filter=emailAddress eq '" + useremail + "' &$format=json",
-                                type: 'GET',
-                                contentType: "application/json",
-                                success: async function (data) {
-                                    var email = data;
-                                    var initiator = data.d.results[0].personIdExternal;
-                                    initiatorCode = data.d.results[0].personIdExternal;
-
-                                    await $.ajax({
-                                        url: DepURL + "odata/v2/PerPerson('" + initiator + "')/personalInfoNav?$format=json",
-                                        type: 'GET',
-                                        contentType: "application/json",
-                                        success: async function (data) {
-                                            console.log("success" + data);
-                                            var userId;
-                                            var nameData = data;
-                                            await $.ajax({
-                                                url: DepURL + "odata/v2/EmpEmployment?$filter=personIdExternal eq '" + initiator + "'&$format=json",
-                                                type: 'GET',
-                                                contentType: "application/json",
-                                                success: async function (data) {
-                                                    console.log("success" + data);
-                                                    userId = data.d.results[0].userId
-                                                    var initDetails = {
-                                                        email: email.d.results[0].emailAddress,
-                                                        personIdExternal: initiator,
-                                                        fullName: nameData.d.results[0].firstName + " " + nameData.d.results[0].lastName,
-                                                        userId: data.d.results[0].userId
+                        if (this.query != undefined) {
+                            oModel.setProperty("/disable", this.query);
+                            var that = this;
+                            this._getInitiator(oModel, useremail)
+                                .then(initiator => {
+                                    var initi = initiator;
+                                    // Checking if the user has Multiple Organization
+                                    this._checkMultiOrg(oModel, initi)
+                                        .then(response => {
+                                            this._S4Services(oModel);
+                                            if (this.query.mode != "bsc") {
+                                            }
+                                            else {
+                                            }
+                                        })
+                                        .catch(e => {
+                                            var errorMessage = e ? JSON.parse(e.responseText).error.message.value : "Some error occurred"
+                                            MessageBox.error(`${errorMessage}`, {
+                                                title: "Error Message",
+                                                actions: [sap.m.MessageBox.Action.OK],
+                                                onClose: function (oAction) {
+                                                    if (oAction) {
+                                                        window.history.go(-1);
                                                     }
-                                                    oModel.setProperty("/user", initDetails);
-                                                },
-                                                error: function (resp) {
-
                                                 }
                                             });
-                                        },
-                                        error: function (resp) {
+                                        });
+                                });
+                            // await $.ajax({
+                            //     url: prefix + "odata/v2/PerEmail?$filter=emailAddress eq '" + useremail + "' &$format=json",
+                            //     type: 'GET',
+                            //     contentType: "application/json",
+                            //     success: async function (data) {
+                            //         var email = data;
+                            //         var initiator = data.d.results[0].personIdExternal;
+                            //         initiatorCode = data.d.results[0].personIdExternal;
 
-                                        }
-                                    });
-                                },
-                                error: function (resp) {
+                            //         await $.ajax({
+                            //             url: prefix + "odata/v2/PerPerson('" + initiator + "')/personalInfoNav?$format=json",
+                            //             type: 'GET',
+                            //             contentType: "application/json",
+                            //             success: async function (data) {
+                            //                 console.log("success" + data);
+                            //                 var userId;
+                            //                 var nameData = data;
+                            //                 await $.ajax({
+                            //                     url: prefix + "odata/v2/EmpEmployment?$filter=personIdExternal eq '" + initiator + "'&$format=json",
+                            //                     type: 'GET',
+                            //                     contentType: "application/json",
+                            //                     success: async function (data) {
+                            //                         console.log("success" + data);
+                            //                         userId = data.d.results[0].userId
+                            //                         that.getNextSevenMonths(userId, that, oModel);
+                            //                         var initDetails = {
+                            //                             email: email.d.results[0].emailAddress,
+                            //                             personIdExternal: initiator,
+                            //                             fullName: nameData.d.results[0].firstName + " " + nameData.d.results[0].lastName,
+                            //                             userId: data.d.results[0].userId
+                            //                         }
+                            //                         oModel.setProperty("/user", initDetails);
+                            //                     },
+                            //                     error: function (resp) {
 
-                                }
-                            });
-                            // header set
-                            this.getOwnerComponent().getModel("ZSFGTGT_PD01_SRV").read("/zsf_pd01_hSet('" + query.formId + "')?$format=json",
-                                {
-                                    success: function (oData) {
-                                        console.log(oData.Formid);
-                                        //Header Values
-                                        this.getView().byId("_IDGenInput2").setValue(oData.Formid);
-                                        this.getView().byId("_IDGenInput1").setValue(oData.Initiator);
-                                        this.getView().byId("_IDGenInput4").setValue(oData.Zdate);
-                                        this.getView().byId("orgInput").setValue(oData.OrgName);
-                                        this.getView().byId("datepicker01").setValue(oData.EffDate);
-                                        this.getView().byId("datepicker01").setEditable(false);
-                                        this.getView().byId("_IDGenSelect2").setValue(oData.SelectEmployee);
-                                        this.getView().byId("_IDGenSelect2").setSelectedKey(oData.SelEmpCode);
-                                        this.getView().byId("_IDGenSelect2").setEditable(false);
-                                        this.getView().getModel("InitData").setProperty("/confirmedButton", oData.ConfirmedButton);
-                                        //CheckBoxes 
-                                        this.getView().byId("_IDGenVBox12").setVisible(true);
-                                        var checkboxAdd = oData.ChgOfAdd == "X" ? true : false
-                                        this.getView().byId("ChangeOfAddCheckbox").setSelected(checkboxAdd);
+                            //                     }
+                            //                 });
+                            //             },
+                            //             error: function (resp) {
 
-                                        var checkboxBank = oData.ChgOfBank == "X" ? true : false
-                                        this.getView().byId("ChangeOfBankCheckbox").setSelected(checkboxBank);
+                            //             }
+                            //         });
+                            //     },
+                            //     error: function (resp) {
 
-                                        var checkboxName = oData.ChgOfNameStat == "X" ? true : false
-                                        this.getView().byId("ChangeOfNameCheckbox").setSelected(checkboxName);
-                                        // END of Checkboxes
-                                        // Header Value end
-
-                                        //disabling the CHECKBOX
-                                        // this.getView().byId("ChangeOfAddCheckbox").setEditable(false);
-                                        // this.getView().byId("ChangeOfBankCheckbox").setEditable(false);
-                                        // this.getView().byId("ChangeOfNameCheckbox").setEditable(false);
-                                        //UNHIDING THE FIELDS
-                                        // Unhide Panels
-                                        this.getView().byId("_PanelSecB").setVisible(checkboxAdd);
-                                        this.getView().byId("_PanelSecC").setVisible(checkboxBank);
-                                        this.getView().byId("_PanelSecD").setVisible(checkboxName);
-                                        this.getView().byId("_confirmButtonIDEmp").setVisible(false); // Confirmed
-                                        // unhide Panels end
-
-                                    }.bind(this),
-                                    error: function (oData) {
-                                        console.log("Error", oData);
-                                    }
-                                }
-                            );
-                            // End OF Header set
-
-                            // secB set
-                            this.getOwnerComponent().getModel("ZSFGTGT_PD01_SRV").read("/zsf_pd01_hSet('" + query.formId + "')/hdr_to_sec_b_nav?$format=json",
-                                {
-                                    success: function (oData) {
-                                        console.log(oData.results[0].Formid);
-                                        //SecB CheckBoxes
-                                        var checkboxPAdd = oData.results[0].ParmAddress == "X" ? true : false
-                                        this.getView().byId("_IDGenCheckBox4").setSelected(checkboxPAdd);
-
-                                        var checkboxFEAdd = oData.results[0].FirstEmgAdd == "X" ? true : false
-                                        this.getView().byId("_IDGenCheckBox5").setSelected(checkboxFEAdd);
-
-                                        var checkboxSEAdd = oData.results[0].SecondEmgAdd == "X" ? true : false
-                                        this.getView().byId("_IDGenCheckBox6").setSelected(checkboxSEAdd);
-                                        //SecB checkboxes END
-
-                                        //Permanent Address values
-                                        // var temp = this.getView().getModel("InitData");
-                                        // var temp1 = {
-                                        //     "d": {
-                                        //         "address1": oData.results[0].Streetpar,
-                                        //         "address2": oData.results[0].AddLine2par
-                                        //     }
-                                        // }
-                                        // this.getView().getModel("InitData").setProperty("/firstEmergencyAddP", temp1);
-                                        // current details
-                                        this.getView().byId("input1").setValue(oData.results[0].Streetpar);
-                                        this.getView().byId("input2").setValue(oData.results[0].AddLine2par);
-                                        this.getView().byId("input4").setValue(oData.results[0].Citypar);
-                                        this.getView().byId("input5").setValue(oData.results[0].Countypar);
-                                        this.getView().byId("input5").setSelectedKey(oData.results[0].CountyCodepar);
-                                        this.getView().byId("input6").setValue(oData.results[0].PostCodepar);
-                                        this.getView().byId("input7").setValue(oData.results[0].HomePhonepar);
-                                        this.getView().byId("_IDGenInput40").setValue(oData.results[0].Mobilepar);
-                                        this.getView().byId("_IDGenInput41").setValue(oData.results[0].ParEmail);
-                                        // End Of Current details
-
-                                        // New details
-                                        this.getView().byId("_IDGenInput5").setValue(oData.results[0].Streetpne);
-                                        this.getView().byId("_IDGenInput6").setValue(oData.results[0].AddLine2pne);
-                                        this.getView().byId("_IDGenInput8").setValue(oData.results[0].Citypne);
-                                        this.getView().byId("_IDGenSelect3").setValue(oData.results[0].Countypne);
-                                        this.getView().byId("_IDGenSelect3").setSelectedKey(oData.results[0].CountyCodepne);
-                                        this.getView().byId("_IDGenInput9").setValue(oData.results[0].PostCodepne);
-                                        this.getView().byId("_IDGenInput10").setValue(oData.results[0].HomePhonepne);
-                                        this.getView().byId("_IDGenInput11").setValue(oData.results[0].Mobilepne);
-                                        this.getView().byId("_IDGenInput12").setValue(oData.results[0].ParNewEmail);
-                                        this.getView().byId("_IDGenInput13").setValue(oData.results[0].ParConEmail);
-                                        oData.results[0].ParPhnType ? this.getView().getModel("InitData").setProperty("/phoneTypeB", { id: oData.results[0].ParPhnType }) : "";
-                                        oData.results[0].PhnFlag == "X" ? this.getView().getModel("InitData").setProperty("/phoneInfoB", { isPrimary: true }) : "";
-
-                                        oData.results[0].ParMobType ? this.getView().getModel("InitData").setProperty("/phoneTypeP", { id: oData.results[0].ParMobType }) : "";
-                                        oData.results[0].MobFlag == "X" ? this.getView().getModel("InitData").setProperty("/phoneInfoP", { isPrimary: true }) : "";
-
-                                        this.getView().getModel("InitData").setProperty("/emailInfoP", { emailType: oData.results[0].ParEmailType, isPrimary: oData.results[0].EmailPrimary == "X" ? true : false });
-                                        // End Of New Details
-                                        // END of Permanent Address
-
-                                        // First Emergency Address
-                                        // Current Details
-                                        this.getView().byId("_IDGenInput42").setValue(oData.results[0].Streetfir);
-                                        this.getView().byId("_IDGenInput43").setValue(oData.results[0].AddLine2fir);
-                                        this.getView().byId("_IDGenInput45").setValue(oData.results[0].Cityfir);
-                                        this.getView().byId("_IDGenInput46").setValue(oData.results[0].Countyfir);
-                                        this.getView().byId("_IDGenInput46").setSelectedKey(oData.results[0].CountyCodefir);
-                                        this.getView().byId("_IDGenInput47").setValue(oData.results[0].PostCodefir);
-                                        this.getView().byId("_IDGenInput48").setValue(oData.results[0].FirstKinName);
-                                        this.getView().byId("_IDGenInputRel").setValue(oData.results[0].CurrFirstRelCode);
-                                        this.getView().byId("_IDGenInput49").setValue(oData.results[0].HomePhonefir);
-                                        this.getView().byId("_IDGenInput49").setValue(oData.results[0].Mobilefir);
-                                        // End Of Current Details
-
-                                        // New Details
-                                        this.getView().byId("_IDGenInput14").setValue(oData.results[0].Streetfne);
-                                        this.getView().byId("_IDGenInput15").setValue(oData.results[0].AddLine2fne);
-                                        this.getView().byId("_IDGenInput17").setValue(oData.results[0].Cityfne);
-                                        this.getView().byId("_IDGenSelect4").setValue(oData.results[0].Countyfne);
-                                        this.getView().byId("_IDGenSelect4").setSelectedKey(oData.results[0].CountyCodefne);
-                                        this.getView().byId("_IDGenInput18").setValue(oData.results[0].PostCodefne);
-                                        this.getView().byId("_IDGenInput19").setValue(oData.results[0].HomePhonefne);
-                                        // this.getView().byId("_IDGenInput20").setValue(oData.results[0].Mobilefne);
-                                        this.getView().byId("_IDGenInput21").setValue(oData.results[0].FirstNewKinName);
-                                        this.getView().byId("_IDGenInputSurne").setValue(oData.results[0].FirstNewKinSurName);
-                                        this.getView().byId("_IDGenComboBox1").setValue(oData.results[0].FirstRelation);
-                                        this.getView().byId("_IDGenComboBox1").setSelectedKey(oData.results[0].FirstRelCode);
-                                        // END Of New Details
-                                        // END of First Emergency Address
-
-                                        // Second Emergency Address
-                                        // Current Details
-                                        this.getView().byId("_IDGenInput51").setValue(oData.results[0].Streetsec);
-                                        this.getView().byId("_IDGenInput52").setValue(oData.results[0].AddLine2sec);
-                                        this.getView().byId("_IDGenInput54").setValue(oData.results[0].Citysec);
-                                        this.getView().byId("_IDGenInput55").setValue(oData.results[0].Countysec);
-                                        this.getView().byId("_IDGenInput55").setSelectedKey(oData.results[0].CountyCodesec);
-                                        this.getView().byId("_IDGenInput57").setValue(oData.results[0].SecKinName);
-                                        this.getView().byId("_IDGenInputSurSec").setValue(oData.results[0].SecKinSurName);
-                                        this.getView().byId("_IDGenInputRelSec").setValue(oData.results[0].CurrSecRelCode);
-                                        this.getView().byId("_IDGenInput56").setValue(oData.results[0].PostCodesec);
-                                        this.getView().byId("_IDGenInput58").setValue(oData.results[0].HomePhonesec);
-                                        // this.getView().byId("_IDGenInput59").setValue(oData.results[0].Mobilesec);
-                                        // End Of Current Details
-
-                                        // New Details
-                                        this.getView().byId("_IDGenInput23").setValue(oData.results[0].Streetsne);
-                                        this.getView().byId("_IDGenInput24").setValue(oData.results[0].AddLine2sne);
-                                        this.getView().byId("_IDGenInput26").setValue(oData.results[0].Citysne);
-                                        this.getView().byId("_IDGenSelect5").setValue(oData.results[0].Countysne);
-                                        this.getView().byId("_IDGenSelect5").setSelectedKey(oData.results[0].CountyCodesne);
-                                        this.getView().byId("_IDGenInput27").setValue(oData.results[0].PostCodesne);
-                                        this.getView().byId("_IDGenInput30").setValue(oData.results[0].HomePhonesne);
-                                        // this.getView().byId("_IDGenInput31").setValue(oData.results[0].Mobilesne);
-                                        this.getView().byId("_IDGenInput28").setValue(oData.results[0].SecNewKinName);
-                                        this.getView().byId("_IDGenInputSurSne").setValue(oData.results[0].SecNewKinSurName);
-                                        this.getView().byId("_IDGenComboBox2").setValue(oData.results[0].SecRelation);
-                                        this.getView().byId("_IDGenComboBox2").setSelectedKey(oData.results[0].SecRelCode);
-                                        // END Of New Details
-                                        // END of Second Emergency Address
-
-                                        // //disabling the CHECKBOX
-                                        // this.getView().byId("_IDGenCheckBox4").setEditable(false);
-                                        // this.getView().byId("_IDGenCheckBox5").setEditable(false);
-                                        // this.getView().byId("_IDGenCheckBox6").setEditable(false);
-                                        // //UNHIDING THE FIELDS
-                                        // Unhide Panels
-                                        this.byId("_permAddressFlexBox").setVisible(checkboxPAdd);
-                                        this.byId("_firstEmergencyFlexBox").setVisible(checkboxFEAdd);
-                                        this.byId("_secondEmergencyFlexBox").setVisible(checkboxSEAdd);
-                                        // unhide Panels end
-
-                                    }.bind(this),
-                                    error: function (oData) {
-                                        console.log("Error", oData);
-                                    }
-                                }
-                            );
-
-                            // secC set
-                            this.getOwnerComponent().getModel("ZSFGTGT_PD01_SRV").read("/zsf_pd01_hSet('" + query.formId + "')/hdr_to_sec_c_nav?$format=json",
-                                {
-                                    success: function (oData) {
-                                        console.log(oData.results[0].Formid);
-                                        //Values
-                                        // Current Details
-                                        this.getView().byId("_IDGenText36").setValue(oData.results[0].SortCodecur);
-                                        this.getView().byId("_IDGenText37").setValue(oData.results[0].BankBuildcur);
-                                        this.getView().byId("_IDGenText38").setValue(oData.results[0].Accountcur);
-                                        this.getView().byId("_IDGenText39").setValue(oData.results[0].BuildSocietyRefcur);
-                                        // End Of Current Details
-
-                                        // New Details
-                                        this.getView().byId("_IDGenInput33").setValue(oData.results[0].SortCodenew);
-                                        this.getView().byId("_IDGenInputA1").setValue(oData.results[0].BankBuildnew);
-                                        this.getView().byId("_IDGenInput34").setValue(oData.results[0].Accountnew);
-                                        this.getView().byId("_IDGenInput35").setValue(oData.results[0].BuildSocietyRefnew);
-                                        this.getView().byId("_nextMonthsDrop").setValue(oData.results[0].EffectiveMonth);
-                                        this.getView().byId("_nextMonthsDrop").setSelectedKey(oData.results[0].EffMonthInt);
-                                        this.getView().getModel("InitData").setProperty("/paymentInfoP", { d: { results: [{ externalCode: oData.results[0].ExtCode }] } });
-                                        this.getView().getModel("InitData").setProperty("/effdateIntP", oData.results[0].EffMonthInt);
-                                        // End Of New Details
-
-                                    }.bind(this),
-                                    error: function (oData) {
-                                        console.log("Error", oData);
-                                    }
-                                }
-                            );
-
-                            // secD set
-                            this.getOwnerComponent().getModel("ZSFGTGT_PD01_SRV").read("/zsf_pd01_hSet('" + query.formId + "')/hdr_to_sec_d_nav?$format=json",
-                                {
-                                    success: function (oData) {
-                                        console.log(oData.results[0].Formid);
-                                        //Values
-                                        // Current Details
-                                        this.getView().byId("_IDGenText40").setValue(oData.results[0].Titlecur);
-                                        this.getView().byId("_IDGenText40").setSelectedKey(oData.results[0].SalutationCodecur);
-                                        this.getView().byId("_IDGenText41").setValue(oData.results[0].Surnamecur);
-                                        this.getView().byId("_IDGenText42").setValue(oData.results[0].Namecur);
-                                        this.getView().byId("_IDGenText43").setValue(oData.results[0].KnownAscur);
-                                        // End Of Current Details
-
-                                        // New Details
-                                        this.getView().byId("_IDGenSelect6").setValue(oData.results[0].Titlenew);
-                                        this.getView().byId("_IDGenSelect6").setSelectedKey(oData.results[0].SalutationCodenew);
-                                        this.getView().byId("_IDGenInput37").setValue(oData.results[0].Surnamenew);
-                                        this.getView().byId("_IDGenInput50").setValue(oData.results[0].MiddleNamenew);
-                                        this.getView().byId("_IDGenInput38").setValue(oData.results[0].Namenew);
-                                        this.getView().byId("_IDGenInput39").setValue(oData.results[0].KnownAsnew);
-                                        // End Of New Details
-
-                                    }.bind(this),
-                                    error: function (oData) {
-                                        console.log("Error", oData);
-                                    }
-                                }
-                            );
-
-                            // Comment set
-                            this.getOwnerComponent().getModel("ZSFGTGT_PD01_SRV").read("/zsf_pd01_hSet('" + query.formId + "')/hdr_to_comm_nav?$format=json",
-                                {
-                                    success: function (oData) {
-                                        console.log(oData.results[0].Formid);
-                                        var comm = oData.results[0].comment;
-                                        if (comm != "") {
-                                            comm = "";
-                                            for (let i = 0; i < oData.results.length; i++) {
-                                                comm += oData.results[i].comment + "\n";
-                                            }
-                                            this.getView().byId("_IDGenTextAreaA").setValue(comm);
-                                            this.getView().byId("_IDGenTextAreaA").setVisible(true);
-
-                                        }
-
-                                    }.bind(this),
-                                    error: function (oData) {
-                                        console.log("Error", oData);
-                                    }
-                                }
-                            );
-                            if (query.mode == "display") {
+                            //     }
+                            // });
+                            if (this.query.mode == "display") {
                                 modeFlag = true;
                                 // this.getView().byId("_IDGenButton1").setVisible(false); // Confirm
                                 this.getView().byId("_confirmButtonIDEmp").setVisible(false); // Confirmed
@@ -405,7 +159,9 @@ sap.ui.define([
                                     return false; // Stop searching deeper once an input is found
                                 });
                             }
-                            else if (query.mode == "initiator") {
+                            else if (this.query.mode == "initiator") {
+                                // loading dropdowns
+                                this.loadDropdowns(oModel);
                                 modeFlag = true;
                                 this.getView().byId("_confirmButtonIDEmp").setVisible(false); // Confirmed
                                 this.getView().byId("_IDGenButton11").setVisible(true); // PRint
@@ -423,245 +179,279 @@ sap.ui.define([
                             oModel.setProperty("/disable", disable);
 
                             // populating date by system
-                            oModel.setProperty("/FormCreationDate", new Date())
+                            oModel.setProperty("/FormCreationDate", new Date());
 
-                            // getting the form id
-                            this.getOwnerComponent().getModel("ZSFGTGT_PD01_SRV").read("/zsf_pd01_formidSet",
-                                {
-                                    success: function (oData) {
-                                        console.log(oData.results[0].Formid);
-                                        this.getView().byId("_IDGenInput2").setValue(oData.results[0].Formid)
-                                        this.getView().byId("_HIDGenFormId1").setValue(oData.results[0].Formid)
-                                    }.bind(this),
-                                    error: function (oData) {
-                                        console.log("Error", oData);
-                                    }
-                                });
-                            var that = this;
-                            // var useremail = "gupta.ashutosh@hcl.com"
-                            var org;
-                            // initiator ajax MAIN
-                            await $.ajax({
-                                url: DepURL + "odata/v2/PerEmail?$filter=emailAddress eq '" + useremail + "' &$format=json",
-                                type: 'GET',
-                                contentType: "application/json",
-                                success: async function (data) {
-                                    var email = data;
+                            // Initialize the Checkboxes and panels variables
+                            this._PanelB = this.byId("_PanelSecB");
+                            this._PanelC = this.byId("_PanelSecC");
+                            this._PanelD = this.byId("_PanelSecD");
+                            this._FlexBoxA = this.byId("_permAddressFlexBox");
+                            this._FlexBoxB = this.byId("_firstEmergencyFlexBox");
+                            this._FlexBoxC = this.byId("_secondEmergencyFlexBox");
+                            this._AddHBox = this.byId("_addressHBox");
+                            this._letterSpace = this.byId("_IDGenInput33");
+                            this._FlexBoxD = this.byId("_empDetailsConfirmFlexB");
+                            this._VBoxA = this.byId("your_comments_boxA");
 
-                                    // var initiator = data.d.results[0].personIdExternal;
+                            this._getInitiator(oModel, useremail)
+                                .then(initiator => {
+                                    var initi = initiator;
+                                    console.log(`Form initiated by ${initi}`);
+                                    // Checking if the user has Multiple Organization
+                                    this._checkMultiOrg(oModel, initi)
+                                        .then(response => {
+                                            // // Calling all the SuccessFactors API's
 
-                                    //initiator logic end
-                                    // Initialize the Checkboxes and panels variables
-                                    this._PanelB = this.byId("_PanelSecB");
-                                    this._PanelC = this.byId("_PanelSecC");
-                                    this._PanelD = this.byId("_PanelSecD");
-                                    this._FlexBoxA = this.byId("_permAddressFlexBox");
-                                    this._FlexBoxB = this.byId("_firstEmergencyFlexBox");
-                                    this._FlexBoxC = this.byId("_secondEmergencyFlexBox");
-                                    this._AddHBox = this.byId("_addressHBox");
-                                    this._letterSpace = this.byId("_IDGenInput33");
-                                    this._FlexBoxD = this.byId("_empDetailsConfirmFlexB");
-                                    this._VBoxA = this.byId("your_comments_boxA");
+                                            // loading dropdowns
+                                            this.loadDropdowns(oModel);
 
+                                            this._SFServices(oModel, initi, response)
+                                                .then(() => {
+                                                    // Generating log for initiated status
+                                                    // setTimeout(this._logCreation("I"), 3000);
+                                                })
 
-                                    //data Binding-------------------------------> 
-                                    // oModel Declaration
-                                    var oModel = this.getView().getModel("InitData");
-                                    var that = this;
-
-                                    // First property - personal Info
-                                    // var initiator = "10200048";
-                                    var initiator = data.d.results[0].personIdExternal;
-                                    initiatorCode = data.d.results[0].personIdExternal;
-
-                                    await $.ajax({
-                                        url: DepURL + "odata/v2/PerPerson('" + initiator + "')/personalInfoNav?$format=json",
-                                        type: 'GET',
-                                        contentType: "application/json",
-                                        success: async function (data) {
-                                            console.log("success" + data);
-                                            var userId;
-                                            var nameData = data;
-                                            await $.ajax({
-                                                url: DepURL + "odata/v2/EmpEmployment?$filter=personIdExternal eq '" + initiator + "'&$format=json",
-                                                type: 'GET',
-                                                contentType: "application/json",
-                                                success: async function (data) {
-                                                    console.log("success" + data);
-                                                    userId = data.d.results[0].userId
-                                                    var initDetails = {
-                                                        email: email.d.results[0].emailAddress,
-                                                        personIdExternal: initiator,
-                                                        fullName: nameData.d.results[0].firstName + " " + nameData.d.results[0].lastName,
-                                                        userId: data.d.results[0].userId
+                                            // getting the form id
+                                            this.getOwnerComponent().getModel("ZSFGTGT_PD01_SRV").read("/zsf_pd01_formidSet",
+                                                {
+                                                    success: function (oData) {
+                                                        console.log(oData.results[0].Formid);
+                                                        this.getView().byId("_IDGenInput2").setValue(oData.results[0].Formid)
+                                                        this.getView().byId("_HIDGenFormId1").setValue(oData.results[0].Formid)
+                                                    }.bind(this),
+                                                    error: function (oData) {
+                                                        console.log("Error", oData);
                                                     }
-                                                    oModel.setProperty("/user", initDetails);
-
-                                                    // Second Property - job Info / Employee DropDown
-                                                    await $.ajax({
-                                                        url: DepURL + "odata/v2/EmpEmployment(personIdExternal='" + initiator + "',userId='" + userId + "')/jobInfoNav?$format=json",
-                                                        type: 'GET',
-                                                        contentType: "application/json",
-                                                        success: async function (data) {
-                                                            console.log("success" + data);
-                                                            var orgType = data.d.results[0].customString3;
-                                                            if (data.d.results[0].managerId == "NO_MANAGER") {
-                                                                MessageBox.error("Line Manager is missing, Form cannot be Initiated", {
-                                                                    title: "Error Message",
-                                                                    actions: [sap.m.MessageBox.Action.OK],
-                                                                    onClose: function (oAction) {
-                                                                        if (oAction) {
-                                                                            // var oHistory, sPreviousHash;
-                                                                            // oHistory = History.getInstance();
-                                                                            // sPreviousHash = oHistory.getPreviousHash();
-                                                                            // if (sPreviousHash == undefined) {
-                                                                            // }
-                                                                            window.history.go(-1);
-                                                                        }
-                                                                    }
-                                                                });
-                                                            }
-                                                            $.ajax({
-                                                                url: DepURL + "odata/v2/cust_PersonnelArea?$filter= externalCode eq '" + data.d.results[0].customString3 + "'&$format=json",
-                                                                type: 'GET',
-                                                                contentType: "application/json",
-                                                                success: function (data) {
-                                                                    console.log("success" + data);
-                                                                    that.getView().byId("orgInput").setValue(data.d.results[0].externalName + " (" + orgType + ")");
-                                                                    org = data.d.results[0].externalName + " (" + orgType + ")";
-                                                                    that.s4Log(org, that);
-                                                                    oModel.setProperty("/jobInfoP", data);
-                                                                    that.getView().setModel(oModel, "InitData");
-                                                                },
-                                                                error: function (e) {
-                                                                    console.log("error: " + e);
-                                                                }
-                                                            });
-
-                                                            that._getEmplData(orgType, oModel);
-                                                            // Personal Info DropDown
-                                                            await $.ajax({
-                                                                url: DepURL + "odata/v2/EmpJob?$filter=customString3 eq '" + orgType + "'&$format=json",
-                                                                type: 'GET',
-                                                                contentType: "application/json",
-                                                                success: function (data) {
-                                                                    console.log("success" + data);
-                                                                    var dropdownArray = [];
-                                                                    for (let i = 0; i < data.d.results.length; i++) {
-                                                                        var Org = data;
-                                                                        $.ajax({
-                                                                            url: DepURL + "odata/v2/EmpEmployment?$filter=userId eq '" + data.d.results[i].userId + "'&$format=json",
-                                                                            type: 'GET',
-                                                                            contentType: "application/json",
-                                                                            success: function (data) {
-                                                                                console.log("success" + data);
-                                                                                $.ajax({
-                                                                                    url: DepURL + "odata/v2/PerPerson('" + data.d.results[0].personIdExternal + "')/personalInfoNav?$format=json",
-                                                                                    type: 'GET',
-                                                                                    contentType: "application/json",
-                                                                                    success: function (data) {
-                                                                                        console.log("success" + data);
-                                                                                        var firstNameDrop = data.d.results[0].firstName;
-                                                                                        var lastNameDrop = data.d.results[0].lastName;
-                                                                                        var personIdExternalDrop = data.d.results[0].personIdExternal;
-                                                                                        var customString1Drop = Org.d.results[i].customString1
-                                                                                        var selectEmp = {
-                                                                                            personIdExternal: personIdExternalDrop,
-                                                                                            firstName: firstNameDrop,
-                                                                                            lastName: lastNameDrop,
-                                                                                            jobInfo: customString1Drop,
-                                                                                            userId: Org.d.results[i].userId
-                                                                                        }
-                                                                                        // pushing the key value pair to the table array
-                                                                                        dropdownArray.push(selectEmp);
-
-                                                                                        // sorting
-                                                                                        dropdownArray.sort((a, b) => {
-                                                                                            // Sort by Last name
-                                                                                            if (a.lastName < b.lastName) return -1;
-                                                                                            if (a.lastName > b.lastName) return 1;
-
-                                                                                            // a.firstName.localeCompare(b.firstName)
-                                                                                            if (a.firstName < b.firstName) return -1;
-                                                                                            if (a.firstName > b.firstName) return 1;
-
-                                                                                            //Sort by UserId
-                                                                                            if (a.userId < b.userId) return -1;
-                                                                                            if (a.userId > b.userId) return 1;
-                                                                                        });
-                                                                                        // making property dropdownInfoP to bind data in table
-                                                                                        oModel.setProperty("/dropdownInfoP", dropdownArray);
-                                                                                        that.getView().setModel(oModel, "InitData");
-
-                                                                                    },
-                                                                                    error: function (e) {
-                                                                                        console.log("error: " + e);
-                                                                                        // console.log("userID: " , userIdOrg);
-                                                                                    }
-                                                                                });
-                                                                            },
-                                                                            error: function (e) {
-                                                                                console.log("error: " + e);
-                                                                                // console.log("userID: " , userIdOrg);
-                                                                            }
-                                                                        });
-                                                                    }
-                                                                },
-                                                                error: function (e) {
-                                                                    console.log("error: " + e);
-                                                                }
-                                                            });
-                                                        },
-                                                        error: function (e) {
-                                                            console.log("error: " + e);
-                                                        }
-                                                    });
-                                                },
-                                                error: function (e) {
-                                                    console.log("error: " + e);
-                                                }
-                                            })
-                                            var salutationInit = nameData.d.results[0].salutation;
-                                            var firstNameInit = nameData.d.results[0].firstName;
-                                            var lastNameInit = nameData.d.results[0].lastName;
-
-                                            // salutation label
-                                            await $.ajax({
-                                                url: DepURL + "odata/v2/PicklistOption(" + salutationInit + 'L' + ")/picklistLabels?$format=json",
-                                                type: 'GET',
-                                                contentType: "application/json",
-                                                success: function (data) {
-                                                    console.log("success" + data);
-                                                    var salutationLabel = data.d.results[0].label;
-                                                    var initName = {
-                                                        salutationLabel: salutationLabel,
-                                                        firstNameInit: firstNameInit,
-                                                        lastNameInit: lastNameInit
-                                                    }
-                                                    oModel.setProperty("/initInfoP", initName);
-                                                    that.getView().setModel(oModel, "InitData");
-                                                },
-                                                error: function (e) {
-                                                    console.log("error: " + e);
-                                                }
-                                            })
-                                            oModel.setProperty("/personalInfoP", data);
-                                            that.getView().setModel(oModel, "InitData");
-                                        },
-                                        error: function (e) {
-                                            console.log("error: " + e);
+                                                });
+                                        });
+                                })
+                                .catch(e => {
+                                    var errorMessage = e ? JSON.parse(e.responseText).error.message.value : "Some error occurred"
+                                    MessageBox.error(`${errorMessage}`, {
+                                        title: "Error Message",
+                                        actions: [sap.m.MessageBox.Action.OK],
+                                        onClose: function (oAction) {
+                                            if (oAction) {
+                                                window.history.go(-1);
+                                            }
                                         }
                                     });
-                                }.bind(this)
-                            }); //initiator ajax ending
+                                });
+
+                            //     var that = this;
+                            // // var useremail = "gupta.ashutosh@hcl.com"
+                            // var org;
+                            // // initiator ajax MAIN
+                            // await $.ajax({
+                            //     url: prefix + "odata/v2/PerEmail?$filter=emailAddress eq '" + useremail + "' &$format=json",
+                            //     type: 'GET',
+                            //     contentType: "application/json",
+                            //     success: async function (data) {
+                            //         var email = data;
+
+                            //         // var initiator = data.d.results[0].personIdExternal;
+
+
+
+                            //         //data Binding-------------------------------> 
+                            //         // oModel Declaration
+                            //         var oModel = this.getView().getModel("InitData");
+                            //         var that = this;
+
+                            //         // First property - personal Info
+                            //         // var initiator = "10200048";
+                            //         var initiator = data.d.results[0].personIdExternal;
+                            //         initiatorCode = data.d.results[0].personIdExternal;
+
+                            //         await $.ajax({
+                            //             url: prefix + "odata/v2/PerPerson('" + initiator + "')/personalInfoNav?$format=json",
+                            //             type: 'GET',
+                            //             contentType: "application/json",
+                            //             success: async function (data) {
+                            //                 console.log("success" + data);
+                            //                 var userId;
+                            //                 var nameData = data;
+                            //                 await $.ajax({
+                            //                     url: prefix + "odata/v2/EmpEmployment?$filter=personIdExternal eq '" + initiator + "'&$format=json",
+                            //                     type: 'GET',
+                            //                     contentType: "application/json",
+                            //                     success: async function (data) {
+                            //                         console.log("success" + data);
+                            //                         userId = data.d.results[0].userId
+                            //                         var initDetails = {
+                            //                             email: email.d.results[0].emailAddress,
+                            //                             personIdExternal: initiator,
+                            //                             fullName: nameData.d.results[0].firstName + " " + nameData.d.results[0].lastName,
+                            //                             userId: data.d.results[0].userId
+                            //                         }
+                            //                         oModel.setProperty("/user", initDetails);
+
+                            //                         // Second Property - job Info / Employee DropDown
+                            //                         await $.ajax({
+                            //                             url: prefix + "odata/v2/EmpEmployment(personIdExternal='" + initiator + "',userId='" + userId + "')/jobInfoNav?$format=json",
+                            //                             type: 'GET',
+                            //                             contentType: "application/json",
+                            //                             success: async function (data) {
+                            //                                 console.log("success" + data);
+                            //                                 var orgType = data.d.results[0].customString3;
+                            //                                 if (data.d.results[0].managerId == "NO_MANAGER") {
+                            //                                     MessageBox.error("Line Manager is missing, Form cannot be Initiated", {
+                            //                                         title: "Error Message",
+                            //                                         actions: [sap.m.MessageBox.Action.OK],
+                            //                                         onClose: function (oAction) {
+                            //                                             if (oAction) {
+                            //                                                 // var oHistory, sPreviousHash;
+                            //                                                 // oHistory = History.getInstance();
+                            //                                                 // sPreviousHash = oHistory.getPreviousHash();
+                            //                                                 // if (sPreviousHash == undefined) {
+                            //                                                 // }
+                            //                                                 window.history.go(-1);
+                            //                                             }
+                            //                                         }
+                            //                                     });
+                            //                                 }
+                            //                                 $.ajax({
+                            //                                     url: prefix + "odata/v2/cust_PersonnelArea?$filter= externalCode eq '" + data.d.results[0].customString3 + "'&$format=json",
+                            //                                     type: 'GET',
+                            //                                     contentType: "application/json",
+                            //                                     success: function (data) {
+                            //                                         console.log("success" + data);
+                            //                                         that.getView().byId("orgInput").setValue(data.d.results[0].externalName + " (" + orgType + ")");
+                            //                                         org = data.d.results[0].externalName + " (" + orgType + ")";
+                            //                                         that.s4Log(org, that);
+                            //                                         oModel.setProperty("/jobInfoP", data);
+                            //                                         that.getView().setModel(oModel, "InitData");
+                            //                                     },
+                            //                                     error: function (e) {
+                            //                                         console.log("error: " + e);
+                            //                                     }
+                            //                                 });
+
+
+                            //                                 // Personal Info DropDown
+                            //                                 await $.ajax({
+                            //                                     url: prefix + "odata/v2/EmpJob?$filter=customString3 eq '" + orgType + "'&$format=json",
+                            //                                     type: 'GET',
+                            //                                     contentType: "application/json",
+                            //                                     success: function (data) {
+                            //                                         console.log("success" + data);
+                            //                                         var dropdownArray = [];
+                            //                                         for (let i = 0; i < data.d.results.length; i++) {
+                            //                                             var Org = data;
+                            //                                             $.ajax({
+                            //                                                 url: prefix + "odata/v2/EmpEmployment?$filter=userId eq '" + data.d.results[i].userId + "'&$format=json",
+                            //                                                 type: 'GET',
+                            //                                                 contentType: "application/json",
+                            //                                                 success: function (data) {
+                            //                                                     console.log("success" + data);
+                            //                                                     $.ajax({
+                            //                                                         url: prefix + "odata/v2/PerPerson('" + data.d.results[0].personIdExternal + "')/personalInfoNav?$format=json",
+                            //                                                         type: 'GET',
+                            //                                                         contentType: "application/json",
+                            //                                                         success: function (data) {
+                            //                                                             console.log("success" + data);
+                            //                                                             var firstNameDrop = data.d.results[0].firstName;
+                            //                                                             var lastNameDrop = data.d.results[0].lastName;
+                            //                                                             var personIdExternalDrop = data.d.results[0].personIdExternal;
+                            //                                                             var customString1Drop = Org.d.results[i].customString1
+                            //                                                             var selectEmp = {
+                            //                                                                 personIdExternal: personIdExternalDrop,
+                            //                                                                 firstName: firstNameDrop,
+                            //                                                                 lastName: lastNameDrop,
+                            //                                                                 jobInfo: customString1Drop,
+                            //                                                                 userId: Org.d.results[i].userId
+                            //                                                             }
+                            //                                                             // pushing the key value pair to the table array
+                            //                                                             dropdownArray.push(selectEmp);
+
+                            //                                                             // sorting
+                            //                                                             dropdownArray.sort((a, b) => {
+                            //                                                                 // Sort by Last name
+                            //                                                                 if (a.lastName < b.lastName) return -1;
+                            //                                                                 if (a.lastName > b.lastName) return 1;
+
+                            //                                                                 // a.firstName.localeCompare(b.firstName)
+                            //                                                                 if (a.firstName < b.firstName) return -1;
+                            //                                                                 if (a.firstName > b.firstName) return 1;
+
+                            //                                                                 //Sort by UserId
+                            //                                                                 if (a.userId < b.userId) return -1;
+                            //                                                                 if (a.userId > b.userId) return 1;
+                            //                                                             });
+                            //                                                             // making property dropdownInfoP to bind data in table
+                            //                                                             oModel.setProperty("/dropdownInfoP", dropdownArray);
+                            //                                                             that.getView().setModel(oModel, "InitData");
+
+                            //                                                         },
+                            //                                                         error: function (e) {
+                            //                                                             console.log("error: " + e);
+                            //                                                             // console.log("userID: " , userIdOrg);
+                            //                                                         }
+                            //                                                     });
+                            //                                                 },
+                            //                                                 error: function (e) {
+                            //                                                     console.log("error: " + e);
+                            //                                                     // console.log("userID: " , userIdOrg);
+                            //                                                 }
+                            //                                             });
+                            //                                         }
+                            //                                     },
+                            //                                     error: function (e) {
+                            //                                         console.log("error: " + e);
+                            //                                     }
+                            //                                 });
+                            //                             },
+                            //                             error: function (e) {
+                            //                                 console.log("error: " + e);
+                            //                             }
+                            //                         });
+                            //                     },
+                            //                     error: function (e) {
+                            //                         console.log("error: " + e);
+                            //                     }
+                            //                 })
+                            //                 var salutationInit = nameData.d.results[0].salutation;
+                            //                 var firstNameInit = nameData.d.results[0].firstName;
+                            //                 var lastNameInit = nameData.d.results[0].lastName;
+
+                            //                 // salutation label
+                            //                 await $.ajax({
+                            //                     url: prefix + "odata/v2/PicklistOption(" + salutationInit + 'L' + ")/picklistLabels?$format=json",
+                            //                     type: 'GET',
+                            //                     contentType: "application/json",
+                            //                     success: function (data) {
+                            //                         console.log("success" + data);
+                            //                         var salutationLabel = data.d.results[0].label;
+                            //                         var initName = {
+                            //                             salutationLabel: salutationLabel,
+                            //                             firstNameInit: firstNameInit,
+                            //                             lastNameInit: lastNameInit
+                            //                         }
+                            //                         oModel.setProperty("/initInfoP", initName);
+                            //                         that.getView().setModel(oModel, "InitData");
+                            //                     },
+                            //                     error: function (e) {
+                            //                         console.log("error: " + e);
+                            //                     }
+                            //                 })
+                            //                 oModel.setProperty("/personalInfoP", data);
+                            //                 that.getView().setModel(oModel, "InitData");
+                            //             },
+                            //             error: function (e) {
+                            //                 console.log("error: " + e);
+                            //             }
+                            //         });
+                            //     }.bind(this)
+                            // }); //initiator ajax ending
                         }
                     })// data loaded bracket
             },
 
-            _getEmplData: async function (orgCode, effDate) {
+            _getEmplData: async function (orgCode, LastDateISO) {
+
                 var terminated, retired, suspended, discarded, reportedNoShow;
                 await $.ajax({
-                    url: prefix + "/odata/v2/PickListValueV2?$filter=PickListV2_id eq 'employee-status' and status eq 'A'&$format=json",
+                    url: prefix + "odata/v2/PickListValueV2?$filter=PickListV2_id eq 'employee-status' and status eq 'A'&$format=json",
                     type: 'GET',
                     contentType: "application/json",
                     success: function (data) {
@@ -684,86 +474,735 @@ sap.ui.define([
                         }
                     },
                     error: function (e) {
+                        console.log(`PickListValueV2 entity failed for employee-status while getting employee dropdown`);
                         console.log(`Error: ${JSON.parse(e.responseText)}`);
                     }
                 });
 
+                let uri = `odata/v2/EmpJob?$filter=customString3 eq '${orgCode}' and emplStatus ne '${discarded}' and emplStatus ne '${terminated}' and emplStatus ne '${retired}' and emplStatus ne '${suspended}' and emplStatus ne '${reportedNoShow}'&$format=json`
+                uri = LastDateISO ? uri + `&toDate=${LastDateISO}` : uri;
+                fetchingEmpData(uri, orgCode, LastDateISO, this);
                 // Getting all the employees from the personnel area
-                let employeeData = [];
-                await $.ajax({
-                    url: prefix + `/odata/v2/EmpJob?$filter=customString3 eq '${orgCode}' and emplStatus ne '${discarded}' and emplStatus ne '${terminated}' and emplStatus ne '${retired}' and emplStatus ne '${suspended}' and emplStatus ne '${reportedNoShow}' and startDate le datetime'${effDate}T00:00:00' &toDate=${effDate.split("-")[0]}-${effDate.split("-")[2]}-${effDate.split("-")[1]}&$format=json`,
+                async function fetchingEmpData(uri, orgCode, LastDateISO, _self) {
+                    let employeeData = [];
+                    await $.ajax({
+                        url: prefix + uri,
+                        type: 'GET',
+                        contentType: "application/json",
+                        success: function (data) {
+                            employeeData = data.d.results;
+                            if (data.d.__next) {
+                                var uri = "/odata/v2" + data.d.__next.split("/odata/v2")[1];
+                                fetchingEmpData(uri, orgCode, LastDateISO, _self);
+                            }
+                        },
+                        error: function (e) {
+                            sap.ui.core.BusyIndicator.hide();
+                            console.log(`EmpJob entity failed for ${orgCode} while getting employee dropdown`);
+                            console.log("error: " + JSON.parse(e.responseText));
+                        }
+                    });
+
+                    employeeData = _self.filterEmplData(employeeData);
+                    var findPostDate = Number((new Date(LastDateISO.split("-")[0], LastDateISO.split("-")[2], 0).getTime()));
+
+                    let a = new sap.ui.model.odata.ODataModel(prefix + "odata/v2", false);
+                    a.bTokenHandling = false;
+                    if (employeeData.length > 180) {
+                        for (let i = 0; i < employeeData.length / 180; i++) {
+                            employeeDetails(employeeData.slice(i * 180, (i + 1) * 180), _self);
+                        }
+                    }
+                    else {
+                        employeeDetails(employeeData, _self);
+                    }
+
+                    function employeeDetails(emplData, _self) {
+                        let batchData = [];
+                        a.clearBatch();
+                        emplData.forEach(function (oItem) {
+                            batchData.push(a.createBatchOperation(
+                                "/EmpEmployment?$filter=userId eq '" + oItem.userId + "'",
+                                "GET"
+                            ));
+                        });
+                        a.addBatchReadOperations(batchData);
+                        a.setUseBatch(true);
+                        a.submitBatch(function (data) {
+                            batchData = [];
+                            a.clearBatch();
+                            data.__batchResponses.forEach(function (oId) {
+                                batchData.push(a.createBatchOperation(
+                                    "/PerPersonal?$filter=personIdExternal eq '" + oId.data.results[0].personIdExternal + "'",
+                                    "GET"
+                                ));
+                            })
+                            a.addBatchReadOperations(batchData);
+                            a.setUseBatch(true);
+                            a.submitBatch(function (data) {
+                                if (data.__batchResponses) {
+                                    var EmpData = [];
+                                    for (let i = 0; i < data.__batchResponses.length; i++) {
+                                        try {
+                                            var postingDate = _self.unixDateRegex(emplData[i].endDate) > findPostDate ? findPostDate : _self.unixDateRegex(emplData[i].endDate);
+                                            var temp = {
+                                                firstName: data.__batchResponses[i].data.results[0].firstName,
+                                                lastName: data.__batchResponses[i].data.results[0].lastName,
+                                                userId: emplData[i].userId,
+                                                jobTitle: emplData[i].customString1,
+                                                personIdExternal: data.__batchResponses[i].data.results[0].personIdExternal,
+                                                postingDate: `/Date(${postingDate})/`
+                                            };
+                                            EmpData.push(temp);
+                                        } catch (e) {
+                                            console.log("Inconsistent data found for " + emplData[i].userId);
+                                        }
+                                    }
+                                    var existingData = _self.getView().getModel("InitData").getProperty("/dropdownInfoP");
+                                    var finalData = existingData ? existingData.concat(EmpData) : EmpData;
+                                    finalData.sort((a, b) => {
+                                        // Sort by Last name
+                                        if (a.lastName < b.lastName) return -1;
+                                        if (a.lastName > b.lastName) return 1;
+
+                                        // a.firstName.localeCompare(b.firstName)
+                                        if (a.firstName < b.firstName) return -1;
+                                        if (a.firstName > b.firstName) return 1;
+
+                                        //Sort by UserId
+                                        if (a.userId < b.userId) return -1;
+                                        if (a.userId > b.userId) return 1;
+                                    });
+                                    _self.getView().getModel("InitData").setProperty("/dropdownInfoP", finalData);
+                                    sap.ui.core.BusyIndicator.hide();
+                                }
+                                else {
+                                    console.log(`No Employee Found for ${empl.d.results[0].personIdExternal}`);
+                                }
+                                sap.ui.core.BusyIndicator.hide();
+                            });
+                        });
+                    }
+                }
+            },
+
+            _getInitiator: async function (oModel, useremail) {
+
+                return new Promise(
+                    async function (resolve, reject) {
+                        var email;
+                        await $.ajax({
+                            url: prefix + "odata/v2/PerEmail?$filter=emailAddress eq '" + useremail + "' &$format=json",
+                            type: 'GET',
+                            contentType: "application/json",
+                            success: function (data) {
+                                email = data;
+                            }.bind(this),
+                            error: function (e) {
+                                console.log(`PerEmail entity failed for ${useremail}`);
+                                reject(e);
+                            }
+                        });
+                        await $.ajax({
+                            url: prefix + "odata/v2/PerPerson(personIdExternal='" + email.d.results[0].personIdExternal + "')/personalInfoNav?$format=json",
+                            type: 'GET',
+                            contentType: "application/json",
+                            success: function (data) {
+                                var initDetails = {
+                                    email: email.d.results[0].emailAddress,
+                                    personIdExternal: email.d.results[0].personIdExternal,        //first name, last name Etc.
+                                    fullName: data.d.results[0].firstName + " " + data.d.results[0].lastName,
+                                    salutation: data.d.results[0].salutation
+                                }
+                                this.initiatorCode = email.d.results[0].personIdExternal;
+                                oModel.setProperty("/user", initDetails);
+                                resolve(email.d.results[0].personIdExternal);
+                            }.bind(this),
+                            error: function (data) {
+                                console.log(`PerPerson entity failed for ${email.d.results[0].personIdExternal}`);
+                                reject(data);
+                            }
+                        });
+                    }.bind(this));
+            },
+
+            _checkMultiOrg: async function (oModel, initiator) {
+
+                return new Promise(
+                    async function (resolve, reject) {
+                        var username;
+                        var multiOrgFound = false;
+                        await $.ajax({
+                            url: prefix + "odata/v2/UserAccount?$format=json&$filter=personIdExternal eq '" + initiator + "'",
+                            type: 'GET',
+                            contentType: "application/json",
+                            success: function (data) {
+                                username = data.d.results[0].username;
+                            },
+                            error: function (e) {
+                                console.log(`UserAccount entity failed for ${initiator}`);
+                                reject(e);
+                            }
+                        });
+                        await $.ajax({
+                            url: prefix + "odata/v2/cust_ZFLM_MULTI_USERS?$filter=cust_UserName eq '" + username + "'&$format=json",
+                            type: 'GET',
+                            contentType: "application/json",
+                            success: async function (data) {
+                                if (data.d.results.length != 0) {
+                                    var cust_Value = data.d.results[0].cust_Value.split(",");
+                                    multiOrgFound = true;
+                                    oModel.setProperty("/OrgNameP", "");
+                                    var val = [];
+                                    cust_Value.forEach(async function (item) {
+                                        $.ajax({
+                                            url: prefix + "odata/v2/cust_PersonnelArea?$filter= externalCode eq '" + item + "'&$format=json",
+                                            type: 'GET',
+                                            contentType: "application/json",
+                                            success: function (data) {
+                                                var req = {
+                                                    key: item,
+                                                    value: data.d.results[0].externalName
+                                                };
+                                                val.push(req);
+                                                oModel.setProperty("/OrgValues", val);
+                                                resolve(true);
+                                            },
+                                            error: function (e) {
+                                                console.log(`cust_PersonnelArea entity failed for ${item}`);
+                                                reject(e);
+                                            }
+                                        });
+                                    });
+                                } else {
+                                    resolve(false);
+                                    oModel.setProperty("/multiOrgFound", false);
+                                }
+                            }.bind(this),
+                            error: function (e) {
+                                console.log(`cust_ZFLM_MULTI_USERS entity failed for ${username}`);
+                                reject(e);
+                            }
+                        });
+                    });
+            },
+
+            _S4Services: function (oModel) {
+
+                // header set
+                this.getOwnerComponent().getModel("ZSFGTGT_PD01_SRV").read("/zsf_pd01_hSet('" + this.query.formId + "')?$format=json",
+                    {
+                        success: function (oData) {
+                            console.log(oData.Formid);
+                            //Header Values
+                            this.getView().byId("_IDGenInput2").setValue(oData.Formid);
+                            this.getView().byId("_IDGenInput1").setValue(oData.Initiator);
+                            this.getView().byId("_IDGenInput4").setValue(oData.Zdate);
+                            this.getView().byId("orgInput").setValue(oData.OrgName);
+                            this.getView().byId("datepicker01").setValue(oData.EffDate);
+                            this.getView().byId("datepicker01").setEditable(false);
+                            this.getView().byId("_IDGenSelect2").setValue(oData.SelectEmployee);
+                            this.getView().byId("_IDGenSelect2").setSelectedKey(oData.SelEmpCode);
+                            this.getView().byId("_IDGenSelect2").setEditable(false);
+                            this.getView().getModel("InitData").setProperty("/confirmedButton", oData.ConfirmedButton);
+                            //CheckBoxes 
+                            this.getView().byId("_IDGenVBox12").setVisible(true);
+                            var checkboxAdd = oData.ChgOfAdd == "X" ? true : false
+                            this.getView().byId("ChangeOfAddCheckbox").setSelected(checkboxAdd);
+
+                            var checkboxBank = oData.ChgOfBank == "X" ? true : false
+                            this.getView().byId("ChangeOfBankCheckbox").setSelected(checkboxBank);
+
+                            var checkboxName = oData.ChgOfNameStat == "X" ? true : false
+                            this.getView().byId("ChangeOfNameCheckbox").setSelected(checkboxName);
+                            // END of Checkboxes
+                            // Header Value end
+
+                            //disabling the CHECKBOX
+                            // this.getView().byId("ChangeOfAddCheckbox").setEditable(false);
+                            // this.getView().byId("ChangeOfBankCheckbox").setEditable(false);
+                            // this.getView().byId("ChangeOfNameCheckbox").setEditable(false);
+                            //UNHIDING THE FIELDS
+                            // Unhide Panels
+                            this.getView().byId("_PanelSecB").setVisible(checkboxAdd);
+                            this.getView().byId("_PanelSecC").setVisible(checkboxBank);
+                            this.getView().byId("_PanelSecD").setVisible(checkboxName);
+                            this.getView().byId("_confirmButtonIDEmp").setVisible(false); // Confirmed
+                            // unhide Panels end
+
+                        }.bind(this),
+                        error: function (oData) {
+                            console.log("Error", oData);
+                        }
+                    }
+                );
+                // End OF Header set
+
+                // secB set
+                this.getOwnerComponent().getModel("ZSFGTGT_PD01_SRV").read("/zsf_pd01_hSet('" + this.query.formId + "')/hdr_to_sec_b_nav?$format=json",
+                    {
+                        success: function (oData) {
+                            console.log(oData.results[0].Formid);
+                            //SecB CheckBoxes
+                            var checkboxPAdd = oData.results[0].ParmAddress == "X" ? true : false
+                            this.getView().byId("_IDGenCheckBox4").setSelected(checkboxPAdd);
+
+                            var checkboxFEAdd = oData.results[0].FirstEmgAdd == "X" ? true : false
+                            this.getView().byId("_IDGenCheckBox5").setSelected(checkboxFEAdd);
+
+                            var checkboxSEAdd = oData.results[0].SecondEmgAdd == "X" ? true : false
+                            this.getView().byId("_IDGenCheckBox6").setSelected(checkboxSEAdd);
+                            //SecB checkboxes END
+
+                            //Permanent Address values
+                            // var temp = this.getView().getModel("InitData");
+                            // var temp1 = {
+                            //     "d": {
+                            //         "address1": oData.results[0].Streetpar,
+                            //         "address2": oData.results[0].AddLine2par
+                            //     }
+                            // }
+                            // this.getView().getModel("InitData").setProperty("/firstEmergencyAddP", temp1);
+                            // current details
+                            this.getView().byId("input1").setValue(oData.results[0].Streetpar);
+                            this.getView().byId("input2").setValue(oData.results[0].AddLine2par);
+                            this.getView().byId("input4").setValue(oData.results[0].Citypar);
+                            this.getView().byId("input5").setValue(oData.results[0].Countypar);
+                            this.getView().byId("input5").setSelectedKey(oData.results[0].CountyCodepar);
+                            this.getView().byId("input6").setValue(oData.results[0].PostCodepar);
+                            this.getView().byId("input7").setValue(oData.results[0].HomePhonepar);
+                            this.getView().byId("_IDGenInput40").setValue(oData.results[0].Mobilepar);
+                            this.getView().byId("_IDGenInput41").setValue(oData.results[0].ParEmail);
+                            // End Of Current details
+
+                            // New details
+                            this.getView().byId("_IDGenInput5").setValue(oData.results[0].Streetpne);
+                            this.getView().byId("_IDGenInput6").setValue(oData.results[0].AddLine2pne);
+                            this.getView().byId("_IDGenInput8").setValue(oData.results[0].Citypne);
+                            this.getView().byId("_IDGenSelect3").setValue(oData.results[0].Countypne);
+                            this.getView().byId("_IDGenSelect3").setSelectedKey(oData.results[0].CountyCodepne);
+                            this.getView().byId("_IDGenInput9").setValue(oData.results[0].PostCodepne);
+                            this.getView().byId("_IDGenInput10").setValue(oData.results[0].HomePhonepne);
+                            this.getView().byId("_IDGenInput11").setValue(oData.results[0].Mobilepne);
+                            this.getView().byId("_IDGenInput12").setValue(oData.results[0].ParNewEmail);
+                            this.getView().byId("_IDGenInput13").setValue(oData.results[0].ParConEmail);
+                            this.configData = {
+                                phoneTypeP: oData.results[0].ParPhnType,
+                                phoneTypeB: oData.results[0].ParMobType,
+                                emailTypeP: oData.results[0].ParEmailType,
+                                isPhonePrimary: oData.results[0].PhnFlag ? true : false,
+                                isHomePrimary: oData.results[0].MobFlag ? true : false,
+                                isEmailPrimary: oData.results[0].EmailPrimary ? true : false
+                            }
+                            oData.results[0].PhnFlag == "X" ? this.getView().getModel("InitData").setProperty("/phoneInfoB", { isPrimary: true }) : "";
+                            oData.results[0].MobFlag == "X" ? this.getView().getModel("InitData").setProperty("/phoneInfoP", { isPrimary: true }) : "";
+
+                            this.getView().getModel("InitData").setProperty("/emailInfoP", { emailType: oData.results[0].ParEmailType, isPrimary: oData.results[0].EmailPrimary == "X" ? true : false });
+                            // End Of New Details
+                            // END of Permanent Address
+
+                            // First Emergency Address
+                            // Current Details
+                            this.getView().byId("_IDGenInput42").setValue(oData.results[0].Streetfir);
+                            this.getView().byId("_IDGenInput43").setValue(oData.results[0].AddLine2fir);
+                            this.getView().byId("_IDGenInput45").setValue(oData.results[0].Cityfir);
+                            this.getView().byId("_IDGenInput46").setValue(oData.results[0].Countyfir);
+                            this.getView().byId("_IDGenInput46").setSelectedKey(oData.results[0].CountyCodefir);
+                            this.getView().byId("_IDGenInput47").setValue(oData.results[0].PostCodefir);
+                            this.getView().byId("_IDGenInput48").setValue(oData.results[0].FirstKinName);
+                            this.getView().byId("_IDGenInputRel").setValue(oData.results[0].CurrFirstRelCode);
+                            this.getView().byId("_IDGenInput49").setValue(oData.results[0].HomePhonefir);
+                            this.getView().byId("_IDGenInput49").setValue(oData.results[0].Mobilefir);
+                            // End Of Current Details
+
+                            // New Details
+                            this.getView().byId("_IDGenInput14").setValue(oData.results[0].Streetfne);
+                            this.getView().byId("_IDGenInput15").setValue(oData.results[0].AddLine2fne);
+                            this.getView().byId("_IDGenInput17").setValue(oData.results[0].Cityfne);
+                            this.getView().byId("_IDGenSelect4").setValue(oData.results[0].Countyfne);
+                            this.getView().byId("_IDGenSelect4").setSelectedKey(oData.results[0].CountyCodefne);
+                            this.getView().byId("_IDGenInput18").setValue(oData.results[0].PostCodefne);
+                            this.getView().byId("_IDGenInput19").setValue(oData.results[0].HomePhonefne);
+                            // this.getView().byId("_IDGenInput20").setValue(oData.results[0].Mobilefne);
+                            this.getView().byId("_IDGenInput21").setValue(oData.results[0].FirstNewKinName);
+                            this.getView().byId("_IDGenInputSurne").setValue(oData.results[0].FirstNewKinSurName);
+                            this.getView().byId("_IDGenComboBox1").setValue(oData.results[0].FirstRelation);
+                            this.getView().byId("_IDGenComboBox1").setSelectedKey(oData.results[0].FirstRelCode);
+                            // END Of New Details
+                            // END of First Emergency Address
+
+                            // Second Emergency Address
+                            // Current Details
+                            this.getView().byId("_IDGenInput51").setValue(oData.results[0].Streetsec);
+                            this.getView().byId("_IDGenInput52").setValue(oData.results[0].AddLine2sec);
+                            this.getView().byId("_IDGenInput54").setValue(oData.results[0].Citysec);
+                            this.getView().byId("_IDGenInput55").setValue(oData.results[0].Countysec);
+                            this.getView().byId("_IDGenInput55").setSelectedKey(oData.results[0].CountyCodesec);
+                            this.getView().byId("_IDGenInput57").setValue(oData.results[0].SecKinName);
+                            this.getView().byId("_IDGenInputSurSec").setValue(oData.results[0].SecKinSurName);
+                            this.getView().byId("_IDGenInputRelSec").setValue(oData.results[0].CurrSecRelCode);
+                            this.getView().byId("_IDGenInput56").setValue(oData.results[0].PostCodesec);
+                            this.getView().byId("_IDGenInput58").setValue(oData.results[0].HomePhonesec);
+                            // this.getView().byId("_IDGenInput59").setValue(oData.results[0].Mobilesec);
+                            // End Of Current Details
+
+                            // New Details
+                            this.getView().byId("_IDGenInput23").setValue(oData.results[0].Streetsne);
+                            this.getView().byId("_IDGenInput24").setValue(oData.results[0].AddLine2sne);
+                            this.getView().byId("_IDGenInput26").setValue(oData.results[0].Citysne);
+                            this.getView().byId("_IDGenSelect5").setValue(oData.results[0].Countysne);
+                            this.getView().byId("_IDGenSelect5").setSelectedKey(oData.results[0].CountyCodesne);
+                            this.getView().byId("_IDGenInput27").setValue(oData.results[0].PostCodesne);
+                            this.getView().byId("_IDGenInput30").setValue(oData.results[0].HomePhonesne);
+                            // this.getView().byId("_IDGenInput31").setValue(oData.results[0].Mobilesne);
+                            this.getView().byId("_IDGenInput28").setValue(oData.results[0].SecNewKinName);
+                            this.getView().byId("_IDGenInputSurSne").setValue(oData.results[0].SecNewKinSurName);
+                            this.getView().byId("_IDGenComboBox2").setValue(oData.results[0].SecRelation);
+                            this.getView().byId("_IDGenComboBox2").setSelectedKey(oData.results[0].SecRelCode);
+                            // END Of New Details
+                            // END of Second Emergency Address
+
+                            // //disabling the CHECKBOX
+                            // this.getView().byId("_IDGenCheckBox4").setEditable(false);
+                            // this.getView().byId("_IDGenCheckBox5").setEditable(false);
+                            // this.getView().byId("_IDGenCheckBox6").setEditable(false);
+                            // //UNHIDING THE FIELDS
+                            // Unhide Panels
+                            this.byId("_permAddressFlexBox").setVisible(checkboxPAdd);
+                            this.byId("_firstEmergencyFlexBox").setVisible(checkboxFEAdd);
+                            this.byId("_secondEmergencyFlexBox").setVisible(checkboxSEAdd);
+                            // unhide Panels end
+
+                        }.bind(this),
+                        error: function (oData) {
+                            console.log("Error", oData);
+                        }
+                    }
+                );
+
+                // secC set
+                this.getOwnerComponent().getModel("ZSFGTGT_PD01_SRV").read("/zsf_pd01_hSet('" + this.query.formId + "')/hdr_to_sec_c_nav?$format=json",
+                    {
+                        success: function (oData) {
+                            console.log(oData.results[0].Formid);
+                            //Values
+                            // Current Details
+                            this.getView().byId("_IDGenText36").setValue(oData.results[0].SortCodecur);
+                            this.getView().byId("_IDGenText37").setValue(oData.results[0].BankBuildcur);
+                            this.getView().byId("_IDGenText38").setValue(oData.results[0].Accountcur);
+                            this.getView().byId("_IDGenText39").setValue(oData.results[0].BuildSocietyRefcur);
+                            // End Of Current Details
+
+                            // New Details
+                            this.getView().byId("_IDGenInput33").setValue(oData.results[0].SortCodenew);
+                            this.getView().byId("_IDGenInputA1").setValue(oData.results[0].BankBuildnew);
+                            this.getView().byId("_IDGenInput34").setValue(oData.results[0].Accountnew);
+                            this.getView().byId("_IDGenInput35").setValue(oData.results[0].BuildSocietyRefnew);
+                            this.getView().byId("_nextMonthsDrop").setValue(oData.results[0].EffectiveMonth);
+                            this.getView().byId("_nextMonthsDrop").setSelectedKey(oData.results[0].EffMonthInt);
+                            this.getView().getModel("InitData").setProperty("/paymentInfoP", { d: { results: [{ externalCode: oData.results[0].ExtCode }] } });
+                            this.getView().getModel("InitData").setProperty("/effdateIntP", oData.results[0].EffMonthInt);
+                            // End Of New Details
+
+                        }.bind(this),
+                        error: function (oData) {
+                            console.log("Error", oData);
+                        }
+                    }
+                );
+
+                // secD set
+                this.getOwnerComponent().getModel("ZSFGTGT_PD01_SRV").read("/zsf_pd01_hSet('" + this.query.formId + "')/hdr_to_sec_d_nav?$format=json",
+                    {
+                        success: function (oData) {
+                            console.log(oData.results[0].Formid);
+                            //Values
+                            // Current Details
+                            this.getView().byId("_IDGenText40").setValue(oData.results[0].Titlecur);
+                            this.getView().byId("_IDGenText40").setSelectedKey(oData.results[0].SalutationCodecur);
+                            this.getView().byId("_IDGenText41").setValue(oData.results[0].Surnamecur);
+                            this.getView().byId("_IDGenText42").setValue(oData.results[0].Namecur);
+                            this.getView().byId("_IDGenText43").setValue(oData.results[0].KnownAscur);
+                            // End Of Current Details
+
+                            // New Details
+                            this.getView().byId("_IDGenSelect6").setValue(oData.results[0].Titlenew);
+                            this.getView().byId("_IDGenSelect6").setSelectedKey(oData.results[0].SalutationCodenew);
+                            this.getView().byId("_IDGenInput37").setValue(oData.results[0].Surnamenew);
+                            this.getView().byId("_IDGenInput50").setValue(oData.results[0].MiddleNamenew);
+                            this.getView().byId("_IDGenInput38").setValue(oData.results[0].Namenew);
+                            this.getView().byId("_IDGenInput39").setValue(oData.results[0].KnownAsnew);
+                            // End Of New Details
+
+                        }.bind(this),
+                        error: function (oData) {
+                            console.log("Error", oData);
+                        }
+                    }
+                );
+
+                // Comment set
+                this.getOwnerComponent().getModel("ZSFGTGT_PD01_SRV").read("/zsf_pd01_hSet('" + this.query.formId + "')/hdr_to_comm_nav?$format=json",
+                    {
+                        success: function (oData) {
+                            var comm = oData.results[0].comment;
+                            if (comm != "") {
+                                comm = "";
+                                for (let i = 0; i < oData.results.length; i++) {
+                                    comm += oData.results[i].comment + "\n";
+                                }
+                                this.getView().byId("_IDGenTextAreaA").setValue(comm);
+                                this.getView().byId("_IDGenTextAreaA").setVisible(true);
+
+                            }
+
+                        }.bind(this),
+                        error: function (oData) {
+                            console.log("Error", oData);
+                        }
+                    }
+                );
+
+            },
+
+            _SFServices: async function (oModel, initiator, multiOrgFlag) {
+
+                var _self = this;
+                return new Promise(
+                    async function (resolve, reject) {
+                        var userData = oModel.getProperty("/user");
+                        // salutation label
+                        $.ajax({
+                            url: prefix + "odata/v2/PicklistOption(" + userData.salutation + 'L' + ")/picklistLabels?$format=json",
+                            type: 'GET',
+                            contentType: "application/json",
+                            success: function (data) {
+                                var salutationLabel = data.d.results[0].label;
+                                var initName = {
+                                    salutationLabel: salutationLabel,
+                                    fullName: userData.fullName
+                                }
+                                oModel.setProperty("/initNameP", initName);
+                            },
+                            error: function (e) {
+                                console.log(`PicklistOption entity failed for ${salutationInit + 'L'}`);
+                                reject(e);
+                            }
+                        });
+
+                        // // orgName Initiator
+                        $.ajax({
+                            url: prefix + "odata/v2/EmpEmployment(personIdExternal='" + initiator + "',userId='" + initiator + "')/jobInfoNav?$format=json",
+                            type: 'GET',
+                            contentType: "application/json",
+                            success: function (data) {
+                                // Organisation Name property
+                                oModel.setProperty("/OrgNameP", data.d.results[0].customString3);
+                                // Storing data for further usage
+                                oModel.setProperty("/EmpJobData", data.d.results[0]);
+
+                                // checking if line manager is present
+                                if (data.d.results[0].managerId == "NO_MANAGER") {
+                                    MessageBox.error("Line Manager is missing, Form cannot be Initiated", {
+                                        title: "Error Message",
+                                        actions: [sap.m.MessageBox.Action.OK],
+                                        onClose: function (oAction) {
+                                            if (oAction) {
+                                                window.history.go(-1);
+                                            }
+                                        }
+                                    });
+                                }
+                                else {
+                                    if (!multiOrgFlag) {
+                                        $.ajax({
+                                            url: prefix + "odata/v2/cust_PersonnelArea?$filter= externalCode eq '" + data.d.results[0].customString3 + "'&$format=json",
+                                            type: 'GET',
+                                            contentType: "application/json",
+                                            success: function (data) {
+                                                var req = [{
+                                                    key: data.d.results[0].externalCode,
+                                                    value: data.d.results[0].externalName
+                                                }];
+                                                var temp = data.d.results[0].externalName + " (" + data.d.results[0].externalCode + ")";
+                                                oModel.setProperty("/OrgValues", req);
+                                                oModel.setProperty("/OrgNameP", temp);
+                                                oModel.setProperty("/selectedOrg", data.d.results[0].externalCode);
+                                            },
+                                            error: function () {
+                                                console.log(`Error in Assigning Multiple Personnel Area`);
+                                                reject(e)
+                                            }
+                                        });
+                                    }
+                                    else {
+                                        oModel.setProperty("/OrgNameP", "");
+                                    }
+                                }
+                            },
+                            error: function (e) {
+                                console.log(`EmpEmployment entity failed for ${initiator}`);
+                                reject(e);
+                            }
+                        });
+                    });
+            },
+
+            loadDropdowns: function (oModel) {
+
+                // Salutation Dropdown
+                $.ajax({
+                    url: prefix + "odata/v2/Picklist('salutation')/picklistOptions?$format=json",
                     type: 'GET',
                     contentType: "application/json",
                     success: function (data) {
                         console.log("success" + data);
-                        employeeData = data.d.results;
-                    }.bind(this),
+                        var salutArr = [];
+                        let a = new sap.ui.model.odata.ODataModel(prefix + "odata/v2", false);
+                        a.bTokenHandling = false;
+                        let batchData = [];
+                        a.clearBatch();
+                        data.d.results.forEach(function (oItem) {
+                            batchData.push(a.createBatchOperation(
+                                "/PicklistOption(" + oItem.id + "L)/picklistLabels?$format=json",
+                                "GET"
+                            ));
+                        });
+                        a.addBatchReadOperations(batchData);
+                        a.setUseBatch(true);
+                        a.submitBatch(function (data) {
+                            for (let i = 0; i < data.__batchResponses.length; i++) {
+                                var salut = {
+                                    salutId: data.__batchResponses[i].data.results[0].optionId,
+                                    salutLabel: data.__batchResponses[i].data.results[0].label
+                                }
+                                salutArr.push(salut);
+                                oModel.setProperty("/salutaionDrop", salutArr);
+                            }
+                        });
+
+                    },
                     error: function (e) {
-                        sap.ui.core.BusyIndicator.hide();
+                        console.log("error: " + e);
+                    }
+                })
+
+                // County Dropdown
+                $.ajax({
+                    url: prefix + "odata/v2/PickListValueV2?$filter=PickListV2_id eq 'COUNTY_GCC' and status eq 'A'&$format=json",
+                    type: 'GET',
+                    contentType: "application/json",
+                    success: function (data) {
+                        console.log("success" + data);
+                        var countyArr = [];
+                        var countyData = data;
+                        for (let i = 0; i < data.d.results.length; i++) {
+                            var count = {
+                                externalCode: data.d.results[i].optionId,
+                                countyLabel: data.d.results[i].label_en_US
+                            }
+                            countyArr.push(count);
+                            oModel.setProperty("/countyDrop", countyArr);
+                        }
+                    },
+                    error: function (e) {
+                        console.log("error: " + e);
+                    }
+                })
+
+                // Relation Dropdown
+                $.ajax({
+                    url: prefix + "odata/v2/PickListValueV2?$filter=PickListV2_id eq 'relation' and status eq 'A'&$format=json",
+                    type: 'GET',
+                    contentType: "application/json",
+                    success: function (data) {
+                        var relationArr = [];
+                        for (let i = 0; i < data.d.results.length; i++) {
+                            var relation = {
+                                optionId: data.d.results[i].optionId,
+                                relationLabel: data.d.results[i].label_en_US
+                            }
+                            relationArr.push(relation);
+                            oModel.setProperty("/relationDrop", relationArr);
+                        }
+                    },
+                    error: function (e) {
                         console.log("error: " + e);
                     }
                 });
 
-                employeeData = this.filterEmplData(employeeData);
-                var findPostDate = Number((new Date(LastDateISO.split("-")[0], LastDateISO.split("-")[2], 0).getTime()));
-                var EmpData = [];
-                for (let i = 0; i < employeeData.length; i++) {
-
-                    $.ajax({
-                        url: prefix + "/odata/v2/EmpEmployment?$filter=userId eq '" + employeeData[i].userId + "' &$format=json",
-                        type: 'GET',
-                        contentType: "application/json",
-                        success: function (data) {
-                            var empl = data;
-                            $.ajax({
-                                url: prefix + "/odata/v2/PerPersonal?$filter=personIdExternal eq '" + empl.d.results[0].personIdExternal + "'&$format=json",
-                                type: 'GET',
-                                contentType: "application/json",
-                                success: function (data) {
-                                    if (data.d.results[0] != null) {
-                                        var postingDate = this.unixDateRegex(employeeData[i].endDate) > findPostDate ? findPostDate : this.unixDateRegex(employeeData[i].endDate);
-                                        var temp = {
-                                            firstName: data.d.results[0].firstName,
-                                            lastName: data.d.results[0].lastName,
-                                            userId: employeeData[i].userId,
-                                            jobTitle: employeeData[i].customString1,
-                                            personIdExternal: empl.d.results[0].personIdExternal,
-                                            postingDate: `/Date(${postingDate})/`
-                                        };
-                                        EmpData.push(temp);
-                                        EmpData.sort((a, b) => {
-                                            // Sort by Last name
-                                            if (a.lastName < b.lastName) return -1;
-                                            if (a.lastName > b.lastName) return 1;
-
-                                            // a.firstName.localeCompare(b.firstName)
-                                            if (a.firstName < b.firstName) return -1;
-                                            if (a.firstName > b.firstName) return 1;
-
-                                            //Sort by UserId
-                                            if (a.userId < b.userId) return -1;
-                                            if (a.userId > b.userId) return 1;
-                                        });
-                                        oModel.setProperty("/dropdownEmp", EmpData);
-                                        sap.ui.core.BusyIndicator.hide();
-                                    }
-                                    else {
-                                        console.log(`No Employee Found for ${empl.d.results[0].personIdExternal}`);
-                                    }
-                                    sap.ui.core.BusyIndicator.hide();
-                                }.bind(this),
-                                error: function () {
-                                    console.log(`No Employee Found for ${empl.d.results[0].personIdExternal}`);
-                                    sap.ui.core.BusyIndicator.hide();
-                                }
-                            });
-                        }.bind(this),
-                        error: function (e) {
-                            console.log("error: " + e);
-                            sap.ui.core.BusyIndicator.hide();
+                // Fetching Phone Type
+                $.ajax({
+                    url: prefix + "odata/v2/PickListValueV2?$filter=PickListV2_id eq 'ecPhoneType' and status eq 'A'&$format=json",
+                    type: 'GET',
+                    contentType: "application/json",
+                    success: function (data) {
+                        if (this.configData) {
+                            this.configData.phoneTypeP = data.d.results.filter((el) => el.externalCode == "P")[0].optionId;
+                            this.configData.phoneTypeB = data.d.results.filter((el) => el.externalCode == "B")[0].optionId;
+                        } else {
+                            this.configData = {
+                                phoneTypeP: data.d.results.filter((el) => el.externalCode == "P")[0].optionId,
+                                phoneTypeB: data.d.results.filter((el) => el.externalCode == "B")[0].optionId
+                            };
                         }
-                    });
+                    }.bind(this),
+                    error: function (e) {
+                        console.log("error: " + e);
+                    }
+                });
+
+                // Fetching Email Type
+                $.ajax({
+                    url: prefix + "odata/v2/PickListValueV2?$filter=PickListV2_id eq 'ecEmailType' and status eq 'A'&$format=json",
+                    type: 'GET',
+                    contentType: "application/json",
+                    success: function (data) {
+                        if (this.configData)
+                            this.configData.emailTypeP = data.d.results.filter((el) => el.externalCode == "P")[0].optionId;
+                        else
+                            this.configData = {
+                                emailTypeP: data.d.results.filter((el) => el.externalCode == "P")[0].optionId
+                            };
+                    }.bind(this),
+                    error: function (e) {
+                        console.log("error: " + e);
+                    }
+                });
+
+                this.getNextSevenMonths(oModel);
+
+            },
+
+            filterEmplData: function (emplData) {
+                var reqArr = [];
+
+                function dateToReq(date) {
+                    return date.split("(")[1].split(")")[0];
                 }
+
+                emplData.sort((a, b) => {
+                    if (a.userId < b.userId) return -1;
+                    if (a.userId > b.userId) return 1;
+
+                    if (dateToReq(a.endDate) < dateToReq(b.endDate)) return 1;
+                    if (dateToReq(a.endDate) > dateToReq(b.endDate)) return -1;
+                });
+
+                for (let i = 0; i < emplData.length; i++) {
+                    if (reqArr.find((el) => el.userId == emplData[i].userId && el.position == emplData[i].position)) {
+                    }
+                    else {
+                        reqArr.push(emplData[i]);
+                    }
+                }
+                return reqArr;
+            },
+
+            unixDateRegex: function (date1) {
+                const regex = /\/Date\((.*?)\)\//;
+                const match = regex.exec(date1);
+                return Number(match[1]);
             },
 
             s4Log: function (org, that) {
@@ -892,39 +1331,23 @@ sap.ui.define([
             },
 
             oEmployeeSelect: async function (oEvent) {
-                var userId = oEvent.getSource().getSelectedItem().getKey();
-                var oModel = this.getView().getModel("InitData");
-                var pernr;
+                if (!oEvent.getSource().getSelectedItem())
+                    oEvent.getSource().setValueState(sap.ui.core.ValueState.Error);
+                else
+                    oEvent.getSource().setValueState(sap.ui.core.ValueState.None);
 
-                // ajax to fetch personId
-                await $.ajax({
-                    url: DepURL + "odata/v2/EmpEmployment?$filter=userId eq '" + userId + "'&$format=json",
-                    type: 'GET',
-                    contentType: "application/json",
-                    success: function (data) {
-                        console.log("success" + data);
-                        pernr = data.d.results[0].personIdExternal;
-                    },
-                    error: function (e) {
-                        console.log("error: " + e);
-                    }
-                })
+            },
 
-                // Payroll period lock ajax
+            getNextSevenMonths: function (oModel) {
                 $.ajax({
-                    url: DepURL + "odata/v2/EmpJob?$filter=userId eq '" + userId + "'&$format=json",
+                    url: prefix + "odata/v2/EmpJob?$filter=userId eq '" + this.initiatorCode + "'&$format=json",
                     type: 'GET',
                     contentType: "application/json",
                     success: function (data) {
-                        console.log("success" + data);
                         // var PayGroup = data.d.results[0].payGroup
                         oModel.setProperty("/payGroupP", data);
-
                         // ------------NEXT SEVEN MONTHS------------
-                        // var currentDate = new Date();
-                        // var currentMonth = currentDate.toLocaleString('default',{month: 'long'});
-                        // var currentYear = currentDate.getFullYear();
-                        // console.log("Current Month: " + currentMonth + "current Year: " + currentYear);
+                        var empPayGroup = data.d.results[0].payGroup;
                         var months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
                         var today = new Date();
                         var monthIndex = today.getMonth();
@@ -933,28 +1356,23 @@ sap.ui.define([
                         var lastYear = currentYear - 1;
                         var todayDate = Number(new Date().toISOString().substring(0, 10).replaceAll('-', ''));
                         var nextSevenMonths = [];
-                        var payGroupProp = this.getView().getModel("InitData").getProperty("/payGroupP")
-                        var empPayGroup = payGroupProp.d.results[0].payGroup;
                         $.ajax({
-                            url: DepURL + "odata/v2/cust_ZFLM_GCC_MSSDEAD/$count?$filter= cust_PayrollArea eq '" + empPayGroup + "'&$format=json",
+                            url: prefix + "odata/v2/cust_ZFLM_GCC_MSSDEAD/$count?$filter= cust_PayrollArea eq '" + empPayGroup + "'&$format=json",
                             type: 'GET',
                             contentType: "application/json",
                             success: function (data) {
-                                console.log("success" + data);
                                 var recordCount = data;
                                 // oModel.setProperty("/countyPermanentP", data);
-                                that.getView().setModel(oModel, "InitData");
                                 if (recordCount !== "0") {
-                                    var urlP = DepURL + "odata/v2/cust_ZFLM_GCC_MSSDEAD?$filter= cust_PayrollArea eq '" + empPayGroup + "' and (cust_PayrollYear eq '" + lastYear + "' or cust_PayrollYear eq '" + currentYear + "' )&$format=json";
+                                    var urlP = prefix + "odata/v2/cust_ZFLM_GCC_MSSDEAD?$filter= cust_PayrollArea eq '" + empPayGroup + "' and (cust_PayrollYear eq '" + lastYear + "' or cust_PayrollYear eq '" + currentYear + "' )&$format=json";
                                 } else {
-                                    var urlP = DepURL + "odata/v2/cust_ZFLM_GCC_MSSDEAD?$filter= cust_PayrollArea eq null and (cust_PayrollYear eq '" + lastYear + "' or cust_PayrollYear eq '" + currentYear + "' )&$format=json";
+                                    var urlP = prefix + "odata/v2/cust_ZFLM_GCC_MSSDEAD?$filter= cust_PayrollArea eq null and (cust_PayrollYear eq '" + lastYear + "' or cust_PayrollYear eq '" + currentYear + "' )&$format=json";
                                 }
                                 $.ajax({
                                     url: urlP,
                                     type: 'GET',
                                     contentType: "application/json",
                                     success: function (data) {
-                                        console.log("success" + data);
                                         var locked = "";
                                         var nextMonth = "";
                                         for (let i = 0; i < data.d.results.length; i++) {
@@ -974,7 +1392,6 @@ sap.ui.define([
                                                     nextMonth: nextMonth
                                                 }
                                                 oModel.setProperty("/lockedP", lockedCon);
-                                                that.getView().setModel(oModel, "InitData");
                                                 break;
                                             }
                                         }
@@ -998,7 +1415,6 @@ sap.ui.define([
                                         }
 
                                         oModel.setProperty("/nextSevenMonths", nextSevenMonths);
-                                        that.getView().setModel("InitData");
                                     },
                                     error: function (e) {
                                         console.log("error: " + e);
@@ -1008,451 +1424,12 @@ sap.ui.define([
                             error: function (e) {
                                 console.log("error: " + e);
                             }
-                        })
-                        // oModel.setProperty("/secDValues", sectionDArr);
-                        // var oModel = this.getView().getModel("InitData");
-
+                        });
                     }.bind(this),
                     error: function (e) {
                         console.log("error: " + e);
                     }
                 })
-                // Payroll period lock end
-
-                var that = this;
-
-                // salutation label
-                $.ajax({
-                    url: DepURL + "odata/v2/PerPerson('" + pernr + "')/personalInfoNav?$format=json",
-                    type: 'GET',
-                    contentType: "application/json",
-                    success: function (data) {
-                        console.log("success" + data);
-                        oModel.setProperty("/secDValues", data);
-                        that.getView().byId("_IDGenText41").setValue(data.d.results[0].lastName);
-                        that.getView().byId("_IDGenText44").setValue(data.d.results[0].middleName);
-                        that.getView().byId("_IDGenText42").setValue(data.d.results[0].firstName);
-                        that.getView().byId("_IDGenText43").setValue(data.d.results[0].preferredName);
-                        that.getView().setModel(oModel, "InitData");
-                        var salutation = data.d.results[0].salutation;
-                        $.ajax({
-                            url: DepURL + "odata/v2/PicklistOption(" + salutation + 'L' + ")/picklistLabels?$format=json",
-                            type: 'GET',
-                            contentType: "application/json",
-                            success: function (data) {
-                                console.log("success" + data);
-                                oModel.setProperty("/salutaionP", data);
-                                that.getView().byId("_IDGenText40").setValue(data.d.results[0].label);
-                                that.getView().byId("_IDGenText40").setSelectedKey(data.d.results[0].optionId);
-                                that.getView().setModel(oModel, "InitData");
-                            },
-                            error: function (e) {
-                                console.log("error: " + e);
-                            }
-                        })
-                    },
-                    error: function (e) {
-                        console.log("error: " + e);
-                    }
-                })
-
-                //Payment Information - date and time
-                // url with specific personal id to fetch records
-
-                // Property - Payment info and Date time
-                var url = DepURL + "odata/v2/PaymentInformationV3?$filter=worker eq '" + pernr + "'&$format=json";
-                $.ajax({
-                    url: url,
-                    type: 'GET',
-                    contentType: "application/json",
-                    success: function (data) {
-                        console.log("success" + data);
-
-                        //getting the date from model
-                        // the date is get in the unix format
-                        var modelDate = data.d.results[0].effectiveStartDate;
-
-                        // getting the epoch date from model date
-                        // fetching just the unix number
-                        const regex = /\/Date\((.*?)\)\//;
-                        const match = regex.exec(modelDate);
-                        var epochDate = match[1];
-
-                        //converting str to int
-                        var newDate = parseInt(epochDate, 10);
-
-                        //converting epoch to human readable
-                        const date = new Date(newDate);
-
-                        var year = date.getUTCFullYear();
-                        var month = date.getUTCMonth() + 1;
-                        var day = date.getUTCDate();
-                        var hours = date.getUTCHours();
-                        var minutes = date.getUTCMinutes();
-                        var seconds = date.getUTCSeconds();
-
-                        // validation to convert into right format
-                        if (month < 10) {
-                            month = (date.getUTCMonth() + 1).toString().padStart(2, '0');
-                        }
-
-                        if (day < 10) {
-                            day = date.getUTCDate().toString().padStart(2, '0');
-                        }
-                        if (hours < 10) {
-                            hours = date.getUTCHours().toString().padStart(2, '0');
-                        }
-                        if (minutes < 10) {
-                            minutes = date.getUTCMinutes().toString().padStart(2, '0');
-                        }
-                        if (seconds < 10) {
-                            seconds = date.getUTCSeconds().toString().padStart(2, '0');
-                        }
-                        // getting the date
-                        const actualDate = `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
-                        //----------------------date conversion end--------------------------//
-                        var url1 = DepURL + "odata/v2/PaymentInformationV3(effectiveStartDate=datetime'" + actualDate + "',worker='" + pernr + "')/toPaymentInformationDetailV3?$format=json"
-
-                        // Third Property - Payment Information
-                        $.ajax({
-                            url: url1,
-                            type: 'GET',
-                            contentType: "application/json",
-                            success: function (data) {
-                                console.log("success" + data);
-                                var extCode = data.d.results[0].externalCode;
-                                $.ajax({
-                                    url: DepURL + "odata/v2/PaymentInformationDetailV3(PaymentInformationV3_effectiveStartDate=datetime'" + actualDate + "',PaymentInformationV3_worker='" + pernr + "',externalCode=" + extCode + 'L' + ")/bankNav?$format=json",
-                                    type: 'GET',
-                                    contentType: "application/json",
-                                    success: function (data) {
-                                        console.log("success" + data);
-                                        oModel.setProperty("/bankNavP", data);
-                                        that.getView().byId("_IDGenText37").setValue(data.d.bankName);
-                                        that.getView().setModel(oModel, "InitData");
-                                    },
-                                    error: function (e) {
-                                        console.log("error: " + e);
-                                    }
-                                })
-
-                                oModel.setProperty("/paymentInfoP", data);
-                                that.getView().byId("_IDGenText36").setValue(data.d.results[0].routingNumber);
-                                that.getView().byId("_IDGenText38").setValue(data.d.results[0].accountNumber);
-                                that.getView().byId("_IDGenText39").setValue(data.d.results[0].cust_BuildingSocRollNo);
-                                that.getView().setModel(oModel, "InitData");
-                            },
-                            error: function (e) {
-                                console.log("error: " + e);
-                            }
-                        })
-                        //payment ajax call end-----------------------
-
-                    },
-                    error: function (e) {
-                        console.log("error: " + e);
-                    }
-                });
-
-                // Fourth Property - Home address
-                $.ajax({
-                    url: DepURL + "odata/v2/PerPerson('" + pernr + "')/homeAddressNavDEFLT?$format=json",
-                    type: 'GET',
-                    contentType: "application/json",
-                    success: function (data) {
-                        console.log("success" + data);
-                        oModel.setProperty("/homeAddressP", data);
-                        that.getView().byId("input1").setValue(data.d.results[0].address1);
-                        that.getView().byId("input2").setValue(data.d.results[0].address2);
-                        that.getView().byId("input4").setValue(data.d.results[0].city);
-                        that.getView().byId("input6").setValue(data.d.results[0].zipCode);
-                        that.getView().setModel(oModel, "InitData");
-                        var countyCode = data.d.results[0].state;
-
-                        // get county label
-                        $.ajax({
-                            url: DepURL + "odata/v2/PickListValueV2?$filter=PickListV2_id eq 'COUNTY_GCC' and status eq 'A' and optionId eq '" + countyCode + "'&$format=json",
-                            type: 'GET',
-                            contentType: "application/json",
-                            success: function (data) {
-                                console.log("success" + data);
-                                if (data.d.results.length != 0) {
-                                    oModel.setProperty("/countyPermanentP", data);
-                                    that.getView().byId("input5").setValue(data.d.results[0].label_en_GB);
-                                    that.getView().byId("input5").setSelectedKey(data.d.results[0].optionId);
-                                    that.getView().setModel(oModel, "InitData");
-                                }
-                            },
-                            error: function (e) {
-                                console.log("error: " + e);
-                            }
-                        })
-                    },
-                    error: function (e) {
-                        console.log("error: " + e);
-                    }
-                })
-
-                // Fifth Property - Phone Info
-                $.ajax({
-                    url: DepURL + "odata/v2/PerPerson('" + pernr + "')/phoneNav?$format=json",
-                    type: 'GET',
-                    contentType: "application/json",
-                    success: function (data) {
-                        console.log("success" + data);
-                        var phoneData = data;
-                        for (let i = 0; i < data.d.results.length; i++) {
-                            var phoneType = data.d.results[i].phoneType;
-                            $.ajax({
-                                url: DepURL + "odata/v2/PerPhone(personIdExternal='" + pernr + "',phoneType='" + data.d.results[i].phoneType + "')/phoneTypeNav?$format=json",
-                                type: 'GET',
-                                contentType: "application/json",
-                                success: function (data) {
-                                    console.log("success" + data);
-                                    if (data.d.externalCode == "P") {
-                                        oModel.setProperty("/phoneInfoP", phoneData.d.results[i]);
-                                        that.getView().byId("_IDGenInput40").setValue(phoneData.d.results[i].phoneNumber);
-                                        that.getView().setModel(oModel, "InitData");
-                                    }
-                                    if (data.d.externalCode == "B") {
-                                        oModel.setProperty("/phoneInfoB", phoneData.d.results[i]);
-                                        that.getView().byId("input7").setValue(phoneData.d.results[i].phoneNumber);
-                                        that.getView().setModel(oModel, "InitData");
-                                    }
-                                },
-                                error: function (e) {
-                                    console.log("error: " + e);
-                                }
-                            })
-
-                        }
-
-                    },
-                    error: function (e) {
-                        console.log("error: " + e);
-                    }
-                })
-
-                // sixth Property - Email Info
-                $.ajax({
-                    url: DepURL + "odata/v2/PerPerson('" + pernr + "')/emailNav?$format=json",
-                    type: 'GET',
-                    contentType: "application/json",
-                    success: function (data) {
-                        console.log("success" + data);
-                        var emailData = data;
-                        for (let i = 0; i < data.d.results.length; i++) {
-                            // var emailType = data.d.results[i].emailType;
-                            $.ajax({
-                                url: DepURL + "odata/v2/PerEmail(emailType='" + data.d.results[i].emailType + "',personIdExternal='" + pernr + "')/emailTypeNav?$format=json",
-                                type: 'GET',
-                                contentType: "application/json",
-                                success: function (data) {
-                                    console.log("success" + data);
-                                    if (data.d.externalCode == "P") {
-                                        oModel.setProperty("/emailInfoP", emailData.d.results[i]);
-                                        that.getView().byId("_IDGenInput41").setValue(emailData.d.results[i].emailAddress);
-                                        that.getView().setModel(oModel, "InitData");
-                                    }
-                                },
-                                error: function (e) {
-                                    console.log("error: " + e);
-                                }
-                            })
-                        }
-                    },
-                    error: function (e) {
-                        console.log("error: " + e);
-                    }
-                })
-
-                // Seventh Property - Emergency Contact
-                $.ajax({
-                    url: DepURL + "odata/v2/PerPerson('" + pernr + "')/emergencyContactNav?$format=json",
-                    type: 'GET',
-                    contentType: "application/json",
-                    success: function (data) {
-                        console.log("success" + data);
-                        oModel.setProperty("/emergencyContactP", data);
-                        that.getView().setModel(oModel, "InitData");
-                        var emergencyData = data;
-                        for (let i = 0; i < data.d.results.length; i++) {
-                            // var eName = data.d.results[i].name;
-                            // var eRelation = data.d.results[i].relationship;
-                            // emergency address ajax call
-                            $.ajax({
-                                url: DepURL + "odata/v2/PerEmergencyContacts(name='" + data.d.results[i].name + "',personIdExternal='" + pernr + "',relationship='" + data.d.results[i].relationship + "')/addressNavDEFLT?$format=json",
-                                type: 'GET',
-                                contentType: "application/json",
-                                success: function (data) {
-                                    console.log("success" + data);
-                                    var emergencyAddData = data;
-                                    $.ajax({
-                                        url: DepURL + "odata/v2/PickListValueV2?$filter=PickListV2_id eq 'COUNTY_GCC' and status eq 'A' and optionId eq '" + data.d.state + "'&$format=json",
-                                        type: 'GET',
-                                        contentType: "application/json",
-                                        success: function (data) {
-                                            console.log("success" + data);
-                                            if (data.d.results.length != 0) {
-                                                if (emergencyData.d.results[i].primaryFlag == "Y") {
-                                                    oModel.setProperty("/countyFirstEAdd", data);
-                                                    that.getView().byId("_IDGenInput46").setValue(data.d.results[0].label_en_GB);
-                                                    that.getView().byId("_IDGenInput46").setSelectedKey(data.d.results[0].optionId);
-                                                    that.getView().setModel(oModel, "InitData");
-                                                }
-                                                if (emergencyData.d.results[i].primaryFlag == "N") {
-                                                    oModel.setProperty("/countySecondEAdd", data);
-                                                    that.getView().byId("_IDGenInput55").setValue(data.d.results[0].label_en_GB);
-                                                    that.getView().byId("_IDGenInput55").setSelectedKey(data.d.results[0].optionId);
-                                                    that.getView().setModel(oModel, "InitData");
-                                                }
-                                            }
-                                        },
-                                        error: function (e) {
-                                            console.log("error: " + e);
-                                        }
-                                    })
-                                    if (emergencyData.d.results[i].primaryFlag == "Y") {
-                                        oModel.setProperty("/firstEmergencyP", emergencyData.d.results[i]);
-                                        that.getView().byId("_IDGenInput48").setValue(emergencyData.d.results[i].name);
-                                        that.getView().byId("_IDGenInputSur").setValue(emergencyData.d.results[i].customString1);
-                                        that.getView().byId("_IDGenInput49").setValue(emergencyData.d.results[i].phone);
-                                        oModel.setProperty("/firstEmergencyAddP", emergencyAddData);
-                                        that.getView().byId("_IDGenInput42").setValue(emergencyAddData.d.address1);
-                                        that.getView().byId("_IDGenInput43").setValue(emergencyAddData.d.address2);
-                                        that.getView().byId("_IDGenInput45").setValue(emergencyAddData.d.city);
-                                        that.getView().byId("_IDGenInput47").setValue(emergencyAddData.d.zipCode);
-                                        that.getView().setModel(oModel, "InitData");
-                                    }
-                                    if (emergencyData.d.results[i].primaryFlag == "N") {
-                                        oModel.setProperty("/secondEmergencyP", emergencyData.d.results[i]);
-                                        that.getView().byId("_IDGenInput57").setValue(emergencyData.d.results[i].name);
-                                        that.getView().byId("_IDGenInputSurSec").setValue(emergencyData.d.results[i].customString1);
-                                        that.getView().byId("_IDGenInput58").setValue(emergencyData.d.results[i].phone);
-                                        oModel.setProperty("/secondEmergencyAddP", emergencyAddData);
-                                        that.getView().byId("_IDGenInput51").setValue(emergencyAddData.d.address1);
-                                        that.getView().byId("_IDGenInput52").setValue(emergencyAddData.d.address2);
-                                        that.getView().byId("_IDGenInput54").setValue(emergencyAddData.d.city);
-                                        that.getView().byId("_IDGenInput56").setValue(emergencyAddData.d.zipCode);
-                                        that.getView().setModel(oModel, "InitData");
-                                    }
-                                },
-                                error: function (e) {
-                                    console.log("error: " + e);
-                                }
-                            })
-                            // relationship label ajax call 
-                            $.ajax({
-                                url: DepURL + "odata/v2/PicklistOption(" + data.d.results[i].relationship + 'L' + ")/picklistLabels?$format=json",
-                                type: 'GET',
-                                contentType: "application/json",
-                                success: function (data) {
-                                    console.log("success" + data);
-                                    if (emergencyData.d.results[i].primaryFlag == "Y") {
-                                        oModel.setProperty("/firstEmergencyRelationP", data);
-                                        that.getView().byId("_IDGenInputRel").setValue(data.d.results[0].label);
-                                        that.getView().setModel(oModel, "InitData");
-                                    }
-                                    if (emergencyData.d.results[i].primaryFlag == "N") {
-                                        oModel.setProperty("/secondEmergencyRelationP", data);
-                                        that.getView().byId("_IDGenInputRelSec").setValue(data.d.results[0].label);
-                                        that.getView().setModel(oModel, "InitData");
-                                    }
-                                },
-                                error: function (e) {
-                                    console.log("error: " + e);
-                                }
-                            })
-                        }
-
-                    },
-                    error: function (e) {
-                        console.log("error: " + e);
-                    }
-                })
-
-                // Salutation Dropdown
-                $.ajax({
-                    url: DepURL + "odata/v2/Picklist('salutation')/picklistOptions?$format=json",
-                    type: 'GET',
-                    contentType: "application/json",
-                    success: function (data) {
-                        console.log("success" + data);
-                        var salutArr = [];
-                        for (let i = 0; i < data.d.results.length; i++) {
-                            $.ajax({
-                                url: DepURL + "odata/v2/PicklistOption(" + data.d.results[i].id + 'L' + ")/picklistLabels?$format=json",
-                                type: 'GET',
-                                contentType: "application/json",
-                                success: function (data) {
-                                    console.log("success" + data);
-                                    var salut = {
-                                        salutId: data.d.results[0].optionId,
-                                        salutLabel: data.d.results[0].label
-                                    }
-                                    salutArr.push(salut);
-                                    oModel.setProperty("/salutaionDrop", salutArr);
-                                    that.getView().setModel(oModel, "InitData");
-                                },
-                                error: function (e) {
-                                    console.log("error: " + e);
-                                }
-                            })
-                        }
-                    },
-                    error: function (e) {
-                        console.log("error: " + e);
-                    }
-                })
-
-                // County Dropdown
-                $.ajax({
-                    url: DepURL + "odata/v2/PickListValueV2?$filter=PickListV2_id eq 'COUNTY_GCC' and status eq 'A'&$format=json",
-                    type: 'GET',
-                    contentType: "application/json",
-                    success: function (data) {
-                        console.log("success" + data);
-                        var countyArr = [];
-                        var countyData = data;
-                        for (let i = 0; i < data.d.results.length; i++) {
-                            var count = {
-                                externalCode: data.d.results[i].optionId,
-                                countyLabel: data.d.results[i].label_en_US
-                            }
-                            countyArr.push(count);
-                            oModel.setProperty("/countyDrop", countyArr);
-                            that.getView().setModel(oModel, "InitData");
-                        }
-                    },
-                    error: function (e) {
-                        console.log("error: " + e);
-                    }
-                })
-
-                // Relation Dropdown
-                $.ajax({
-                    url: DepURL + "odata/v2/PickListValueV2?$filter=PickListV2_id eq 'relation' and status eq 'A'&$format=json",
-                    type: 'GET',
-                    contentType: "application/json",
-                    success: function (data) {
-                        console.log("success" + data);
-                        var relationArr = [];
-                        for (let i = 0; i < data.d.results.length; i++) {
-                            console.log("success" + data);
-                            var relation = {
-                                optionId: data.d.results[i].optionId,
-                                relationLabel: data.d.results[i].label_en_US
-                            }
-                            relationArr.push(relation);
-                            oModel.setProperty("/relationDrop", relationArr);
-                            that.getView().setModel(oModel, "InitData");
-                        }
-                    },
-                    error: function (e) {
-                        console.log("error: " + e);
-                    }
-                })
-
             },
 
             oMonthSelect: function (oEvent) {
@@ -1498,9 +1475,9 @@ sap.ui.define([
                         emphasizedAction: MessageBox.Action.OK,
                         onClose: function (oAction) {
                             if (oAction === MessageBox.Action.OK) {
-                                console.log("User Clicked OK");
+
+                                this.fetchSelEmplData(this.getView().byId("_IDGenSelect2").getSelectedKey());
                                 oModel.setProperty("/confirmedButton", "X");
-                                this.getView().setModel(oModel, "InitData");
                                 this.getView().byId("_IDGenVBox12").setVisible(true);
                                 this.getView().byId("datepicker01").setEditable(false);
                                 this.getView().byId("_IDGenSelect2").setEditable(false);
@@ -1511,6 +1488,348 @@ sap.ui.define([
                     });
                 }
 
+            },
+
+            fetchSelEmplData: function (selEmpCode) {
+                var oModel = this.getView().getModel("InitData");
+                var pernr = this.getView().getModel("InitData").getProperty("/dropdownInfoP").filter((el) => el.userId == selEmpCode)[0].personIdExternal;
+                var that = this;
+                // salutation label
+                $.ajax({
+                    url: prefix + "odata/v2/PerPerson('" + pernr + "')/personalInfoNav?$format=json",
+                    type: 'GET',
+                    contentType: "application/json",
+                    success: function (data) {
+                        oModel.setProperty("/secDValues", data);
+                        that.getView().byId("_IDGenText41").setValue(data.d.results[0].lastName);
+                        that.getView().byId("_IDGenText44").setValue(data.d.results[0].middleName);
+                        that.getView().byId("_IDGenText42").setValue(data.d.results[0].firstName);
+                        that.getView().byId("_IDGenText43").setValue(data.d.results[0].preferredName);
+                        that.getView().setModel(oModel, "InitData");
+                        var salutation = data.d.results[0].salutation;
+                        $.ajax({
+                            url: prefix + "odata/v2/PicklistOption(" + salutation + 'L' + ")/picklistLabels?$format=json",
+                            type: 'GET',
+                            contentType: "application/json",
+                            success: function (data) {
+                                oModel.setProperty("/salutaionP", data);
+                                that.getView().byId("_IDGenText40").setValue(data.d.results[0].label);
+                                that.getView().byId("_IDGenText40").setSelectedKey(data.d.results[0].optionId);
+                                that.getView().setModel(oModel, "InitData");
+                            }.bind(this),
+                            error: function (e) {
+                                console.log("error: " + e);
+                            }
+                        })
+                    }.bind(this),
+                    error: function (e) {
+                        console.log("error: " + e);
+                    }
+                });
+
+                //Payment Information - date and time
+                // url with specific personal id to fetch records
+
+                // Property - Payment info and Date time
+                var url = prefix + "odata/v2/PaymentInformationV3?$filter=worker eq '" + pernr + "'&$format=json";
+                $.ajax({
+                    url: url,
+                    type: 'GET',
+                    contentType: "application/json",
+                    success: function (data) {
+                        //getting the date from model
+                        // the date is get in the unix format
+                        var modelDate = data.d.results[0].effectiveStartDate;
+
+                        // getting the epoch date from model date
+                        // fetching just the unix number
+                        const regex = /\/Date\((.*?)\)\//;
+                        const match = regex.exec(modelDate);
+                        var epochDate = match[1];
+
+                        //converting str to int
+                        var newDate = parseInt(epochDate, 10);
+
+                        //converting epoch to human readable
+                        const date = new Date(newDate);
+
+                        var year = date.getUTCFullYear();
+                        var month = date.getUTCMonth() + 1;
+                        var day = date.getUTCDate();
+                        var hours = date.getUTCHours();
+                        var minutes = date.getUTCMinutes();
+                        var seconds = date.getUTCSeconds();
+
+                        // validation to convert into right format
+                        if (month < 10) {
+                            month = (date.getUTCMonth() + 1).toString().padStart(2, '0');
+                        }
+
+                        if (day < 10) {
+                            day = date.getUTCDate().toString().padStart(2, '0');
+                        }
+                        if (hours < 10) {
+                            hours = date.getUTCHours().toString().padStart(2, '0');
+                        }
+                        if (minutes < 10) {
+                            minutes = date.getUTCMinutes().toString().padStart(2, '0');
+                        }
+                        if (seconds < 10) {
+                            seconds = date.getUTCSeconds().toString().padStart(2, '0');
+                        }
+                        // getting the date
+                        const actualDate = `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+                        //----------------------date conversion end--------------------------//
+                        var url1 = prefix + "odata/v2/PaymentInformationV3(effectiveStartDate=datetime'" + actualDate + "',worker='" + pernr + "')/toPaymentInformationDetailV3?$format=json"
+
+                        // Third Property - Payment Information
+                        $.ajax({
+                            url: url1,
+                            type: 'GET',
+                            contentType: "application/json",
+                            success: function (data) {
+                                var extCode = data.d.results[0].externalCode;
+                                $.ajax({
+                                    url: prefix + "odata/v2/PaymentInformationDetailV3(PaymentInformationV3_effectiveStartDate=datetime'" + actualDate + "',PaymentInformationV3_worker='" + pernr + "',externalCode=" + extCode + 'L' + ")/bankNav?$format=json",
+                                    type: 'GET',
+                                    contentType: "application/json",
+                                    success: function (data) {
+                                        oModel.setProperty("/bankNavP", data);
+                                        that.getView().byId("_IDGenText37").setValue(data.d.bankName);
+                                        that.getView().setModel(oModel, "InitData");
+                                    }.bind(this),
+                                    error: function (e) {
+                                        console.log("error: " + e);
+                                    }
+                                })
+
+                                oModel.setProperty("/paymentInfoP", data);
+                                that.getView().byId("_IDGenText36").setValue(data.d.results[0].routingNumber);
+                                that.getView().byId("_IDGenText38").setValue(data.d.results[0].accountNumber);
+                                that.getView().byId("_IDGenText39").setValue(data.d.results[0].cust_BuildingSocRollNo);
+                                that.getView().setModel(oModel, "InitData");
+                            }.bind(this),
+                            error: function (e) {
+                                console.log("error: " + e);
+                            }
+                        })
+                        //payment ajax call end-----------------------
+
+                    }.bind(this),
+                    error: function (e) {
+                        console.log("error: " + e);
+                    }
+                });
+
+                // Fourth Property - Home address
+                $.ajax({
+                    url: prefix + "odata/v2/PerPerson('" + pernr + "')/homeAddressNavDEFLT?$format=json",
+                    type: 'GET',
+                    contentType: "application/json",
+                    success: function (data) {
+                        oModel.setProperty("/homeAddressP", data);
+                        that.getView().byId("input1").setValue(data.d.results[0].address1);
+                        that.getView().byId("input2").setValue(data.d.results[0].address2);
+                        that.getView().byId("input4").setValue(data.d.results[0].city);
+                        that.getView().byId("input6").setValue(data.d.results[0].zipCode);
+                        that.getView().setModel(oModel, "InitData");
+                        var countyCode = data.d.results[0].state;
+
+                        // get county label
+                        $.ajax({
+                            url: prefix + "odata/v2/PickListValueV2?$filter=PickListV2_id eq 'COUNTY_GCC' and status eq 'A' and optionId eq '" + countyCode + "'&$format=json",
+                            type: 'GET',
+                            contentType: "application/json",
+                            success: function (data) {
+                                if (data.d.results.length != 0) {
+                                    oModel.setProperty("/countyPermanentP", data);
+                                    that.getView().byId("input5").setValue(data.d.results[0].label_en_GB);
+                                    that.getView().byId("input5").setSelectedKey(data.d.results[0].optionId);
+                                    that.getView().setModel(oModel, "InitData");
+                                }
+                            }.bind(this),
+                            error: function (e) {
+                                console.log("error: " + e);
+                            }
+                        })
+                    }.bind(this),
+                    error: function (e) {
+                        console.log("error: " + e);
+                    }
+                })
+
+                // Fifth Property - Phone Info
+                $.ajax({
+                    url: prefix + "odata/v2/PerPerson('" + pernr + "')/phoneNav?$format=json",
+                    type: 'GET',
+                    contentType: "application/json",
+                    success: function (data) {
+                        var phoneData = data;
+                        for (let i = 0; i < data.d.results.length; i++) {
+                            var phoneType = data.d.results[i].phoneType;
+                            $.ajax({
+                                url: prefix + "odata/v2/PerPhone(personIdExternal='" + pernr + "',phoneType='" + data.d.results[i].phoneType + "')/phoneTypeNav?$format=json",
+                                type: 'GET',
+                                contentType: "application/json",
+                                success: function (data) {
+                                    if (data.d.externalCode == "P") {
+                                        oModel.setProperty("/phoneInfoP", phoneData.d.results[i]);
+                                        that.getView().byId("_IDGenInput40").setValue(phoneData.d.results[i].phoneNumber);
+                                        that.configData.isPhonePrimary = phoneData.d.results[i].isPrimary;
+                                    }
+                                    if (data.d.externalCode == "B") {
+                                        oModel.setProperty("/phoneInfoB", phoneData.d.results[i]);
+                                        that.getView().byId("input7").setValue(phoneData.d.results[i].phoneNumber);
+                                        that.configData.isHomePrimary = phoneData.d.results[i].isPrimary;
+                                    }
+                                }.bind(this),
+                                error: function (e) {
+                                    console.log("error: " + e);
+                                }
+                            })
+
+                        }
+
+                    }.bind(this),
+                    error: function (e) {
+                        console.log("error: " + e);
+                    }
+                })
+
+                // sixth Property - Email Info
+                $.ajax({
+                    url: prefix + "odata/v2/PerPerson('" + pernr + "')/emailNav?$format=json",
+                    type: 'GET',
+                    contentType: "application/json",
+                    success: function (data) {
+                        var emailData = data;
+                        if (data.d.results.length == 0)
+                            that.configData.isEmailPrimary = true;
+                        for (let i = 0; i < data.d.results.length; i++) {
+                            // var emailType = data.d.results[i].emailType;
+                            $.ajax({
+                                url: prefix + "odata/v2/PerEmail(emailType='" + data.d.results[i].emailType + "',personIdExternal='" + pernr + "')/emailTypeNav?$format=json",
+                                type: 'GET',
+                                contentType: "application/json",
+                                success: function (data) {
+                                    if (data.d.externalCode == "P") {
+                                        oModel.setProperty("/emailInfoP", emailData.d.results[i]);
+                                        that.getView().byId("_IDGenInput41").setValue(emailData.d.results[i].emailAddress);
+                                        if (emailData.d.results[i].isPrimary)
+                                            that.configData.isEmailPrimary = true;
+                                    }
+                                }.bind(this),
+                                error: function (e) {
+                                    console.log("error: " + e);
+                                }
+                            })
+                        }
+                    }.bind(this),
+                    error: function (e) {
+                        console.log("error: " + e);
+                    }
+                })
+
+                // Seventh Property - Emergency Contact
+                $.ajax({
+                    url: prefix + "odata/v2/PerPerson('" + pernr + "')/emergencyContactNav?$format=json",
+                    type: 'GET',
+                    contentType: "application/json",
+                    success: function (data) {
+                        oModel.setProperty("/emergencyContactP", data);
+                        that.getView().setModel(oModel, "InitData");
+                        var emergencyData = data;
+                        for (let i = 0; i < data.d.results.length; i++) {
+                            // var eName = data.d.results[i].name;
+                            // var eRelation = data.d.results[i].relationship;
+                            // emergency address ajax call
+                            $.ajax({
+                                url: prefix + "odata/v2/PerEmergencyContacts(name='" + data.d.results[i].name + "',personIdExternal='" + pernr + "',relationship='" + data.d.results[i].relationship + "')/addressNavDEFLT?$format=json",
+                                type: 'GET',
+                                contentType: "application/json",
+                                success: function (data) {
+                                    var emergencyAddData = data;
+                                    $.ajax({
+                                        url: prefix + "odata/v2/PickListValueV2?$filter=PickListV2_id eq 'COUNTY_GCC' and status eq 'A' and optionId eq '" + data.d.state + "'&$format=json",
+                                        type: 'GET',
+                                        contentType: "application/json",
+                                        success: function (data) {
+                                            if (data.d.results.length != 0) {
+                                                if (emergencyData.d.results[i].primaryFlag == "Y") {
+                                                    oModel.setProperty("/countyFirstEAdd", data);
+                                                    that.getView().byId("_IDGenInput46").setValue(data.d.results[0].label_en_GB);
+                                                    that.getView().byId("_IDGenInput46").setSelectedKey(data.d.results[0].optionId);
+                                                    that.getView().setModel(oModel, "InitData");
+                                                }
+                                                if (emergencyData.d.results[i].primaryFlag == "N") {
+                                                    oModel.setProperty("/countySecondEAdd", data);
+                                                    that.getView().byId("_IDGenInput55").setValue(data.d.results[0].label_en_GB);
+                                                    that.getView().byId("_IDGenInput55").setSelectedKey(data.d.results[0].optionId);
+                                                    that.getView().setModel(oModel, "InitData");
+                                                }
+                                            }
+                                        }.bind(this),
+                                        error: function (e) {
+                                            console.log("error: " + e);
+                                        }
+                                    })
+                                    if (emergencyData.d.results[i].primaryFlag == "Y") {
+                                        oModel.setProperty("/firstEmergencyP", emergencyData.d.results[i]);
+                                        that.getView().byId("_IDGenInput48").setValue(emergencyData.d.results[i].name);
+                                        that.getView().byId("_IDGenInputSur").setValue(emergencyData.d.results[i].customString1);
+                                        that.getView().byId("_IDGenInput49").setValue(emergencyData.d.results[i].phone);
+                                        oModel.setProperty("/firstEmergencyAddP", emergencyAddData);
+                                        that.getView().byId("_IDGenInput42").setValue(emergencyAddData.d.address1);
+                                        that.getView().byId("_IDGenInput43").setValue(emergencyAddData.d.address2);
+                                        that.getView().byId("_IDGenInput45").setValue(emergencyAddData.d.city);
+                                        that.getView().byId("_IDGenInput47").setValue(emergencyAddData.d.zipCode);
+                                        that.getView().setModel(oModel, "InitData");
+                                    }
+                                    if (emergencyData.d.results[i].primaryFlag == "N") {
+                                        oModel.setProperty("/secondEmergencyP", emergencyData.d.results[i]);
+                                        that.getView().byId("_IDGenInput57").setValue(emergencyData.d.results[i].name);
+                                        that.getView().byId("_IDGenInputSurSec").setValue(emergencyData.d.results[i].customString1);
+                                        that.getView().byId("_IDGenInput58").setValue(emergencyData.d.results[i].phone);
+                                        oModel.setProperty("/secondEmergencyAddP", emergencyAddData);
+                                        that.getView().byId("_IDGenInput51").setValue(emergencyAddData.d.address1);
+                                        that.getView().byId("_IDGenInput52").setValue(emergencyAddData.d.address2);
+                                        that.getView().byId("_IDGenInput54").setValue(emergencyAddData.d.city);
+                                        that.getView().byId("_IDGenInput56").setValue(emergencyAddData.d.zipCode);
+                                        that.getView().setModel(oModel, "InitData");
+                                    }
+                                }.bind(this),
+                                error: function (e) {
+                                    console.log("error: " + e);
+                                }
+                            })
+                            // relationship label ajax call 
+                            $.ajax({
+                                url: prefix + "odata/v2/PicklistOption(" + data.d.results[i].relationship + 'L' + ")/picklistLabels?$format=json",
+                                type: 'GET',
+                                contentType: "application/json",
+                                success: function (data) {
+                                    if (emergencyData.d.results[i].primaryFlag == "Y") {
+                                        oModel.setProperty("/firstEmergencyRelationP", data);
+                                        that.getView().byId("_IDGenInputRel").setValue(data.d.results[0].label);
+                                        that.getView().setModel(oModel, "InitData");
+                                    }
+                                    if (emergencyData.d.results[i].primaryFlag == "N") {
+                                        oModel.setProperty("/secondEmergencyRelationP", data);
+                                        that.getView().byId("_IDGenInputRelSec").setValue(data.d.results[0].label);
+                                        that.getView().setModel(oModel, "InitData");
+                                    }
+                                }.bind(this),
+                                error: function (e) {
+                                    console.log("error: " + e);
+                                }
+                            })
+                        }
+
+                    }.bind(this),
+                    error: function (e) {
+                        console.log("error: " + e);
+                    }
+                })
             },
 
             onPostChange: function (oEvent) {
@@ -1554,7 +1873,7 @@ sap.ui.define([
                 else {
                     phoneFlag = false;
                     $.ajax({
-                        url: DepURL + "odata/v2/PickListValueV2?$filter=PickListV2_id eq 'ecPhoneType' and status eq 'A' &$format=json",
+                        url: prefix + "odata/v2/PickListValueV2?$filter=PickListV2_id eq 'ecPhoneType' and status eq 'A' &$format=json",
                         type: 'GET',
                         contentType: "application/json",
                         success: function (data) {
@@ -1609,20 +1928,26 @@ sap.ui.define([
 
             onSortCodeChange: function (oEvent) {
                 var sortCode = oEvent.getSource().getValue();
-                $.ajax({
-                    url: DepURL + "odata/v2/Bank('" + sortCode + "')?$format=json",
-                    type: 'GET',
-                    contentType: "application/json",
-                    success: function (data) {
-                        console.log("success" + data);
-                        var oModel = this.getView().getModel("InitData");
-                        oModel.setProperty("/bankP", data);
-                        this.getView().byId("_IDGenInputA1").setValue(data.d.bankName)
-                    }.bind(this),
-                    error: function (e) {
-                        console.log("error: " + e);
-                    }
-                })
+                if ((/^[1-9]{6}$/).test(sortCode)) {
+                    $.ajax({
+                        url: prefix + "odata/v2/Bank('" + sortCode + "')?$format=json",
+                        type: 'GET',
+                        contentType: "application/json",
+                        success: function (data) {
+                            oEvent.getSource().setValueState(sap.ui.core.ValueState.None);
+                            var oModel = this.getView().getModel("InitData");
+                            oModel.setProperty("/bankP", data);
+                            this.getView().byId("_IDGenInputA1").setValue(data.d.bankName);
+                        }.bind(this),
+                        error: function (e) {
+                            oEvent.getSource().setValueState(sap.ui.core.ValueState.Error);
+                            this.getView().byId("_IDGenInputA1").setValue("");
+                        }.bind(this)
+                    })
+                } else {
+                    oEvent.getSource().setValueState(sap.ui.core.ValueState.Error);
+                    this.getView().byId("_IDGenInputA1").setValue("");
+                }
             },
 
             onAddCommentPress: function () {
@@ -1683,11 +2008,26 @@ sap.ui.define([
                 }
                 else {
                     oEvent.oSource.setValueState(sap.ui.core.ValueState.None);
-                    var orgCode = this.getView().byId("orgInput").getSelectedItem() ? this.getView().byId("orgInput").getSelectedItem().getText() : this.getView().byId("orgInput").getValue();
-                    var effDate = new Date(this.getView().byId("_IDGenInput4").getDateValue());
-                    var dateFormat = sap.ui.core.format.DateFormat.getDateInstance({ pattern: "yyyy-MM-dd" });
+                    var orgCode = this.getView().byId("orgInput").getSelectedKey();
+                    var effDate = new Date(oEvent.getParameter("newValue"))
+                    var dateFormat = sap.ui.core.format.DateFormat.getDateInstance({ pattern: "yyyy-dd-MM" });
                     var effDateISO = dateFormat.format(effDate);
                     this._getEmplData(orgCode, effDateISO)
+                }
+            },
+
+            onOrgChange: async function (oEvent) {
+
+                if (oEvent.getSource().getSelectedItem() != null) {
+                    oEvent.getSource().setValueState(sap.ui.core.ValueState.None);
+                    var LastDate = this.getView().byId("datepicker01").getValue() ? this.getView().byId("datepicker01").getValue() : "";
+                    var dateFormat = sap.ui.core.format.DateFormat.getDateInstance({ pattern: "yyyy-dd-MM" });
+                    var LastDateISO = LastDate ? dateFormat.format(LastDate) : "";
+                    var orgCode = oEvent.getSource().getSelectedItem().getKey();
+                    this._getEmplData(orgCode, LastDateISO);
+                }
+                else {
+                    oEvent.getSource().setValueState(sap.ui.core.ValueState.Error);
                 }
             },
 
@@ -1703,7 +2043,7 @@ sap.ui.define([
                     oEvent.oSource.setValueStateText("");
                     emailFlag = "0";
                     $.ajax({
-                        url: DepURL + "odata/v2/PickListValueV2?$filter=PickListV2_id eq 'ecEmailType' and status eq 'A'  and externalCode eq 'P' &$format=json",
+                        url: prefix + "odata/v2/PickListValueV2?$filter=PickListV2_id eq 'ecEmailType' and status eq 'A'  and externalCode eq 'P' &$format=json",
                         type: 'GET',
                         contentType: "application/json",
                         success: function (data) {
@@ -1852,6 +2192,9 @@ sap.ui.define([
                     if (this.getView().byId("_IDGenInput33").getValue() == "") {
                         flag = "5";
                     }
+                    if (this.getView().byId("_IDGenInputA1").getValue() == "") {
+                        flag = "5";
+                    }
                     if (this.getView().byId("_nextMonthsDrop").getSelectedItem() == null) {
                         flag = "5";
                     }
@@ -1962,16 +2305,12 @@ sap.ui.define([
                                 sap.m.MessageBox.success(`Form: ` + oData.Formid + ` is saved successfully`, {
                                     title: "Success Message",
                                     actions: [sap.m.MessageBox.Action.OK],
-                                    // onClose: function (oAction) {
-                                    //     if (oAction) {
-                                    //         var oHistory, sPreviousHash;
-                                    //         oHistory = History.getInstance();
-                                    //         sPreviousHash = oHistory.getPreviousHash();
-                                    //         if (sPreviousHash == undefined) {
-                                    //             window.history.go(-1);
-                                    //         }
-                                    //     }
-                                    // }
+                                    onClose: function (oAction) {
+                                        if (oAction) {
+                                            if (this.query) window.close();
+                                            window.history.go(-1);
+                                        }
+                                    }.bind(this)
                                 });
 
                             },
@@ -2074,14 +2413,14 @@ sap.ui.define([
                             "Countypar": this.getView().byId("input5").getSelectedItem() != null ? this.getView().byId("input5").getSelectedItem().getText() : this.getView().byId("input5").getValue(),
                             "PostCodepar": this.getView().byId("input6").getValue() != "" ? this.getView().byId("input6").getValue() : "",
                             "HomePhonepar": this.getView().byId("input7").getValue() != "" ? this.getView().byId("input7").getValue() : "",
-                            "ParPhnType": perPhoneType,
-                            "PhnFlag": perPhoneFlag,
+                            "ParPhnType": this.configData.phoneTypeB,
+                            "PhnFlag": this.configData.isHomePrimary ? "X" : "",
                             "Mobilepar": this.getView().byId("_IDGenInput40").getValue() != "" ? this.getView().byId("_IDGenInput40").getValue() : "",
-                            "ParMobType": permobType,
-                            "MobFlag": permobFlag,
+                            "ParMobType": this.configData.phoneTypeP,
+                            "MobFlag": !(this.configData.isPhonePrimary || this.configData.isHomePrimary) ? "X" : this.configData.isPhonePrimary ? "X" : "",
                             "ParEmail": this.getView().byId("_IDGenInput41").getValue() != "" ? this.getView().byId("_IDGenInput41").getValue() : "",
-                            "ParEmailType": perEmailType == "" ? emailType : perEmailType,
-                            "EmailPrimary": isEmailPrimary,
+                            "ParEmailType": this.configData.emailTypeP,
+                            "EmailPrimary": this.configData.isEmailPrimary ? "X" : "",
                             // End Of Current
 
                             // New Details
@@ -2283,7 +2622,7 @@ sap.ui.define([
                                                         var userId = initiator_prop.userId;
                                                         var Status = 'S';
                                                         $.ajax({
-                                                            url: DepURL + "odata/v2/EmpEmployment(personIdExternal='" + initiator + "',userId='" + userId + "')/jobInfoNav?$format=json",
+                                                            url: prefix + "odata/v2/EmpEmployment(personIdExternal='" + initiator + "',userId='" + userId + "')/jobInfoNav?$format=json",
                                                             type: 'GET',
                                                             contentType: "application/json",
                                                             success: function (data) {
@@ -2315,7 +2654,7 @@ sap.ui.define([
 
                                                                 } else {
                                                                     $.ajax({
-                                                                        url: DepURL + "odata/v2/PerPerson('" + data.d.results[0].managerId + "')/personalInfoNav?$format=json",
+                                                                        url: prefix + "odata/v2/PerPerson('" + data.d.results[0].managerId + "')/personalInfoNav?$format=json",
                                                                         type: 'GET',
                                                                         contentType: "application/json",
                                                                         success: function (data) {

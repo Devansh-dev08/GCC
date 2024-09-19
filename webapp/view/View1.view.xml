@@ -24,7 +24,7 @@ controllerName="pd01qa.controller.View1" displayBlock="true">
                                     <!--  Initiator details  -->
                                     <HBox id="_IDGenHBox2" width="550px">
                                         <Label id="_IDGenLabel1" text="{i18n>Initi}" width="130px" labelFor="_IDGenInput1" showColon="true" class="sapUiSmallMarginTop sapUiTinyMarginBottom"/>
-                                        <Input id="_IDGenInput1" value="{InitData>/initInfoP/salutationLabel} {InitData>/initInfoP/firstNameInit} {InitData>/initInfoP/lastNameInit}" width="auto" editable="false" class="sapUiTinyMargin sapUiTinyMarginEnd"/>
+                                        <Input id="_IDGenInput1" value="{InitData>/initNameP/salutationLabel} {InitData>/initNameP/fullName}" width="auto" editable="false" class="sapUiTinyMargin sapUiTinyMarginEnd"/>
                                     </HBox>
                                     <!--  Form ID  -->
                                     <HBox id="_IDGenHBox3">
@@ -36,7 +36,12 @@ controllerName="pd01qa.controller.View1" displayBlock="true">
                                     <!--  School Name  -->
                                     <HBox id="_IDGenHBox5" width="550px">
                                         <Label id="_IDGenLabel3" text="{i18n>School}" width="130px" labelFor="orgInput" showColon="true" class="sapUiSmallMarginTop sapUiTinyMarginBottom"/>
-                                        <Input id="orgInput" width="230px" editable="false" class="sapUiTinyMargin sapUiTinyMarginEnd"/>
+                                        <!-- <Input width="230px" editable="false" class="sapUiTinyMargin sapUiTinyMarginEnd"/> -->
+                                        <ComboBox id="orgInput" value="{InitData>/OrgNameP}" selectedKey="{InitData>/selectedOrg}" items="{path: 'InitData>/OrgValues', templateShareable:false}" change="onOrgChange" enabled="{= ${InitData>/disable/mode} !== 'display'}" editable="{InitData>/multiOrgFound}" >
+                                 <items>
+                                    <core:Item key="{InitData>key}" text="{InitData>value} ({InitData>key})" />
+                                 </items>
+                              </ComboBox>
                                     </HBox>
                                     <!--  Form Date  -->
                                     <HBox id="_IDGenHBox6">
@@ -56,9 +61,9 @@ controllerName="pd01qa.controller.View1" displayBlock="true">
                                 </HBox>
                                 <HBox id="_IDGenHBox8" width="auto" class="sapUiMediumMarginBegin">
                                     <Label id="_IDGenLabel6" required="true" text="{i18n>employee}" labelFor="_IDGenSelect1" showColon="true" class="sapUiTinyMarginTop sapUiTinyMarginBottom" width="200px"/>
-                                    <ComboBox editable="{= ${InitData>/disable/mode} !== 'display'}" id="_IDGenSelect2" width="500px" value="" tooltip="{i18n>employeeWithChange}" items="{InitData>/dropdownInfoP}" change="oEmployeeSelect">
+                                    <ComboBox editable="{= ${InitData>/disable/mode} !== 'display'}" id="_IDGenSelect2" width="500px" value="" tooltip="{i18n>employeeWithChange}" items="{path: 'InitData>/dropdownInfoP', length: 10000}" change="oEmployeeSelect">
                                         <items>
-                                            <core:Item id="_IDGenItem1" key="{InitData>personIdExternal}" text="{InitData>lastName} {InitData>firstName} {InitData>userId} {InitData>jobInfo}"/>
+                                            <core:Item id="_IDGenItem1" key="{InitData>userId}" text="{InitData>lastName} {InitData>firstName} {InitData>userId} {InitData>jobTitle}"/>
                                         </items>
                                     </ComboBox>
                                 </HBox>
@@ -646,7 +651,7 @@ controllerName="pd01qa.controller.View1" displayBlock="true">
                                                 </HBox>
                                                 <HBox id="_IDGenHBoxA10" width="auto">
                                                     <Label id="_IDGenLabelA16" text="{i18n>middlename}" labelFor="_IDGenInput50" required="false" width="230px" class="sapUiTinyMarginTop"/>
-                                                    <Input id="_IDGenInput50" type="Text" width="230px" editable="{= ${InitData>/disable/mode} !== 'display'}" tooltip="{i18n>surnameTip}"/>
+                                                    <Input id="_IDGenInput50" type="Text" width="230px" editable="{= ${InitData>/disable/mode} !== 'display'}" tooltip="{i18n>midNameTip}"/>
                                                 </HBox>
                                                 <HBox id="_IDGenHBoxA7" width="auto">
                                                     <Label id="_IDGenLabelA13" text="{i18n>name}" labelFor="_IDGenInput38" required="true" width="230px" class="sapUiTinyMarginTop"/>

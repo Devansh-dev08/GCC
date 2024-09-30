@@ -7,15 +7,6 @@
     font-weight: bolder;
 }
 
-/* .sapMPanel.sapMPanelExpandable .sapMPanelHdr,
-.sapMPanel.sapMPanelExpandable .sapMTB.sapMPanelHeaderTB {
-    padding-left: 5px;
-} */
-
-.sapMPanelHdr {
-    font-size: 1.1rem;
-}
-
 .sapMPanel .sapMPanelHeadingDiv>.sapMPanelHdr,
 .sapMPanelWrappingDiv,
 .sapMPanelWrappingDivTb {
@@ -24,23 +15,6 @@
 
 .sapMPanelWrappingDiv .sapUiIcon {
     color: #000;
-}
-
-/* .hhhh{
-    display: inline;
-}*/
-
-.link09 .text09 ._IDGenPanel1 {
-    display: inline;
-}
-
-.sapMText {
-    text-align: left;
-    display: inline;
-}
-
-.sapMLnk {
-    display: inline;
 }
 
 .sapMListTblCell.cellBorderRight {
@@ -69,18 +43,14 @@
     margin-top: 2px;
 }
 
-.fontHeader {
-    font-size: 1rem;
-}
-
 tr[data-dataWs="Hours"] .sapMListTblCell {
     background: #f5f6f7c5;
 }
 
-tr[data-dataWs="Hours"] .sapMListTblCell .sapMText {
+/* tr[data-dataWs="Hours"] .sapMListTblCell .sapMText {
     font-weight: bold;
     font-size: 1rem;
-}
+} */
 
 /* tr[data-dataWs="Hours"] td[aria-colindex="1"].sapMListTblCell {
     background-color: red;
@@ -96,4 +66,8 @@ tr[data-dataWs="Hours"] .sapMListTblCell .sapMText {
 
 .sapMListTblCell:has(span[data-p13ndata="true"]) {
     background-color: white !important;
+}
+
+.WSButton {
+    margin-left: 13px;
 }

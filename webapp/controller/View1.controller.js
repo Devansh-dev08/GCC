@@ -1,19 +1,19 @@
 sap.ui.define([
   "sap/m/MessageBox",
   "sap/ui/model/json/JSONModel",
-  "sap/ui/core/mvc/Controller",
+  "./baseController",
   "../model/formatter"
 ],
   /**
    * @param {typeof sap.ui.core.mvc.Controller} Controller
    */
-  function (MessageBox, JSONModel, Controller, formatter) {
+  function (MessageBox, JSONModel, baseController, formatter) {
     "use strict";
     var companyCode = "", initiator = "", useremail = "", formId1 = "", initiatorName = "", userId;
     var serviceURL = "", pernr = "", approverFlag = false, bscFlag = false, initiatorFlag = false, payGroup = "", nationalid = "", empTermination = "", approverCode = "";
-    var formOwnerCode = "", personnel = "", emplSubGroup = "";
+    var formOwnerCode = "", personnel = "", emplSubGroup = "", multiOrgFound = false;
 
-    return Controller.extend("com.gcc.newstarterqa.newstarterqa.controller.View1", {
+    return baseController.extend("com.gcc.newstarterqa.newstarterqa.controller.View1", {
       formatter: formatter,
       onInit: function (oEvent) {
         serviceURL = sap.ui.require.toUrl(this.getOwnerComponent().getManifestEntry('/sap.app/id').replaceAll('.', '/'));
@@ -36,12 +36,148 @@ sap.ui.define([
         var oneModel = new JSONModel(data);
         this.getView().setModel(oneModel, "oneModel");
         this.clearFields();
-        // this.s4hanaServices(oEvent);
         //this.SFservice(oEvent);
-
         this.getOwnerComponent().getRouter().getRoute("RouteView1").attachPatternMatched(this._onRouteMatched, this);
-        //this._onRouteMatched(oEvent);
       },
+
+
+      _onRouteMatched: function (oEvent) {
+        sap.ui.core.BusyIndicator.show();
+        var oModel2 = new sap.ui.model.json.JSONModel();
+        const url = serviceURL + "/user-api/currentUser";
+
+        var mock = {
+          firstname: "Dummy",
+          lastname: "User",
+          email: "",
+          name: "",
+          displayName: "Dummy User (dummy.user@com)"
+        };
+        oModel2.loadData(url);
+        oModel2.dataLoaded()
+          .then(() => {
+            if (!oModel2.getData().email) {
+              oModel2.setData(mock);
+              useremail = "test00014577@noemail.gloucestershire.gov.uk";
+            }
+            else {
+              useremail = oModel2.getData().email;
+            }
+            this.query = oEvent.getParameter('arguments')["?query"];
+            if (this.query == undefined) {
+              var disable = {
+                formId: "",
+                mode: ""
+              }
+              var oModel = this.getView().getModel("oneModel");
+              oModel.setProperty("/disable", disable);
+
+              // // Getting the initiator from the mail id
+              this._getInitiator(useremail, oModel)
+                .then(initiator => {
+                  var initi = initiator;
+                  // Checking if the user has Multiple Organization
+                  this._checkMultiOrg(oModel, initi)
+                    .then(response => {
+                      // restricting user to enter anything below if organization is not selected ( when multi org found )
+                      if (response) {
+                        this.enableSecA(false);
+                      }
+                      // // Calling all the SuccessFactors API's
+                      this.SFservice(response);
+                      // // Generating Form ID
+                      this.getOwnerComponent().getModel("ZSFGTGW_NS01_SRV").read("/ZSFGT_NS01_FORMID_GETSet", {
+                        success: function (oData) {
+                          if (oData.results[0]) {
+                            this.getView().byId("_IDGenInput2").setValue(oData.results[0].Formid);
+                          }
+                        }.bind(this),
+                        error: function (oData) {
+                          console.log("form id service Error");
+                        }
+                      });
+                    });
+                })
+                .catch(error => {
+                  MessageBox.error(`We cannot process the form ahead because of the following message:
+                     
+                     ${error.Message}`);
+                });
+
+            } else {
+              this.getView().getModel("oneModel").setProperty("/disable", this.query);
+              formId1 = this.query.formId;
+              if (this.query.mode == "bsc") {
+                bscFlag = true;
+                this.getView().byId("delete").setVisible(false);
+                this.getView().byId("submit").setVisible(false);
+              } else if (this.query.mode == "display") {
+                approverFlag = true;
+                this.getView().byId("delete").setVisible(false);
+                this.getView().byId("submit").setVisible(false);
+              } else if (this.query.mode == "initiator") {
+                initiatorFlag = true;
+                this.getView().byId("delete").setVisible(false);
+                this.getView().byId("submit").setVisible(false);
+              }
+              $.ajax({
+                url: serviceURL + "/odata/v2/PerEmail?$filter=emailAddress eq '" + useremail + "'&$format=json",
+                type: 'GET',
+                contentType: "application/json",
+                success: function (data) {
+
+                  if (data.d.results[0] && data.d.results[0].personIdExternal) {
+                    initiator = data.d.results[0].personIdExternal;
+                    setTimeout(this.readFormidData(formId1, useremail), 300);
+                    if (bscFlag || approverFlag) {
+                      this.getView().getModel("oneModel").setProperty("/editable", false);
+                      this.getView().byId("_IDGenComboBox1").setEditable(false);
+                      this.getView().byId("_IDGenComboBox41").setEditable(false);
+                      this.getView().byId("idempCame").setEditable(false);
+                      this.getView().byId("_IDGenInput10").setEditable(false);
+                      this.getView().byId("_IDGenComboBox411").setEditable(false);
+                      this.getView().byId("_IDGenInput11").setEditable(false);
+                      this.getView().byId("_IDGenInput112").setEditable(false);
+
+                      this.getView().byId("titleB1").setEditable(false);
+
+
+                      this.getView().byId("_IDGenComboBox17").setEditable(false);
+                      this.getView().byId("_IDGenDatePicker1").setEditable(false);
+                      this.getView().byId("_IDGenComboBox2").setEditable(false);
+                      this.getView().byId("_IDGenComboBox3").setEditable(false);
+                      this.getView().byId("_IDGenComboBox6").setEditable(false);
+                      this.getView().byId("country1").setEditable(false);
+                      this.getView().byId("Hoursperweek").setEditable(false);
+                      this.getView().byId("idWeekYeardrop").setEditable(false);
+                      this.getView().byId("idWorkingWeeksdrop").setEditable(false);
+                      this.getView().byId("idFTE").setEditable(false);
+                      this.getView().byId("idFTEperc").setEditable(false);
+                      this.getView().byId("_IDGenInput141").setEditable(false);
+                      this.getView().byId("probationEndDatePic").setEditable(false);
+                      this.getView().byId("_IDGenComboBox8").setEditable(false);
+                      this.getView().byId("_IDGenInput191").setEditable(false);
+                      this.getView().byId("_IDGenInput12").setEditable(false);
+                      this.getView().byId("_IDGenComboBox82").setEditable(false);
+                      this.getView().byId("_IDGenInput1912").setEditable(false);
+                      this.getView().byId("_IDGenInput122").setEditable(false);
+                      this.getView().byId("_IDGenComboBox83").setEditable(false);
+                      this.getView().byId("_IDGenInput1913").setEditable(false);
+                      this.getView().byId("_IDGenInput123").setEditable(false);
+                    } else sap.ui.core.BusyIndicator.hide();
+                    sap.ui.core.BusyIndicator.hide();
+                  }
+                }.bind(this),
+                error: function (e) {
+                  console.log("error: " + e);
+                  sap.ui.core.BusyIndicator.hide();
+                }
+              });
+            }
+          });
+
+      },
+
       DOBRestrict10years: function (oEvent) {
         //Dob defaulting 10yrs prior
         var CurrDate = new Date();
@@ -53,6 +189,7 @@ sap.ui.define([
 
         oEvent.getSource().setMaxDate(new Date(minDate));
       },
+
       editable: function (oValue) {
         if (oValue) {
           return oValue = true;
@@ -105,151 +242,110 @@ sap.ui.define([
         }
       },
 
-      getBaseURL: function () {
-        var appId = this.getOwnerComponent().getManifestEntry("/sap.app/id");
-        var appPath = appId.replaceAll(".", "/");
-        var appModulePath = jQuery.sap.getModulePath(appPath);
-        return appModulePath;
-      },
-      _onRouteMatched: function (oEvent) {
-        sap.ui.core.BusyIndicator.show();
-        var oModel = new sap.ui.model.json.JSONModel();
-        const url = this.getBaseURL() + "/user-api/currentUser";
-
-        var mock = {
-          firstname: "Dummy",
-          lastname: "User",
-          email: "",
-          name: "",
-          displayName: "Dummy User (dummy.user@com)"
-        };
-        var that = this;
-        oModel.loadData(url);
-        oModel.dataLoaded()
-          .then(() => {
-            if (!oModel.getData().email) {
-              oModel.setData(mock);
-              useremail = "dummy.user@com";
-              //  useremail = "vivek-kumar5@hcl.com" // -------------------------------------------------Comment before deploy
-              initiator = "00002062";
-              initiatorName = "dummy";
-              var disable = {
-                formId: "",
-                mode: "initiator"
-              }
-              this.getView().getModel("oneModel").setProperty("/disable", disable);
-              this.s4hanaServices();
-              this.SFservice();
-              sap.ui.core.BusyIndicator.hide();
-              //this.readFormidData("0000002450"); //-------------------------------------------------------------------Comment before deploy
-            }
-            else {
-              useremail = oModel.getData().email;
-              var query = oEvent.getParameter('arguments')["?query"];
-              var that = this;
-              if (query == undefined) {
-                var disable = {
-                  formId: "",
-                  mode: ""
+      _getInitiator: async function (useremail, oModel) {
+        return new Promise(
+          async function (resolve, reject) {
+            var email;
+            await $.ajax({
+              url: serviceURL + "/odata/v2/PerEmail?$filter=emailAddress eq '" + useremail + "'&$format=json",
+              type: 'GET',
+              contentType: "application/json",
+              success: function (data) {
+                email = data;
+                initiator = data.d.results[0].personIdExternal;
+                if (initiator) {
+                  sap.ui.core.BusyIndicator.hide();
                 }
-                this.getView().getModel("oneModel").setProperty("/disable", disable);
-
-                $.ajax({
-                  url: serviceURL + "/odata/v2/PerEmail?$filter=emailAddress eq '" + useremail + "'&$format=json",
-                  type: 'GET',
-                  contentType: "application/json",
-                  success: function (data) {
-                    console.log("success" + data);
-                    initiator = data.d.results[0].personIdExternal;
-                    if (initiator) {
-                      this.SFservice();
-                      this.s4hanaServices();
-                      sap.ui.core.BusyIndicator.hide();
-                    }
-                  }.bind(this),
-                  error: function (e) {
-                    console.log("error: " + e);
-                    sap.ui.core.BusyIndicator.hide();
-                  }
-
-                });
-
-              } else {
-                this.getView().getModel("oneModel").setProperty("/disable", query);
-                formId1 = query.formId;
-                if (query.mode == "bsc") {
-                  bscFlag = true;
-                  this.getView().byId("delete").setVisible(false);
-                  this.getView().byId("submit").setVisible(false);
-                } else if (query.mode == "display") {
-                  approverFlag = true;
-                  this.getView().byId("delete").setVisible(false);
-                  this.getView().byId("submit").setVisible(false);
-                } else if (query.mode == "initiator") {
-                  initiatorFlag = true;
-                  this.getView().byId("delete").setVisible(false);
-                  this.getView().byId("submit").setVisible(false);
-                }
-                $.ajax({
-                  url: serviceURL + "/odata/v2/PerEmail?$filter=emailAddress eq '" + useremail + "'&$format=json",
-                  type: 'GET',
-                  contentType: "application/json",
-                  success: function (data) {
-                    console.log("success" + data);
-                    if (data.d.results[0] && data.d.results[0].personIdExternal) {
-                      initiator = data.d.results[0].personIdExternal;
-                      setTimeout(this.readFormidData(formId1, useremail), 300);
-                      if (bscFlag || approverFlag) {
-                        this.getView().getModel("oneModel").setProperty("/editable", false);
-                        this.getView().byId("_IDGenComboBox1").setEditable(false);
-                        this.getView().byId("_IDGenComboBox41").setEditable(false);
-                        this.getView().byId("idempCame").setEditable(false);
-                        this.getView().byId("_IDGenInput10").setEditable(false);
-                        this.getView().byId("_IDGenComboBox411").setEditable(false);
-                        this.getView().byId("_IDGenInput11").setEditable(false);
-                        this.getView().byId("_IDGenInput112").setEditable(false);
-
-                        this.getView().byId("titleB1").setEditable(false);
-
-
-                        this.getView().byId("_IDGenComboBox17").setEditable(false);
-                        this.getView().byId("_IDGenDatePicker1").setEditable(false);
-                        this.getView().byId("_IDGenComboBox2").setEditable(false);
-                        this.getView().byId("_IDGenComboBox3").setEditable(false);
-                        this.getView().byId("_IDGenComboBox6").setEditable(false);
-                        this.getView().byId("Hoursperweek").setEditable(false);
-                        this.getView().byId("idWeekYeardrop").setEditable(false);
-                        this.getView().byId("idWorkingWeeksdrop").setEditable(false);
-                        this.getView().byId("idFTE").setEditable(false);
-                        this.getView().byId("idFTEperc").setEditable(false);
-                        this.getView().byId("_IDGenInput141").setEditable(false);
-                        this.getView().byId("probationEndDatePic").setEditable(false);
-                        this.getView().byId("_IDGenComboBox8").setEditable(false);
-                        this.getView().byId("_IDGenInput191").setEditable(false);
-                        this.getView().byId("_IDGenInput12").setEditable(false);
-                        this.getView().byId("_IDGenComboBox82").setEditable(false);
-                        this.getView().byId("_IDGenInput1912").setEditable(false);
-                        this.getView().byId("_IDGenInput122").setEditable(false);
-                        this.getView().byId("_IDGenComboBox83").setEditable(false);
-                        this.getView().byId("_IDGenInput1913").setEditable(false);
-                        this.getView().byId("_IDGenInput123").setEditable(false);
-                      } else sap.ui.core.BusyIndicator.hide();
-                      sap.ui.core.BusyIndicator.hide();
-                    }
-                  }.bind(this),
-                  error: function (e) {
-                    console.log("error: " + e);
-                    sap.ui.core.BusyIndicator.hide();
-                  }
-                });
+              }.bind(this),
+              error: function (e) {
+                console.log("error: " + e);
+                sap.ui.core.BusyIndicator.hide();
               }
-            }
+            });
+
+            await $.ajax({
+              url: serviceURL + "/odata/v2/PerPerson(personIdExternal='" + initiator + "')/personalInfoNav?$format=json",
+              type: 'GET',
+              contentType: "application/json",
+              success: function (data) {
+                var initDetails = {
+                  email: email.d.results[0].emailAddress,
+                  personIdExternal: email.d.results[0].personIdExternal,        //first name, last name Etc.
+                  fullName: data.d.results[0].firstName + " " + data.d.results[0].lastName,
+                  salutation: data.d.results[0].salutation
+                }
+                oModel.setProperty("/user", initDetails);
+                resolve(initiator);
+              }.bind(this),
+              error: function (data) {
+                console.log(`PerPerson entity failed for ${email.d.results[0].personIdExternal}`);
+                reject(data);
+              }
+            });
           });
-
       },
 
+      _checkMultiOrg: async function (oModel, initi) {
+        return new Promise(
+          async function (resolve, reject) {
+            var username;
+            await $.ajax({
+              url: serviceURL + "/odata/v2/UserAccount?$format=json&$filter=personIdExternal eq '" + initi + "'",
+              type: 'GET',
+              contentType: "application/json",
+              success: function (data) {
+                username = data.d.results[0].username;
+              },
+              error: function (e) {
+                console.log(`UserAccount entity failed for ${initi}`);
+                reject(e);
+              }
+            });
+            await $.ajax({
+              url: serviceURL + "/odata/v2/cust_ZFLM_MULTI_USERS?$filter=cust_UserName eq '" + username + "'&$format=json",
+              type: 'GET',
+              contentType: "application/json",
+              success: async function (data) {
+                if (data.d.results.length != 0) {
+                  var cust_Value = data.d.results[0].cust_Value.split(",");
+                  multiOrgFound = true;
+                  oModel.setProperty("/OrgNameP", "");
+                  var val = [];
+                  cust_Value.forEach(async function (item) {
+                    $.ajax({
+                      url: serviceURL + "/odata/v2/cust_PersonnelArea?$filter= externalCode eq '" + item + "'&$format=json",
+                      type: 'GET',
+                      contentType: "application/json",
+                      success: function (data) {
+                        var req = {
+                          key: item,
+                          value: data.d.results[0].externalName
+                        };
+                        val.push(req);
+                        val.sort((a, b) => a.value.localeCompare(b.value))
+                        oModel.setProperty("/OrgValues", val);
+                        resolve(true);
+                      },
+                      error: function (e) {
+                        console.log(`cust_PersonnelArea entity failed for ${item}`);
+                        reject(e);
+                      }
+                    });
+                  });
+                } else {
+                  resolve(false);
+                  oModel.setProperty("/multiOrgFound", false);
+                }
+              }.bind(this),
+              error: function (e) {
+                console.log(`cust_ZFLM_MULTI_USERS entity failed for ${username}`);
+                reject(e);
+              }
+            });
+          });
+      },
 
-      SFservice: function () {
+      SFservice: async function (multiOrgFound) {
         var that = this;
         var oModel = that.getView().getModel("oneModel");
         var oView = that.getView();
@@ -262,114 +358,129 @@ sap.ui.define([
           type: 'GET',
           contentType: "application/json",
           success: function (data) {
-            // $.ajax({
-            //   url: serviceURL + "/odata/v2/PickListValueV2?$filter=PickListV2_id eq 'rcmUKEthnicGroup' and status eq 'A' &$format=json",
-            //   type: 'GET',
-            //   contentType: "application/json",
-            //   success: function (data) {
-            //     data.d.results.sort();
-            //     oModel.setProperty("/Ethnicity", data.d.results);
-            //   }.bind(this),
-            //   error: function (e) {
-            //     console.log("error: " + e);
-            //   }
-            // });
-            $.ajax({
-              url: serviceURL + "/odata/v2/cust_PersonnelArea?$filter= externalCode eq '" + data.d.results[0].customString3 + "'&$format=json",
-              type: 'GET',
-              contentType: "application/json",
-              success: function (data) {
-                console.log("success" + data);
-                personnel = data.d.results[0].externalName + " (" + data.d.results[0].externalCode + ")"
-              },
-              error: function (e) {
-                console.log("error: " + e);
-              }
-            });
-            var orgType = data.d.results[0].customString3;
-            var manId = data.d.results[0].managerId;
-            $.ajax({
-              url: serviceURL + "/odata/v2/PerPerson('" + manId + "')/personalInfoNav?$format=json",
-              type: 'GET',
-              contentType: "application/json",
-              success: function (data) {
-                if (bscFlag || approverFlag || initiatorFlag) {
+            if (data && data.d.results[0]) {
+              if (!(approverFlag || initiatorFlag || bscFlag)) {
+                // checking if manager is present or not
+                if (data.d.results[0].managerId == "NO_MANAGER") {
+                  MessageBox.error("Line Manager is missing, Form cannot be Initiated", {
+                    title: "Error Message",
+                    actions: [sap.m.MessageBox.Action.OK],
+                    onClose: function (oAction) {
+                      if (oAction) {
+                        window.history.go(-1);
+                      }
+                    }
+                  });
                 }
-                else {
-                  console.log("success per person manager org type" + data);
-                  var manName = data.d.results[0].firstName + " " + data.d.results[0].lastName;
-                  // settin the value of manager id in header field
-                  oView.byId("approver").setValue(manName);
-                  this.ApproverCode = data.d.results[0].salutation;
-                }
-              }, error: function () { }
-            }).done(function () {
-              if (approverFlag || bscFlag) {
-                oView.byId("empCame").setVisible(true);
-                oView.byId("idempCame").setVisible(true);
-                oView.byId("_IDGenLabel621").setVisible(true);
-                oView.byId("_IDGenInput10").setVisible(true);
-                oView.byId("_IDGenLabel6421").setVisible(true);
-                oView.byId("_IDGenComboBox411").setVisible(true);
-                oView.byId("_IDGenLabel6411").setVisible(true);
-                oView.byId("_IDGenInput11").setVisible(true);
-                oView.byId("_IDGenLabel611").setVisible(true);
-                oView.byId("_IDGenInput112").setVisible(true);
-
-                oView.byId("DatePicker01").setEditable(false);
-                oView.byId("Dob11").setEditable(false);
-
-                oView.byId("Nationality1").setEditable(false);
-                oView.byId("Disability1").setEditable(false);
-                oView.byId("DBS1").setEditable(false);
-                oView.byId("TeachRegNum1").setEditable(false);
-                oView.byId("BankSort1").setEditable(false);
-                oView.byId("BankAccNum1").setEditable(false);
-
-
-                oView.byId("nationalIns1").setEditable(false);
-                oView.byId("Ethicity1").setEditable(false);
-                oView.byId("Gender1").setEditable(false);
-                oView.byId("ClearDate1").setEditable(false);
-                oView.byId("ClearDate1").setEditable(false);
-                oView.byId("issuDate1").setEditable(false);
-                oView.byId("issuDate1").setEditable(false);
-                // oView.byId("BankName1").setEnabled(false);
-                oView.byId("BuildingSoc1").setEditable(false);
-                oView.byId("_IDGefnInput11").setEditable(false);
-                oView.byId("_IDGefnInput12").setEditable(false);
-                //this.getView().byId("_IDGenfInput13").setEnabled(false);
-                oView.byId("_IDGefnInput14").setEditable(false);
-                oView.byId("_IDGenItem6").setEditable(false);
-
-
-                //First Emergency 
-
-                oView.byId("idree4d2").setEditable(false);
-                oView.byId("_IDGenItem6").setEditable(false);
-                // oView.byId("emergency1County").setEditable(false);
-                oView.byId("_IDGenInput15").setEditable(false);
-                oView.byId("_IDGenInput16").setEditable(false);
-                oView.byId("_IDGenInput16s").setEditable(false);
-                oView.byId("_IDGenInput17").setEditable(false);
-                oView.byId("_IDGenInput18").setEditable(false);
-                // oView.byId("_IDGenInput19").setEditable(false);
-
-
-                oView.byId("_IDGefnInput122").setEditable(false);
-                oView.byId("_IDGefnInput112").setEditable(false);
-                //this.getView().byId("_IDGenfInput132").setEnabled(false);
-                oView.byId("_IDGefnInput142").setEditable(false);
-                // this.getView().byId("idCountry2").setEnabled(false);
-                oView.byId("_IDGenInput152").setEditable(false);
-                oView.byId("_IDGenInput162").setEditable(false);
-                oView.byId("_IDGenInput162s").setEditable(false);
-                oView.byId("_IDGenInput172").setEditable(false);
-                oView.byId("_IDGenInput182").setEditable(false);
-                // oView.byId("_IDGenInput192").setEditable(false);
-
               }
-            });
+              // setting data of EmpJob for further usage
+              oModel.setProperty("/EmpJobData", data.d.results[0]);
+              payGroup = data.d.results[0].payGroup;
+              if (!multiOrgFound) {
+                // setting the value of Org if there is only one org
+                $.ajax({
+                  url: serviceURL + "/odata/v2/cust_PersonnelArea?$filter= externalCode eq '" + data.d.results[0].customString3 + "'&$format=json",
+                  type: 'GET',
+                  contentType: "application/json",
+                  success: function (data) {
+                    personnel = data.d.results[0].externalName + " (" + data.d.results[0].externalCode + ")"
+                    var req = [{
+                      key: data.d.results[0].externalCode,
+                      value: data.d.results[0].externalName
+                    }];
+                    oModel.setProperty("/OrgValues", req);
+                    oModel.setProperty("/selectedOrg", data.d.results[0].externalCode);
+                  },
+                  error: function (e) {
+                    console.log("error: " + e);
+                  }
+                });
+              }
+
+              // fetching emplymentType code from its nav
+              if (!(approverFlag || bscFlag || initiatorFlag)) {
+                $.ajax({
+                  url: serviceURL + `/odata/v2${data.d.results[0].employmentTypeNav.__deferred.uri.split("/odata/v2")[1]}?$format=json`,
+                  type: 'GET',
+                  contentType: "application/json",
+                  success: function (data) {
+                    emplSubGroup = data.d.externalCode;
+                  },
+                  error: function (e) {
+                    console.log("error: " + e);
+                  }
+                });
+              }
+
+              // ajax for finding position and its cost center
+              $.ajax({
+                url: serviceURL + "/odata/v2" + data.d.results[0].positionNav.__deferred.uri.split("/odata/v2")[1] + "?$format=json",
+                type: 'GET',
+                contentType: "application/json",
+                success: function (data) {
+                  $.ajax({
+                    url: serviceURL + "/odata/v2" + data.d.PositionCostAssignmentItems.__deferred.uri.split("/odata/v2")[1] + "?$format=json",
+                    type: 'GET',
+                    contentType: "application/json",
+                    success: function (data) {
+                      for (let j = 0; j < data.d.results.length; j++) {
+                        if (data.d.results[j].defaultAssignment == true) {
+                          $.ajax({
+                            url: serviceURL + "/odata/v2" + data.d.results[j].costCenterNav.__deferred.uri.split("/odata/v2")[1] + "?$format=json",
+                            type: 'GET',
+                            contentType: "application/json",
+                            success: function (data) {
+                              that.getView().byId("_IDGenInput112").setValue((+data.d.results[0].costcenterExternalObjectID).toString() + " " + data.d.results[0].description);
+                            },
+                            error: function (e) {
+                              console.log("error: " + e);
+                            }
+                          });
+                        }
+                      }
+                    },
+                    error: function (e) {
+                      console.log("error: " + e);
+                    }
+                  });
+                },
+                error: function (e) {
+                  console.log("error: " + e);
+                }
+              });
+              var manId = data.d.results[0].managerId;
+              $.ajax({
+                url: serviceURL + "/odata/v2/PerPerson('" + manId + "')/personalInfoNav?$format=json",
+                type: 'GET',
+                contentType: "application/json",
+                success: function (data) {
+                  if (bscFlag || approverFlag || initiatorFlag) {
+                  }
+                  else {
+                    var manName = data.d.results[0].firstName + " " + data.d.results[0].lastName;
+                    // settin the value of manager id in header field
+                    oView.byId("approver").setValue(manName);
+                    this.ApproverCode = data.d.results[0].salutation;
+                  }
+                }, error: function () { }
+              }).done(function () {
+                if (approverFlag || bscFlag) {
+                  oView.byId("empCame").setVisible(true);
+                  oView.byId("idempCame").setVisible(true);
+                  oView.byId("_IDGenLabel621").setVisible(true);
+                  oView.byId("_IDGenInput10").setVisible(true);
+                  oView.byId("_IDGenLabel6421").setVisible(true);
+                  oView.byId("_IDGenComboBox411").setVisible(true);
+                  oView.byId("_IDGenLabel6411").setVisible(true);
+                  oView.byId("_IDGenInput11").setVisible(true);
+                  oView.byId("_IDGenLabel611").setVisible(true);
+                  oView.byId("_IDGenInput112").setVisible(true);
+
+                  this.enableFields(false);
+
+                }
+              });
+            }
             // resolve(data);
           }, error: function (e) {
             console.log("error: " + e);
@@ -377,28 +488,34 @@ sap.ui.define([
           }
         });
 
-
-        // // organisation name
-        // $.ajax({
-        //   url: serviceURL + "/odata/v2/cust_ZFLM_MULTI_USERS?$format=json",
-        //   type: 'GET',
-        //   contentType: "application/json",
-        //   success: function (data) {
-        //     oModel.setProperty("/organisation", data);
-        //   }, error: function (e) { }
-        // })
-
         // // Cost Center AJAX 
 
-        $.ajax({
+        await $.ajax({
           url: serviceURL + "/odata/v2/EmpCostAssignmentItem?$filter= EmpCostAssignment_worker eq '" + initiator + "'&$format=json",
           type: 'GET',
           contentType: "application/json",
           success: function (data) {
-            console.log("success" + data);
+
             for (let i = 0; i < data.d.results.length; i++) {
               if (data.d.results[i].defaultAssignment == true) {
-                oModel.setProperty("/CostCentreP", data.d.results[0]);
+                oModel.setProperty("/costCenterCode", data.d.results[i].costCenter);
+                $.ajax({
+                  url: serviceURL + `/odata/v2${data.d.results[i].costCenterNav.__deferred.uri.split("/odata/v2")[1]}?$format=json`,
+                  type: 'GET',
+                  contentType: "application/json",
+                  success: function (data) {
+                    if (data && data.d.results[0] && data.d.results[0].costcenterExternalObjectID) {
+                      oModel.setProperty("/CostCentreP", { costCenter: (+data.d.results[0].costcenterExternalObjectID).toString() });
+                      that.getGrades(oModel);
+                    }
+                    else {
+                      MessageBox.error("Cost Center could not be found");
+                    }
+                  },
+                  error: function (e) {
+                    console.log(`FOCostCenter entity failed for ${initiator}`);
+                  }
+                });
               }
             }
           }.bind(this),
@@ -464,12 +581,112 @@ sap.ui.define([
           error: function (e) { console.log("error: " + e); }
 
         });
-        //property - personal Info dropdown
 
-        this.allDropdowns(oModel, that);
+        // Contract dropdowns
+        $.ajax({
+          url: serviceURL + "/odata/v2/cust_ZFLM_CONTRACT_TY?$format=json",
+          type: 'GET',
+          contentType: "application/json",
+          success: function (data) {
+            data.d.results.sort((a, b) => {
+              if (a.cust_Text < b.cust_Text) return -1;
+              if (a.cust_Text > b.cust_Text) return 1;
+            });
+            oModel.setProperty("/oContractType", data);
+          },
+          error: function (e) {
+            console.log("error: " + e);
+          }
+        });
 
-        // });
+        //dropdown for where is your employe came from
+        $.ajax({
+          url: serviceURL + "/odata/v2/PicklistLabel?$filter=label eq 'Hire' and locale eq 'en_GB' &$format=json",
+          type: 'GET',
+          contentType: "application/json",
+          success: function (data) {
+            var hireData = data.d.results[0];
+            var empCameFrom = [];
+            $.ajax({
+              url: serviceURL + "/odata/v2/FOEventReason?$filter=status eq 'A' &$format=json",
+              type: 'GET',
+              contentType: "application/json",
+              success: function (data) {
+                data.d.results.forEach(function (item) {
+                  if (item.event == hireData.optionId) {
+                    empCameFrom.push({
+                      "name": item.name,
+                      "event": item.event
+                    })
+                  }
+                });
+                empCameFrom.sort((a, b) => {
+                  if (a.name < b.name) return -1;
+                  if (a.name > b.name) return 1;
+                });
+                oModel.setProperty("/empCameFrom", empCameFrom);
+              }, error: function (e) { }
+            });
+          }, error: function (e) { }
+        });
 
+      },
+
+      enableFields: function (bEditable) {
+
+        var oView = this.getView();
+
+        oView.byId("DatePicker01").setEditable(bEditable);
+        oView.byId("Dob11").setEditable(bEditable);
+
+        oView.byId("country1").setEditable(bEditable);
+        oView.byId("Nationality1").setEditable(bEditable);
+        oView.byId("Disability1").setEditable(bEditable);
+        oView.byId("DBS1").setEditable(bEditable);
+        oView.byId("TeachRegNum1").setEditable(bEditable);
+        oView.byId("BankSort1").setEditable(bEditable);
+        oView.byId("BankAccNum1").setEditable(bEditable);
+
+
+        oView.byId("nationalIns1").setEditable(bEditable);
+        oView.byId("Ethicity1").setEditable(bEditable);
+        oView.byId("Gender1").setEditable(bEditable);
+        oView.byId("ClearDate1").setEditable(bEditable);
+        oView.byId("ClearDate1").setEditable(bEditable);
+        oView.byId("issuDate1").setEditable(bEditable);
+        oView.byId("issuDate1").setEditable(bEditable);
+        // oView.byId("BankName1").setEnabled(bEditable);
+        oView.byId("BuildingSoc1").setEditable(bEditable);
+        oView.byId("_IDGefnInput11").setEditable(bEditable);
+        oView.byId("_IDGefnInput12").setEditable(bEditable);
+        //this.getView().byId("_IDGenfInput13").setEnabled(bEditable);
+        oView.byId("_IDGefnInput14").setEditable(bEditable);
+        oView.byId("_IDGenItem6").setEditable(bEditable);
+
+
+        //First Emergency 
+
+        oView.byId("idree4d2").setEditable(bEditable);
+        oView.byId("_IDGenItem6").setEditable(bEditable);
+        // oView.byId("emergency1County").setEditable(bEditable);
+        oView.byId("_IDGenInput15").setEditable(bEditable);
+        oView.byId("_IDGenInput16").setEditable(bEditable);
+        oView.byId("_IDGenInput16s").setEditable(bEditable);
+        oView.byId("_IDGenInput17").setEditable(bEditable);
+        oView.byId("_IDGenInput18").setEditable(bEditable);
+        // oView.byId("_IDGenInput19").setEditable(bEditable);
+
+
+        oView.byId("_IDGefnInput122").setEditable(bEditable);
+        oView.byId("_IDGefnInput112").setEditable(bEditable);
+        //this.getView().byId("_IDGenfInput132").setEnabled(bEditable);
+        oView.byId("_IDGefnInput142").setEditable(bEditable);
+        // this.getView().byId("idCountry2").setEnabled(bEditable);
+        oView.byId("_IDGenInput152").setEditable(bEditable);
+        oView.byId("_IDGenInput162").setEditable(bEditable);
+        oView.byId("_IDGenInput162s").setEditable(bEditable);
+        oView.byId("_IDGenInput172").setEditable(bEditable);
+        oView.byId("_IDGenInput182").setEditable(bEditable);
       },
 
       clearFields: function () {
@@ -574,7 +791,7 @@ sap.ui.define([
               type: 'GET',
               contentType: "application/json",
               success: function (data) {
-                console.log("success" + data);
+
                 var assignUserId = data;
                 var lenData = data.d.results.length
                 if (data.d.results[0].originalStartDate != "") {
@@ -608,7 +825,7 @@ sap.ui.define([
                     type: 'GET',
                     contentType: "application/json",
                     success: function (data) {
-                      console.log("success" + data);
+
                       if (data.d.results.length > 0) {
 
                         var posNo = data.d.results[0].customString1; //positionHeld
@@ -995,10 +1212,7 @@ sap.ui.define([
                         }
                         console.log("Emergency contacts 1 success"); console.log(data);
                       } if (emergencyData.d.results[i].primaryFlag == "N") {
-                        oView.byId("_IDGenHBox1222212").setVisible(true);
                         oView.byId("_IDGenCheckBox2").setVisible(true);
-                        oView.byId("_IDGenTfitle12").setVisible(true);
-                        oModel.setProperty("/PerEmergencyContactsSecond", data.d);
                         if (data.d.state) {
                           oView.byId("idree4d2").setSelectedKey(data.d.state);
                           $.ajax({
@@ -1043,9 +1257,37 @@ sap.ui.define([
           })
 
         }
+      },
 
+      onOrgChange: function (oEvent) {
+        if (oEvent.getSource().getSelectedItem() == null) {
+          MessageBox.error("Please select a valid Organization");
+          oEvent.oSource.setValueState(sap.ui.core.ValueState.Error);
+          this.enableSecA(false);
+        }
+        else {
+          oEvent.oSource.setValueState(sap.ui.core.ValueState.None);
+          var orgName = oEvent.getSource().getSelectedItem().getKey();
+          this._getEmployees(orgName);
+          this.enableSecA(true);
+        }
+      },
 
+      generalDropdownCheck: function (oEvent) {
+        var value = oEvent.getSource().getSelectedItem();
+        if (value) {
+          oEvent.getSource().setValueState(sap.ui.core.ValueState.None);
+        }
+        else {
+          oEvent.getSource().setValueState(sap.ui.core.ValueState.Error);
+        }
+      },
 
+      generalInputCheck: function (oEvent) {
+        var value = oEvent.getSource().getValue();
+        if (value) {
+          oEvent.getSource().setValueState(sap.ui.core.ValueState.None);
+        }
       },
 
       requiredDate: function (date) {
@@ -1083,78 +1325,68 @@ sap.ui.define([
         return reqDate;
       },
 
-      oEmployeeSelect: function () {
+      oEmployeeSelect: function (oEvent) {
 
         var oValue = this.getView().byId("_IDGenComboBox41").getSelectedItem();
-
-        //var oValue = oEvent.getSource().getSelectedItem().getText();
-
         if (oValue) {
+          oEvent.getSource().setValueState(sap.ui.core.ValueState.None);
           this.getView().byId("empCame").setVisible(true);
           this.getView().byId("idempCame").setVisible(true);
-          this.getView().byId("_IDGenLabel621").setVisible(true);
-          this.getView().byId("_IDGenInput10").setVisible(true);
-          this.getView().byId("_IDGenLabel6421").setVisible(true);
-          this.getView().byId("_IDGenComboBox411").setVisible(true);
-          this.getView().byId("_IDGenLabel6411").setVisible(true);
-          this.getView().byId("_IDGenInput11").setVisible(true);
-          this.getView().byId("_IDGenLabel611").setVisible(true);
-          this.getView().byId("_IDGenInput112").setVisible(true);
 
-          this.getView().byId("DatePicker01").setEditable(false);
-          this.getView().byId("Dob11").setEditable(false);
+          this.showSecAFields(true);
+          // this.getView().byId("DatePicker01").setEditable(false);
+          // this.getView().byId("Dob11").setEditable(false);
 
-          this.getView().byId("Nationality1").setEditable(false);
-          this.getView().byId("Disability1").setEditable(false);
-          this.getView().byId("DBS1").setEditable(false);
-          this.getView().byId("TeachRegNum1").setEditable(false);
-          this.getView().byId("BankSort1").setEditable(false);
-          this.getView().byId("BankAccNum1").setEditable(false);
+          // this.getView().byId("country1").setEditable(false);
+          // this.getView().byId("Nationality1").setEditable(false);
+          // this.getView().byId("Disability1").setEditable(false);
+          // this.getView().byId("DBS1").setEditable(false);
+          // this.getView().byId("TeachRegNum1").setEditable(false);
+          // this.getView().byId("BankSort1").setEditable(false);
+          // this.getView().byId("BankAccNum1").setEditable(false);
 
 
-          this.getView().byId("nationalIns1").setEditable(false);
-          this.getView().byId("Ethicity1").setEditable(false);
-          this.getView().byId("Gender1").setEditable(false);
-          this.getView().byId("ClearDate1").setEditable(false);
-          this.getView().byId("ClearDate1").setEditable(false);
-          this.getView().byId("issuDate1").setEditable(false);
-          this.getView().byId("issuDate1").setEditable(false);
-          // this.getView().byId("BankName1").setEnabled(false);
-          this.getView().byId("BuildingSoc1").setEditable(false);
-          this.getView().byId("_IDGefnInput11").setEditable(false);
-          this.getView().byId("_IDGefnInput12").setEditable(false);
-          //this.getView().byId("_IDGenfInput13").setEnabled(false);
-          this.getView().byId("_IDGefnInput14").setEditable(false);
-          this.getView().byId("_IDGenItem6").setEditable(false);
+          // this.getView().byId("nationalIns1").setEditable(false);
+          // this.getView().byId("Ethicity1").setEditable(false);
+          // this.getView().byId("Gender1").setEditable(false);
+          // this.getView().byId("ClearDate1").setEditable(false);
+          // this.getView().byId("ClearDate1").setEditable(false);
+          // this.getView().byId("issuDate1").setEditable(false);
+          // this.getView().byId("issuDate1").setEditable(false);
+          // // this.getView().byId("BankName1").setEnabled(false);
+          // this.getView().byId("BuildingSoc1").setEditable(false);
+          // this.getView().byId("_IDGefnInput11").setEditable(false);
+          // this.getView().byId("_IDGefnInput12").setEditable(false);
+          // //this.getView().byId("_IDGenfInput13").setEnabled(false);
+          // this.getView().byId("_IDGefnInput14").setEditable(false);
+          // this.getView().byId("_IDGenItem6").setEditable(false);
 
 
-          //First Emergency 
+          // //First Emergency 
 
-          this.getView().byId("idree4d2").setEditable(false);
-          this.getView().byId("_IDGenItem6").setEditable(false);
-          // this.getView().byId("emergency1County").setEditable(false);
-          this.getView().byId("_IDGenInput15").setEditable(false);
-          this.getView().byId("_IDGenInput16").setEditable(false);
-          this.getView().byId("_IDGenInput16s").setEditable(false);
-          this.getView().byId("_IDGenInput17").setEditable(false);
-          this.getView().byId("_IDGenInput18").setEditable(false);
-          // this.getView().byId("_IDGenInput19").setEditable(false);
-
-
-          this.getView().byId("_IDGefnInput122").setEditable(false);
-          this.getView().byId("_IDGefnInput112").setEditable(false);
-          //this.getView().byId("_IDGenfInput132").setEnabled(false);
-          this.getView().byId("_IDGefnInput142").setEditable(false);
-          // this.getView().byId("idCountry2").setEnabled(false);
-          this.getView().byId("_IDGenInput152").setEditable(false);
-          this.getView().byId("_IDGenInput162").setEditable(false);
-          this.getView().byId("_IDGenInput162s").setEditable(false);
-
-          this.getView().byId("_IDGenInput172").setEditable(false);
-          this.getView().byId("_IDGenInput182").setEditable(false);
-          // this.getView().byId("_IDGenInput192").setEditable(false);
+          // this.getView().byId("idree4d2").setEditable(false);
+          // this.getView().byId("_IDGenItem6").setEditable(false);
+          // // this.getView().byId("emergency1County").setEditable(false);
+          // this.getView().byId("_IDGenInput15").setEditable(false);
+          // this.getView().byId("_IDGenInput16").setEditable(false);
+          // this.getView().byId("_IDGenInput16s").setEditable(false);
+          // this.getView().byId("_IDGenInput17").setEditable(false);
+          // this.getView().byId("_IDGenInput18").setEditable(false);
+          // // this.getView().byId("_IDGenInput19").setEditable(false);
 
 
+          // this.getView().byId("_IDGefnInput122").setEditable(false);
+          // this.getView().byId("_IDGefnInput112").setEditable(false);
+          // //this.getView().byId("_IDGenfInput132").setEnabled(false);
+          // this.getView().byId("_IDGefnInput142").setEditable(false);
+          // // this.getView().byId("idCountry2").setEnabled(false);
+          // this.getView().byId("_IDGenInput152").setEditable(false);
+          // this.getView().byId("_IDGenInput162").setEditable(false);
+          // this.getView().byId("_IDGenInput162s").setEditable(false);
+
+          // this.getView().byId("_IDGenInput172").setEditable(false);
+          // this.getView().byId("_IDGenInput182").setEditable(false);
+          // // this.getView().byId("_IDGenInput192").setEditable(false);
           const myArray = oValue.getText().split(" ", 4);
           var firstName = myArray[0];
           var lastName = myArray[1];
@@ -1165,10 +1397,9 @@ sap.ui.define([
           }
           var salutation = myArray[3];
           var sectionDArr = { salutation: salutation, firstName: firstName, lastName: lastName, pernr: pernr };
-
         }
-
-
+        else
+          oEvent.getSource().setValueState(sap.ui.core.ValueState.Error);
       },
 
       dateConverter: function (date1) {
@@ -1244,9 +1475,12 @@ sap.ui.define([
       },
 
       //Reading data from backend using form id
-      readFormidData: function (formId1, useremail) {
+      readFormidData: function (formId1, multiOrgFound) {
         // /sap/opu/odata/sap/ZSFGTGW_NS01_SRV/ZSFGT_NS01Set(Formid='0000002450')
         this.getOwnerComponent().getModel("ZSFGTGW_NS01_SRV").read("/ZSFGT_NS01Set(Formid='" + formId1 + "')", {
+          urlParameters: {
+            "$expand": "HeadToWsNav"
+          },
           success: function (oData) {
             this.getView().getModel("oneModel").setProperty("/oDataCall", oData);
 
@@ -1257,7 +1491,7 @@ sap.ui.define([
             this.getView().byId("_IDGenInput4").setValue(oData.Organization);
             var oModel = this.getView().getModel("oneModel");
             var that = this;
-            oModel.setProperty("/CostCentreP", { costCenter: oData.CostCenter });
+            oModel.setProperty("/CostCentreP", { costCenter: oData.CostCenterDisp });
             this.getView().byId("_IDGen1Inpu1t4").setValue(oData.CostCenter);
             //"CostCenterCode":"" , //"CC01",
             this.getView().byId("approver").setValue(oData.Approver);
@@ -1267,9 +1501,14 @@ sap.ui.define([
             emplSubGroup = oData.EmpSubGrpCode;
             payGroup = oData.Paygroup;
             initiator = oData.CostCenterCode;
-            this.allDropdowns(oModel, that);
+            this.allDropdowns(oModel);
             this.SFservice();
             if (oData.EmployeedOrganization == "N") {
+              if (initiatorFlag) {
+                this.getView().byId("SimpleFormChange354wide1").setEditable(true);
+                this.getView().byId("_IDGenSimpleForm1").setEditable(true);
+                this.getView().byId("_IDGenSimpleForm2").setEditable(true);
+              }
               this.getView().byId("_IDGenPanel4").setHeaderText("Section B – New Employee Details");
               this.getView().byId("_IDGenComboBox1").setSelectedKey(oData.EmployeedOrganization);
               this.getView().byId("idempCame").setVisible(false);
@@ -1278,6 +1517,46 @@ sap.ui.define([
               this.getView().byId("idempCame1").setVisible(true);
             } else {
               this.getView().byId("_IDGenPanel4").setHeaderText("Section B - Multi Employee Details");
+              this.getView().byId("_IDGenComboBox1").setEditable(false);
+              this.getView().byId("_IDGenComboBox41").setEditable(false);
+              this.getView().byId("idempCame").setEditable(false);
+              this.getView().byId("_IDGenInput10").setEditable(false);
+              this.getView().byId("_IDGenComboBox411").setEditable(false);
+              this.getView().byId("_IDGenInput11").setEditable(false);
+              this.getView().byId("_IDGenInput112").setEditable(false);
+              this.getView().byId("country1").setEditable(false);
+
+              this.getView().byId("titleB1").setEditable(false);
+              this.getView().byId("foreName1").setEditable(false);
+              this.getView().byId("middelname1").setEditable(false);
+              this.getView().byId("surname1").setEditable(false);
+              this.getView().byId("contStartDate1").setEditable(false);
+              // that.getView().byId("empAdd1").setEditable(false);
+              this.getView().byId("streetHouseNo1").setEditable(false);
+              this.getView().byId("2ndadd1").setEditable(false);
+
+              this.getView().byId("city1").setEditable(false);
+              this.getView().byId("country1").setEditable(false);
+              this.getView().byId("postcode1").setEditable(false);
+              this.getView().byId("homeTelephone1").setEditable(false);
+              this.getView().byId("mobileTelephone1").setEditable(false);
+              this.getView().byId("emailAdd1").setEditable(false);
+
+              this.getView().byId("Dob11").setEditable(false);
+              this.getView().byId("Nationality1").setEditable(false);
+              this.getView().byId("Disability1").setEditable(false);
+              this.getView().byId("DBS1").setEditable(false);
+              this.getView().byId("TeachRegNum1").setEditable(false);
+              this.getView().byId("BankSort1").setEditable(false);
+              this.getView().byId("BankAccNum1").setEditable(false);
+              this.getView().byId("nationalIns1").setEditable(false);
+              this.getView().byId("Ethicity1").setEditable(false);
+              this.getView().byId("Gender1").setEditable(false);
+              this.getView().byId("ClearDate1").setEditable(false);
+              this.getView().byId("issuDate1").setEditable(false);
+              this.getView().byId("BankName1").setEditable(false);
+              this.getView().byId("BuildingSoc1").setEditable(false);
+
               this.checkSectionD(oData);
               this.getView().byId("_IDGenComboBox41").setSelectedKey(oData.SelEmpCode); // "4789",
               this.getView().byId("_IDGenComboBox41").setValue(oData.SelectEmployee); // "4789",
@@ -1445,6 +1724,9 @@ sap.ui.define([
                 this.getView().byId("idfte1").setVisible(false);
                 this.getView().byId("Hoursperweek").setFieldGroupIds("sectionE");
               }
+              this.getView().byId("idHoursPerWeek1").setVisible(true);
+              this.getView().byId("idWeekYear1").setVisible(true);
+              this.getView().byId("Hoursperweek").setFieldGroupIds("sectionE");
             }
             //"FteDec":"1", //this.getView().byId("").getValue() != '' ? this.getView().byId("").getValue() : '', // "10",
             if (oData.Grade || oData.GradeCode) {
@@ -1472,6 +1754,7 @@ sap.ui.define([
               this.getView().byId("probationEndDate").setVisible(true);
               this.getView().byId("probationEndDatePic").setVisible(true);
             }
+            else this.getView().byId("_IDGenInput141").setSelectedKey("No");
             this.getView().byId("idSelectTypePos1").setSelectedKey(oData.EmpSubGrp);
 
             this.getView().byId("_IDGenComboBox8").setValue(oData.Allowance1);  // "1100",
@@ -1495,6 +1778,29 @@ sap.ui.define([
             this.getView().byId("idLEASCHOOL").setValue(oData.LeaSchoolname);  //"Lea School",
             this.getView().byId("idNumberHoursD").setValue(oData.NoHours); // "1",
             this.getView().getModel("oneModel").setProperty("/SecDTerminData", { seqNumber: oData.seqNumber, startDate: oData.TermStartDt })
+
+            //   previewData[counter][items[i].Day] = { [items[i].Day]: items[i].HoursWorked, dataFound: "true", DaysName: items[i].Day, ScheduleDay: items[i].ScheduleDay, Daykey: items[i].DayKey };
+            // previewData[counter].Type = "Hours";
+            if (oData.HeadToWsNav.results && oData.HeadToWsNav.results.length > 0) {
+              var wsData = [];
+              var s4WsData = oData.HeadToWsNav.results;
+              for (let i = 0; i < s4WsData.length; i++) {
+                var singleData = {
+                  ScheduleDay: s4WsData[i].ScheduleDay,
+                  Day: s4WsData[i].DaysName,
+                  DayKey: +s4WsData[i].DayKey,
+                  HoursWorked: s4WsData[i].Value
+                }
+                wsData.push(singleData);
+              }
+              var oModelWS = new JSONModel();
+              oModelWS.setProperty("/WSItems", wsData);
+              this.preparePreviewData(oModelWS)
+              oModelWS.setProperty("/PreviewTableShow", true)
+              oModelWS.setProperty("/PreviewText", "Hide Preview")
+              oModelWS.setProperty("/DelButShow", false);
+              this.getView().setModel(oModelWS, "WSModel");
+            }
             sap.ui.core.BusyIndicator.hide();
           }.bind(this),
           error: function (oData) {
@@ -1520,29 +1826,6 @@ sap.ui.define([
             console.log("Error", oData);
           }
         });
-      },
-
-      s4hanaServices: function () {
-        var that = this;
-        // var FormOwner, Status = 'I';
-        this.getOwnerComponent().getModel("ZSFGTGW_NS01_SRV").read("/ZSFGT_NS01_FORMID_GETSet",
-          {
-            success: function (oData) {
-              if (oData.results[0]) {
-                that.getView().byId("_IDGenInput2").setValue(oData.results[0].Formid);
-              }
-              //FormOwner = this.getView().byId("idInitiator").getValue();
-              //  this.s4LogCreation(Status, FormOwner);
-
-            }.bind(this),
-            error: function (oData) {
-              console.log(" form id service Error");
-              // MessageBox.error(JSON.parse(oData.responseText).error.message.value);
-            }
-          });
-
-
-
       },
 
       s4LogCreation: function (Status, FormOwner) {
@@ -1616,7 +1899,7 @@ sap.ui.define([
             type: 'GET',
             contentType: "application/json",
             success: function (data) {
-              console.log("success" + data);
+
               this.getView().byId("BankName1").setValue(data.d.bankName);
               oEvent.oSource.setValueState(sap.ui.core.ValueState.None);
             }.bind(this),
@@ -1650,7 +1933,7 @@ sap.ui.define([
         }
         sap.ui.core.BusyIndicator.show();
         var oModel = this.getView().getModel("oneModel");
-        var perArea = oModel.getProperty("/jobInfoOrganisation");
+        var perArea = oModel.getProperty("/EmpJobData");
         var grade = this.getView().byId("_IDGenComboBox2").getSelectedItem() != null ? this.getView().byId("_IDGenComboBox2").getSelectedItem().getKey() : this.getView().byId("_IDGenComboBox2").getSelectedKey();
         var startDate = new Date(this.getView().byId("_IDGenDatePicker1").getValue()).toISOString().split("T")[0];
         var that = this;
@@ -1888,7 +2171,7 @@ sap.ui.define([
             type: 'GET',
             contentType: "application/json",
             success: function (data) {
-              console.log("success" + data);
+
               if (!bscFlag || !approverFlag) {
                 this.getView().byId("_IDGenComboBox3").setEditable(true);
               }
@@ -1907,6 +2190,7 @@ sap.ui.define([
 
       _getEmployees: async function (orgCode) {
         var oModel = this.getView().getModel("oneModel")
+        oModel.setProperty("/employeeList", []);
         var terminated, retired, suspended, discarded, reportedNoShow;
         await $.ajax({
           url: serviceURL + "/odata/v2/PickListValueV2?$filter=PickListV2_id eq 'employee-status' and status eq 'A'&$format=json",
@@ -1943,7 +2227,7 @@ sap.ui.define([
           type: 'GET',
           contentType: "application/json",
           success: function (data) {
-            console.log("success" + data);
+
             employeeData = data.d.results;
           }.bind(this),
           error: function (e) {
@@ -1953,7 +2237,7 @@ sap.ui.define([
         });
 
         employeeData = this.filterEmplData(employeeData);
-        let a = new sap.ui.model.odata.ODataModel("/odata/v2", true);
+        let a = new sap.ui.model.odata.ODataModel(serviceURL + "/odata/v2", true);
         a.bTokenHandling = false;
         if (employeeData.length > 180) {
           for (let i = 0; i < employeeData.length / 180; i++) {
@@ -2052,309 +2336,104 @@ sap.ui.define([
       },
 
       onChangeCurrentlyEmployed: function (oEvent) {
-        var orgValue = oEvent.getSource().mProperties.value;
+        var orgValue = oEvent.getSource().getSelectedItem();
         this.clearFields();
-        if (orgValue === "Yes") {
-
-          var org = this.getView().byId("_IDGenInput4").getValue().split("(")[1].split(")")[0];
-          if (!this.getView().getModel("oneModel").getProperty("/employeeList"))
+        if (orgValue) {
+          oEvent.getSource().setValueState(sap.ui.core.ValueState.None);
+          orgValue = oEvent.getSource().getSelectedItem().getText();
+          if (orgValue === "Yes") {
+            this.getView().byId("_IDGenPanel4").setHeaderText("Section B - Multi Employee Details");
+            // getting employee data
+            var org = this.getView().byId("_IDGenInput4").getValue().split("(")[1].split(")")[0];
             this._getEmployees(org);
-          this.getView().byId("idempCame").setVisible(false);
-          this.getView().byId("empCame3").setVisible(false);
 
-          this.getView().byId("_IDGenLabel64").setVisible(true);
-          this.getView().byId("_IDGenComboBox41").setVisible(true);
-          this.getView().byId("_IDGenPanel4").setHeaderText("Section B - Multi Employee Details");
+            // changing the fields on user inputs
+            this.getView().byId("idempCame").setVisible(false);
+            this.getView().byId("idempCame").setRequired(false);
+            this.getView().byId("empCame3").setVisible(false);
+            this.getView().byId("empCame3").setRequired(false);
 
-        } else {
+            this.getView().byId("_IDGenLabel64").setVisible(true);
+            this.getView().byId("_IDGenLabel64").setRequired(true);
+            this.getView().byId("_IDGenComboBox41").setVisible(true);
+            this.getView().byId("_IDGenComboBox41").setRequired(true);
 
-          this.getView().byId("_IDGenPanel4").setHeaderText("Section B – New Employee Details");
-          this.getView().byId("idempCame1").setVisible(false);
+            this.showSecAFields(false);
 
-          this.getView().byId("empCame").setVisible(false);
-          this.getView().byId("idempCame").setVisible(true);
-          this.getView().byId("empCame3").setVisible(true);
+          } else {
 
-          this.getView().byId("_IDGenLabel64").setVisible(false);
-          this.getView().byId("_IDGenComboBox41").setVisible(false);
-          // this.getView().byId("_IDGenLabel641").setVisible(false);
+            this.getView().byId("_IDGenPanel4").setHeaderText("Section B – New Employee Details");
 
-          this.getView().byId("empCame").setVisible(true);
-          this.getView().byId("idempCame").setVisible(true);
-          this.getView().byId("_IDGenLabel621").setVisible(true);
-          this.getView().byId("_IDGenInput10").setVisible(true);
-          this.getView().byId("_IDGenLabel6421").setVisible(true);
-          this.getView().byId("_IDGenComboBox411").setVisible(true);
-          this.getView().byId("_IDGenLabel6411").setVisible(true);
-          this.getView().byId("_IDGenInput11").setVisible(true);
-          this.getView().byId("_IDGenLabel611").setVisible(true);
-          this.getView().byId("_IDGenInput112").setVisible(true);
+            // changing the fields on user inputs
+            this.getView().byId("idempCame").setVisible(true);
+            this.getView().byId("idempCame").setRequired(true);
+            this.getView().byId("empCame3").setVisible(true);
+            this.getView().byId("empCame3").setRequired(true);
 
-          this.getView().byId("Dob11").setEditable(true);
-          this.getView().byId("Nationality1").setEditable(true);
-          this.getView().byId("Disability1").setEditable(true);
-          this.getView().byId("DBS1").setEditable(true);
-          this.getView().byId("TeachRegNum1").setEditable(true);
-          this.getView().byId("BankSort1").setEditable(true);
-          this.getView().byId("BankAccNum1").setEditable(true);
-          this.getView().byId("nationalIns1").setEditable(true);
-          this.getView().byId("Ethicity1").setEditable(true);
-          this.getView().byId("Gender1").setEditable(true);
-          this.getView().byId("ClearDate1").setEditable(true);
-          this.getView().byId("ClearDate1").setEditable(true);
-          this.getView().byId("issuDate1").setEditable(true);
-          this.getView().byId("issuDate1").setEditable(true);
-          //this.getView().byId("BankName1").setEnabled(true);
-          this.getView().byId("BuildingSoc1").setEditable(true);
-          this.getView().byId("_IDGefnInput11").setEditable(true);
-          this.getView().byId("_IDGefnInput12").setEditable(true);
-          this.getView().byId("_IDGefnInput14").setEditable(true);
-          this.getView().byId("_IDGenItem6").setEditable(true);
-          // this.getView().byId("idCountry").setEnabled(true);
-          this.getView().byId("_IDGenInput15").setEditable(true);
-          this.getView().byId("_IDGenInput16").setEditable(true);
-          this.getView().byId("_IDGenInput16s").setEditable(true);
-          this.getView().byId("_IDGenInput17").setEditable(true);
-          this.getView().byId("_IDGenInput18").setEditable(true);
-          // this.getView().byId("_IDGenInput19").setEditable(true);
-          this.getView().byId("_IDGefnInput112").setEditable(true);
-          this.getView().byId("_IDGefnInput122").setEditable(true);
-          this.getView().byId("_IDGefnInput142").setEditable(true);
-          this.getView().byId("idree4d2").setEditable(true);
-          this.getView().byId("_IDGenInput152").setEditable(true);
-          this.getView().byId("_IDGenInput162").setEditable(true);
-          this.getView().byId("_IDGenInput162s").setEditable(true);
-          this.getView().byId("_IDGenInput172").setEditable(true);
-          this.getView().byId("_IDGenInput182").setEditable(true);
-          // this.getView().byId("_IDGenInput192").setEditable(true);
+            this.getView().byId("_IDGenLabel64").setVisible(false);
+            this.getView().byId("_IDGenLabel64").setRequired(false);
+            this.getView().byId("_IDGenComboBox41").setVisible(false);
+            this.getView().byId("_IDGenComboBox41").setRequired(false);
+
+            this.getView().byId("idempCame1").setVisible(false);
+            this.getView().byId("empCame").setVisible(false);
+
+            this.showSecAFields(true);
+
+            // this.getView().byId("_IDGenLabel621").setVisible(true);
+            // this.getView().byId("_IDGenInput10").setVisible(true);
+            // this.getView().byId("_IDGenLabel6421").setVisible(true);
+            // this.getView().byId("_IDGenComboBox411").setVisible(true);
+            // this.getView().byId("_IDGenLabel6411").setVisible(true);
+            // this.getView().byId("_IDGenInput11").setVisible(true);
+            // this.getView().byId("_IDGenLabel611").setVisible(true);
+            // this.getView().byId("_IDGenInput112").setVisible(true);
+
+            // this.getView().byId("country1").setEditable(true);
+            // this.getView().byId("Dob11").setEditable(true);
+            // this.getView().byId("Nationality1").setEditable(true);
+            // this.getView().byId("Disability1").setEditable(true);
+            // this.getView().byId("DBS1").setEditable(true);
+            // this.getView().byId("TeachRegNum1").setEditable(true);
+            // this.getView().byId("BankSort1").setEditable(true);
+            // this.getView().byId("BankAccNum1").setEditable(true);
+            // this.getView().byId("nationalIns1").setEditable(true);
+            // this.getView().byId("Ethicity1").setEditable(true);
+            // this.getView().byId("Gender1").setEditable(true);
+            // this.getView().byId("ClearDate1").setEditable(true);
+            // this.getView().byId("ClearDate1").setEditable(true);
+            // this.getView().byId("issuDate1").setEditable(true);
+            // this.getView().byId("issuDate1").setEditable(true);
+            // //this.getView().byId("BankName1").setEnabled(true);
+            // this.getView().byId("BuildingSoc1").setEditable(true);
+            // this.getView().byId("_IDGefnInput11").setEditable(true);
+            // this.getView().byId("_IDGefnInput12").setEditable(true);
+            // this.getView().byId("_IDGefnInput14").setEditable(true);
+            // this.getView().byId("_IDGenItem6").setEditable(true);
+            // // this.getView().byId("idCountry").setEnabled(true);
+            // this.getView().byId("_IDGenInput15").setEditable(true);
+            // this.getView().byId("_IDGenInput16").setEditable(true);
+            // this.getView().byId("_IDGenInput16s").setEditable(true);
+            // this.getView().byId("_IDGenInput17").setEditable(true);
+            // this.getView().byId("_IDGenInput18").setEditable(true);
+            // // this.getView().byId("_IDGenInput19").setEditable(true);
+            // this.getView().byId("_IDGefnInput112").setEditable(true);
+            // this.getView().byId("_IDGefnInput122").setEditable(true);
+            // this.getView().byId("_IDGefnInput142").setEditable(true);
+            // this.getView().byId("idree4d2").setEditable(true);
+            // this.getView().byId("_IDGenInput152").setEditable(true);
+            // this.getView().byId("_IDGenInput162").setEditable(true);
+            // this.getView().byId("_IDGenInput162s").setEditable(true);
+            // this.getView().byId("_IDGenInput172").setEditable(true);
+            // this.getView().byId("_IDGenInput182").setEditable(true);
+            // // this.getView().byId("_IDGenInput192").setEditable(true);
+          }
         }
+        else
+          oEvent.getSource().setValueState(sap.ui.core.ValueState.Error);
       },
 
-      allDropdowns: function (oModel, that) {
-
-        // Second Property - job Info // Allowance service
-        $.ajax({
-          url: serviceURL + "/odata/v2/EmpEmployment(personIdExternal='" + initiator + "',userId='" + initiator + "')/jobInfoNav?$format=json",
-          type: 'GET', contentType: "application/json",
-          success: function (data) {
-            if (bscFlag || approverFlag || initiatorFlag) { }
-            else {
-              if (data.d.results[0].managerId == "NO_MANAGER") {
-                MessageBox.error("Line Manager is missing, Form cannot be Initiated", {
-                  title: "Error Message",
-                  actions: [sap.m.MessageBox.Action.OK],
-                  onClose: function (oAction) {
-                    if (oAction) {
-                      // var oHistory, sPreviousHash;
-                      // oHistory = History.getInstance();
-                      // sPreviousHash = oHistory.getPreviousHash();
-                      // if (sPreviousHash == undefined) {
-                      // }
-                      window.history.go(-1);
-                    }
-                  }
-                });
-              }
-              $.ajax({
-                url: serviceURL + "/odata/v2" + data.d.results[0].positionNav.__deferred.uri.split("/odata/v2")[1] + "?$format=json",
-                type: 'GET',
-                contentType: "application/json",
-                success: function (data) {
-                  console.log("success" + data);
-                  $.ajax({
-                    url: serviceURL + "/odata/v2" + data.d.PositionCostAssignmentItems.__deferred.uri.split("/odata/v2")[1] + "?$format=json",
-                    type: 'GET',
-                    contentType: "application/json",
-                    success: function (data) {
-                      console.log("success" + data);
-                      for (let j = 0; j < data.d.results.length; j++) {
-                        if (data.d.results[j].defaultAssignment == true) {
-                          $.ajax({
-                            url: serviceURL + "/odata/v2" + data.d.results[j].costCenterNav.__deferred.uri.split("/odata/v2")[1] + "?$format=json",
-                            type: 'GET',
-                            contentType: "application/json",
-                            success: function (data) {
-                              console.log("success" + data);
-                              that.getView().byId("_IDGenInput112").setValue(data.d.results[0].externalCode + " " + data.d.results[0].description);
-                            },
-                            error: function (e) {
-                              console.log("error: " + e);
-                            }
-                          });
-                        }
-                      }
-                    },
-                    error: function (e) {
-                      console.log("error: " + e);
-                    }
-                  });
-                },
-                error: function (e) {
-                  console.log("error: " + e);
-                }
-              });
-            }
-            oModel.setProperty("/jobInfoOrganisation", data.d.results[0]);
-            payGroup = data.d.results[0].payGroup;
-            $.ajax({
-              url: serviceURL + "/odata/v2/cust_PersonnelArea?$filter= externalCode eq '" + data.d.results[0].customString3 + "'&$format=json",
-              type: 'GET',
-              contentType: "application/json",
-              success: function (data) {
-                console.log("success" + data);
-                oModel.setProperty("/jobInfoOrganisation/customString3", data.d.results[0].externalName + " (" + data.d.results[0].externalCode + ")");
-              },
-              error: function (e) {
-                console.log("error: " + e);
-              }
-            });
-            that.OrganizationName = data.d.results[0].customString3;
-            if (data) {
-              var orgData = data.d.results[0];
-              //allowance service
-              var perArea = orgData.customString3;
-              var perSubArea = orgData.customString4;
-              var date1 = orgData.startDate;
-              var timestamp = parseInt(date1.match(/\d+/)[0], 10);
-              var date = new Date(timestamp);
-              var formattedDate = date.toISOString().split('T')[0];
-              var seqNumber = orgData.seqNumber;
-              $.ajax({
-                url: serviceURL + "/odata/v2/EmpJob(seqNumber=" + seqNumber + ",startDate=datetime'" + formattedDate + "T00:00:00',userId='" + initiator + "')/employmentTypeNav?$format=json",
-                type: 'GET',
-                contentType: "application/json",
-                success: function (data) {
-                  if (bscFlag || approverFlag || initiatorFlag) { }
-                  else
-                    emplSubGroup = data.d.externalCode;
-                  //type of position
-                  $.ajax({
-                    url: serviceURL + "/odata/v2/cust_ZFLM_POS_LIST?$format=json &$filter=cust_EESubgroup eq '" + emplSubGroup + "'",
-                    type: 'GET',
-                    contentType: "application/json",
-                    success: function (data) {
-                      var posTypeData = [];
-                      var posData = data;
-                      for (let i = 0; i < posData.d.results.length; i++) {
-                        $.ajax({
-                          url: serviceURL + "/odata/v2/PickListValueV2?$format=json&$filter=PickListV2_id eq 'employee-type' and status eq 'A' and externalCode eq '" + posData.d.results[i].cust_EESubgroup + "'",
-                          type: 'GET',
-                          contentType: "application/json",
-                          success: function (data) {
-                            data.d.results.sort();
-                            var temp = {
-                              code: data.d.results[0].optionId,
-                              posType: posData.d.results[i].cust_PositionType
-                            }
-                            posTypeData.push(temp);
-                            posTypeData.sort((a, b) => {
-                              if (a.posType < b.posType) return -1;
-                              if (a.posType > b.posType) return 1;
-                            });
-                            oModel.setProperty("/positionType", posTypeData);
-                            //cust_PositionType
-                          },
-                          error: function (e) {
-                            console.log("error: " + e);
-                          }
-                        })
-                      }
-                    },
-                    error: function (e) {
-                      console.log("error: " + e);
-                    }
-                  })
-                  $.ajax({
-                    url: serviceURL + "/odata/v2/cust_ZFLM_WAGTYPES_DD?$format=json&$filter=cust_PersSubarea eq '" + perSubArea + "' and cust_EESubgroup eq '" + emplSubGroup + "' and cust_PersArea eq '" + perArea + "' ",
-                    type: 'GET',
-                    contentType: "application/json",
-                    success: function (data) {
-                      var countyArr = [];
-                      var countyData = data;
-                      for (let i = 0; i < data.d.results.length; i++) {
-                        $.ajax({
-                          url: serviceURL + "/odata/v2/FOPayComponent?$filter=externalCode eq '" + data.d.results[i].cust_WageType + "' &$format=json",
-                          type: 'GET',
-                          contentType: "application/json",
-                          success: function (data) {
-                            var count = {
-                              externalCode: countyData.d.results[i].externalCode,
-                              cust_WageTypedescription: data.d.results[0].description,
-                              wholeData: data.d.results[0]
-                            }
-                            countyArr.push(data.d.results[0]);
-                            countyArr.sort((a, b) => {
-                              if (a.externalCode < b.externalCode) return -1;
-                              if (a.externalCode > b.externalCode) return 1;
-
-                              if (a.description < b.description) return -1;
-                              if (a.description > b.description) return 1;
-                            });
-                            oModel.setProperty("/Allowance", countyArr);
-                          },
-                          error: function (e) {
-                            console.log("error: " + e);
-                          }
-                        })
-                      }
-                    },
-                    error: function (e) {
-                      console.log("error: " + e);
-                    }
-                  })
-                },
-                error: function (e) {
-                  console.log("error: " + e);
-                }
-              })
-
-              //grades drop down
-              //grade group
-              setTimeout(that.getGrades(oModel, seqNumber, formattedDate), 300);
-            }
-
-            // oModel.setProperty("/jobInfoP", data);
-            //  that.getView().setModel(oModel, "InitData");
-            //  var variable = oModel.getProperty("/jobInfoP").d.results[0].jobTitle;
-            // return variable;
-
-          }, error: function (e) {
-            console.log("JobInfo service error: " + e);
-
-          }
-
-        });
-
-        //dropdown for where is your employe came from
-        $.ajax({
-          url: serviceURL + "/odata/v2/PicklistLabel?$filter=label eq 'Hire' and locale eq 'en_GB' &$format=json",
-          type: 'GET',
-          contentType: "application/json",
-          success: function (data) {
-            var hireData = data.d.results[0];
-            var empCameFrom = [];
-            $.ajax({
-              url: serviceURL + "/odata/v2/FOEventReason?$filter=status eq 'A' &$format=json",
-              type: 'GET',
-              contentType: "application/json",
-              success: function (data) {
-                data.d.results.forEach(function (item) {
-                  if (item.event == hireData.optionId) {
-                    empCameFrom.push({
-                      "name": item.name,
-                      "event": item.event
-                    })
-                  }
-                });
-                empCameFrom.sort((a, b) => {
-                  if (a.name < b.name) return -1;
-                  if (a.name > b.name) return 1;
-                });
-                oModel.setProperty("/empCameFrom", empCameFrom);
-              }, error: function (e) { }
-            });
-          }, error: function (e) { }
-        });
+      allDropdowns: function (oModel) {
 
         //ContractType
         $.ajax({
@@ -2373,31 +2452,15 @@ sap.ui.define([
           }
         })
 
-        $.ajax({
-          url: serviceURL + "/odata/v2/cust_ZFLM_CONTRACT_TY?$format=json",
-          type: 'GET',
-          contentType: "application/json",
-          success: function (data) {
-            data.d.results.sort((a, b) => {
-              if (a.cust_Text < b.cust_Text) return -1;
-              if (a.cust_Text > b.cust_Text) return 1;
-            });
-            oModel.setProperty("/oContractType", data);
-          },
-          error: function (e) {
-            console.log("error: " + e);
-          }
-        })
-
         //Title
         $.ajax({
           url: serviceURL + "/odata/v2/Picklist('salutation')/picklistOptions?$format=json",
           type: 'GET',
           contentType: "application/json",
           success: function (data) {
-            console.log("success" + data);
+
             var salut = [];
-            let a = new sap.ui.model.odata.ODataModel("/odata/v2", true);
+            let a = new sap.ui.model.odata.ODataModel(serviceURL + "/odata/v2", true);
             a.bTokenHandling = false;
             if (data.d.results.length > 180) {
               for (let i = 0; i < data.d.results.length / 180; i++) {
@@ -2420,10 +2483,10 @@ sap.ui.define([
               a.addBatchReadOperations(batchData);
               a.setUseBatch(true);
               a.submitBatch(function (data) {
-                for (let j = 0; j < data.length; j++) {
+                for (let j = 0; j < data.__batchResponses.length; j++) {
                   var temp = {
-                    externalCode: data[i].optionId,
-                    label_en_GB: data[i].label
+                    externalCode: data.__batchResponses[j].data.results[0].optionId,
+                    label_en_GB: data.__batchResponses[j].data.results[0].label
                   }
                   salut.push(temp);
                   salut.sort((a, b) => {
@@ -2440,7 +2503,7 @@ sap.ui.define([
             //     type: 'GET',
             //     contentType: "application/json",
             //     success: function (data) {
-            //       console.log("success" + data);
+            //       
             //     }.bind(this),
             //     error: function (e) {
             //       console.log("error: " + e);
@@ -2508,7 +2571,7 @@ sap.ui.define([
           type: 'GET',
           contentType: "application/json",
           success: function (data) {
-            console.log("success" + data);
+
             data.d.results.sort((a, b) => {
               if (a.label_en_GB < b.label_en_GB) return -1;
               if (a.label_en_GB > b.label_en_GB) return 1;
@@ -2538,15 +2601,96 @@ sap.ui.define([
           }
         });
 
+        // allowance dropdown
+        var empJob = oModel.getProperty("/EmpJobData");
+        $.ajax({
+          url: serviceURL + "/odata/v2/cust_ZFLM_WAGTYPES_DD?$format=json&$filter=cust_PersSubarea eq '" + empJob.customString4 + "' and cust_EESubgroup eq '" + emplSubGroup + "' and cust_PersArea eq '" + empJob.customString3 + "' ",
+          type: 'GET',
+          contentType: "application/json",
+          success: function (data) {
+            var countyArr = [];
+            var countyData = data;
+            for (let i = 0; i < data.d.results.length; i++) {
+              $.ajax({
+                url: serviceURL + "/odata/v2/FOPayComponent?$filter=externalCode eq '" + data.d.results[i].cust_WageType + "' &$format=json",
+                type: 'GET',
+                contentType: "application/json",
+                success: function (data) {
+                  var count = {
+                    externalCode: countyData.d.results[i].externalCode,
+                    cust_WageTypedescription: data.d.results[0].description,
+                    wholeData: data.d.results[0]
+                  }
+                  countyArr.push(data.d.results[0]);
+                  countyArr.sort((a, b) => {
+                    if (a.externalCode < b.externalCode) return -1;
+                    if (a.externalCode > b.externalCode) return 1;
+
+                    if (a.description < b.description) return -1;
+                    if (a.description > b.description) return 1;
+                  });
+                  oModel.setProperty("/Allowance", countyArr);
+                },
+                error: function (e) {
+                  console.log("error: " + e);
+                }
+              })
+            }
+          },
+          error: function (e) {
+            console.log("error: " + e);
+          }
+        });
+
+        // Positions for BSC team
+        if (bscFlag) {
+          $.ajax({
+            url: serviceURL + "/odata/v2/cust_ZFLM_POS_LIST?$format=json &$filter=cust_EESubgroup eq '" + emplSubGroup + "'",
+            type: 'GET',
+            contentType: "application/json",
+            success: function (data) {
+              var posTypeData = [];
+              var posData = data;
+              for (let i = 0; i < posData.d.results.length; i++) {
+                $.ajax({
+                  url: serviceURL + "/odata/v2/PickListValueV2?$format=json&$filter=PickListV2_id eq 'employee-type' and status eq 'A' and externalCode eq '" + posData.d.results[i].cust_EESubgroup + "'",
+                  type: 'GET',
+                  contentType: "application/json",
+                  success: function (data) {
+                    data.d.results.sort();
+                    var temp = {
+                      code: data.d.results[0].optionId,
+                      posType: posData.d.results[i].cust_PositionType
+                    }
+                    posTypeData.push(temp);
+                    posTypeData.sort((a, b) => {
+                      if (a.posType < b.posType) return -1;
+                      if (a.posType > b.posType) return 1;
+                    });
+                    oModel.setProperty("/positionType", posTypeData);
+                    //cust_PositionType
+                  },
+                  error: function (e) {
+                    console.log("error: " + e);
+                  }
+                });
+              }
+            },
+            error: function (e) {
+              console.log("error: " + e);
+            }
+          });
+        }
+
       },
 
-      getGrades: function (oModel, seqNumber, formattedDate) {
+      getGrades: function (oModel) {
         var f3digits = (((oModel.getProperty("/CostCentreP")).costCenter).toString()).substring(oModel.getProperty("/CostCentreP").costCenter.length - 3),
           grade = [];
         if (f3digits != undefined) {
-          var job = oModel.getProperty("/jobInfoOrganisation");
+          var job = oModel.getProperty("/EmpJobData");
           $.ajax({
-            url: serviceURL + "/odata/v2/EmpJob(seqNumber=" + seqNumber + ",startDate=datetime'" + formattedDate + "T00:00:00',userId='" + initiator + "')/companyNav?$format=json",
+            url: serviceURL + `/odata/v2${job.companyNav.__deferred.uri.split("/odata/v2")[1]}?$format=json`,
             type: 'GET',
             contentType: "application/json",
             success: function (data) {
@@ -2559,14 +2703,14 @@ sap.ui.define([
                 type: 'GET',
                 contentType: "application/json",
                 success: function (data) {
-                  console.log("success" + data);
+
                   if (data.d.results.length == 0) {
                     $.ajax({
                       url: serviceURL + "/odata/v2/cust_ZFLM_GRADE_NEW?$filter=cust_CompanyCode eq " + CompanyCode + "&$format=json",
                       type: 'GET',
                       contentType: "application/json",
                       success: function (data) {
-                        console.log("success" + data);
+
                         var custGradeData = data;
                         if (custGradeData.d.results.length == 0) {
                           $.ajax({
@@ -2574,7 +2718,7 @@ sap.ui.define([
                             type: 'GET',
                             contentType: "application/json",
                             success: function (data) {
-                              console.log("success" + data);
+
                               var j = 0;
                               var k = 0, payScaleGroupData = [];
                               for (let b = 0; b < data.d.results.length; b++) {
@@ -2594,7 +2738,7 @@ sap.ui.define([
                                   type: 'GET',
                                   contentType: "application/json",
                                   success: function (data) {
-                                    console.log("success" + data);
+
                                     if (data.d.results.length != 0) {
                                       grade.push(data.d.results[0]);
                                     }
@@ -2648,7 +2792,7 @@ sap.ui.define([
                               type: 'GET',
                               contentType: "application/json",
                               success: function (data) {
-                                console.log("success" + data);
+
                                 data.d.results.forEach(function (gradeData) {
                                   grade.push(gradeData);
                                 })
@@ -2697,111 +2841,59 @@ sap.ui.define([
       },
 
       onConfirmEmpDetails: function (oEvent) {
-        var that = this;
-        //MessageBox.confirm("You will not be able to change your selection. Are you sure you'd like to go ahead?");
-        var ComboYesNo = that.getView().byId("_IDGenComboBox1").getSelectedItem() != null ? that.getView().byId("_IDGenComboBox1").getSelectedItem().getKey() : that.getView().byId("_IDGenComboBox1").getSelectedKey();
-        var employeeSelect = that.getView().byId("_IDGenComboBox41").getValue();
-        var comboContractorType = that.getView().byId("_IDGenComboBox411").getSelectedKey();
-        var position = that.getView().byId("_IDGenInput11").getValue();
-
-        if (ComboYesNo == "X" && employeeSelect && comboContractorType && position) {
-          MessageBox.confirm("You will not be able to change your selection. Are you sure you'd like to go ahead?", {
-            actions: [MessageBox.Action.OK, MessageBox.Action.CANCEL],
-            emphasizedAction: MessageBox.Action.OK,
-            onClose: function (sAction) {
-              if (sAction === "OK") {
-
-                that.getView().byId("_IDGenButton122").setText("Confirmed");
-                that.getView().byId("_IDGenButton122").setEnabled(false);
-
-                that.getView().byId("_IDGenComboBox1").setEditable(false);
-                that.getView().byId("_IDGenComboBox41").setEditable(false);
-                that.getView().byId("idempCame").setEditable(false);
-                that.getView().byId("_IDGenInput10").setEditable(false);
-                that.getView().byId("_IDGenComboBox411").setEditable(false);
-                that.getView().byId("_IDGenInput11").setEditable(false);
-                that.getView().byId("_IDGenInput112").setEditable(false);
-
-
-                // show section B C D E F
-                that.getView().byId("_IDGenPanel4").setVisible(true);
-                that.getView().byId("_IDGenPanel45").setVisible(true);
-                that.getView().byId("_IDGenPanel4dhd51").setVisible(true);
-                that.getView().byId("_IDGenPanel4dh51").setVisible(true);
-                //that.getView().byId("_IDGenPanel451").setVisible(true);
-                // that.getView().byId("_IDGenPanel4d51").setVisible(true);
-
-                that.getView().byId("titleB1").setEditable(false);
-                that.getView().byId("foreName1").setEditable(false);
-                that.getView().byId("middelname1").setEditable(false);
-                that.getView().byId("surname1").setEditable(false);
-                that.getView().byId("contStartDate1").setEditable(false);
-                // that.getView().byId("empAdd1").setEditable(false);
-                that.getView().byId("streetHouseNo1").setEditable(false);
-                that.getView().byId("2ndadd1").setEditable(false);
-
-                that.getView().byId("city1").setEditable(false);
-                that.getView().byId("country1").setEditable(false);
-                that.getView().byId("postcode1").setEditable(false);
-                that.getView().byId("homeTelephone1").setEditable(false);
-                that.getView().byId("mobileTelephone1").setEditable(false);
-                that.getView().byId("emailAdd1").setEditable(false);
-                // that.getView().byId("addEmergencyContact1").setEnabled(true);
-
-              }
-            }
-          });
-        } else if (ComboYesNo == "N" && comboContractorType && position) {
-          MessageBox.confirm("You will not be able to change your selection. Are you sure you'd like to go ahead?", {
-            actions: [MessageBox.Action.OK, MessageBox.Action.CANCEL],
-            emphasizedAction: MessageBox.Action.OK,
-            onClose: function (sAction) {
-              if (sAction === "OK") {
-
-                that.getView().byId("_IDGenButton122").setText("Confirmed");
-                that.getView().byId("_IDGenButton122").setEnabled(false);
-
-
-                that.getView().byId("_IDGenComboBox1").setEditable(false);
-                that.getView().byId("_IDGenComboBox41").setEditable(false);
-                that.getView().byId("idempCame").setEditable(false);
-                that.getView().byId("_IDGenInput10").setEditable(false);
-                that.getView().byId("_IDGenComboBox411").setEditable(false);
-                that.getView().byId("_IDGenInput11").setEditable(false);
-                that.getView().byId("_IDGenInput112").setEditable(false);
-
-                //show section B C D E F
-                // that.getView().byId("_IDGenPanel4d51").setVisible(true);
-                that.getView().byId("_IDGenPanel4").setVisible(true);
-                that.getView().byId("_IDGenPanel45").setVisible(true);
-
-                that.getView().byId("_IDGenPanel4dhd51").setVisible(true);
-                that.getView().byId("_IDGenPanel4dh51").setVisible(true);
-                //that.getView().byId("_IDGenPanel451").setVisible(true);
-
-                that.getView().byId("titleB1").setEditable(true);
-                that.getView().byId("foreName1").setEditable(true);
-                that.getView().byId("middelname1").setEditable(true);
-                that.getView().byId("surname1").setEditable(true);
-                that.getView().byId("contStartDate1").setEditable(true);
-                // that.getView().byId("empAdd1").setEditable(true);
-                that.getView().byId("streetHouseNo1").setEditable(true);
-                that.getView().byId("2ndadd1").setEditable(true);
-
-                that.getView().byId("city1").setEditable(true);
-
-                that.getView().byId("country1").setEditable(true);
-                that.getView().byId("postcode1").setEditable(true);
-                that.getView().byId("homeTelephone1").setEditable(true);
-                that.getView().byId("mobileTelephone1").setEditable(true);
-                that.getView().byId("emailAdd1").setEditable(true);
-                that.getView().byId("addEmergencyContact1").setEnabled(true);
-
-              }
-            }
-          });
-        } else {
+        // checking if all the required fields are filled or not
+        var errorFound = this.checkSecA();
+        if (errorFound) {
           MessageBox.error("Please fill all mandatory fields");
+        }
+        else {
+          var ComboYesNo = this.getView().byId("_IDGenComboBox1").getSelectedItem() != null ? this.getView().byId("_IDGenComboBox1").getSelectedItem().getKey() : this.getView().byId("_IDGenComboBox1").getSelectedKey();
+          MessageBox.confirm("You will not be able to change your selection. Are you sure you'd like to go ahead?", {
+            actions: [MessageBox.Action.OK, MessageBox.Action.CANCEL],
+            emphasizedAction: MessageBox.Action.OK,
+            onClose: function (sAction) {
+              if (sAction === "OK") {
+                // loading all the dropdowns
+                this.allDropdowns(this.getView().getModel("oneModel"));
+                // disabling confirm button and changing texts
+                this.getView().byId("_IDGenButton122").setText("Confirmed");
+                // disabling all the fields
+                this.enableSecA(false);
+                //disabling the organization editable
+                this.getView().byId("_IDGenInput4").setEditable(false);
+                // show section B C D E F
+                this.getView().byId("_IDGenPanel4").setVisible(true);
+                this.getView().byId("_IDGenPanel45").setVisible(true);
+                this.getView().byId("_IDGenPanel4dhd51").setVisible(true);
+                this.getView().byId("_IDGenPanel4dh51").setVisible(true);
+                if (ComboYesNo == "X") {
+                  this.enableSecB(false);
+                  this.enableFirstEmer(false);
+                  this.enableSecEmer(false);
+                }
+                else {
+                  this.enableSecB(true);
+                  this.getView().byId("addEmergencyContact1").setEnabled(true);
+                }
+                // that.getView().byId("titleB1").setEditable(false);
+                // that.getView().byId("foreName1").setEditable(false);
+                // that.getView().byId("middelname1").setEditable(false);
+                // that.getView().byId("surname1").setEditable(false);
+                // that.getView().byId("contStartDate1").setEditable(false);
+                // // that.getView().byId("empAdd1").setEditable(false);
+                // that.getView().byId("streetHouseNo1").setEditable(false);
+                // that.getView().byId("2ndadd1").setEditable(false);
+
+                // that.getView().byId("city1").setEditable(false);
+                // that.getView().byId("country1").setEditable(false);
+                // that.getView().byId("postcode1").setEditable(false);
+                // that.getView().byId("homeTelephone1").setEditable(false);
+                // that.getView().byId("mobileTelephone1").setEditable(false);
+                // that.getView().byId("emailAdd1").setEditable(false);
+
+              }
+            }.bind(this)
+          });
         }
 
       },
@@ -2912,12 +3004,12 @@ sap.ui.define([
 
       },
 
-      oSaveCall: function (call) {
+      oSaveCall: function (call, that) {
         sap.ui.core.BusyIndicator.show();
         var purpose = "I";
-        var Request_Payload = this.payload(purpose, "");
+        var Request_Payload = that.payload(purpose, "");
         ///sap/opu/odata/sap/ZSFGTGW_NS01_SRV/ZSFGT_NS01Set
-        this.getOwnerComponent().getModel("ZSFGTGW_NS01_SRV").create("/ZSFGT_NS01Set",
+        that.getOwnerComponent().getModel("ZSFGTGW_NS01_SRV").create("/ZSFGT_NS01Set",
           Request_Payload, {
 
           success: function (oData) {
@@ -2925,17 +3017,21 @@ sap.ui.define([
             console.log(oData.Formid);
             sap.ui.core.BusyIndicator.hide();
             if (call == "submit") {
-              this.workflowCall();
-              var jobOrg = this.getView().getModel("oneModel").getProperty("/jobInfoOrganisation");
+              that.workflowCall();
+              var jobOrg = that.getView().getModel("oneModel").getProperty("/EmpJobData");
               formOwnerCode = jobOrg.managerId;
-              this.s4LogCreation("S", this.InitiatorName);
+              that.s4LogCreation("S", formOwnerCode);
             } else {
-              this.s4LogCreation("E", this.InitiatorName);
-              sap.m.MessageBox.success(`Form: ${this.getView().byId("_IDGenInput2").getValue()} is saved as draft successfully`);
+              that.s4LogCreation("E", that.InitiatorName);
+              sap.m.MessageBox.success(`Form: ${that.getView().byId("_IDGenInput2").getValue()} is saved as draft successfully`, {
+                onClose: function (oAction) {
+                  if (that.query.mode) window.parent.close();
+                }
+              });
             }
 
 
-          }.bind(this),
+          },
           error: function (oData) {
             //MessageBox.error("Error");
             sap.ui.core.BusyIndicator.hide();
@@ -2963,7 +3059,7 @@ sap.ui.define([
               emphasizedAction: MessageBox.Action.Yes,
               onClose: function (sAction) {
                 if (sAction === "YES") {
-                  that.oSaveCall("save");
+                  that.oSaveCall("save", that);
                 }
               }.bind(this)
             });
@@ -2975,7 +3071,7 @@ sap.ui.define([
             emphasizedAction: MessageBox.Action.Yes,
             onClose: function (sAction) {
               if (sAction === "YES") {
-                that.oSaveCall("save");
+                that.oSaveCall("save", that);
               }
             }.bind(this)
           });
@@ -2999,18 +3095,52 @@ sap.ui.define([
         // if (checkValidation) {
         //   MessageBox.error(`You have not filled all the required fields`);
         // } else {
-        var that = this;
-        MessageBox.alert("Do you want to submit the form?", {
-          title: "Submit Form",
-          actions: [MessageBox.Action.YES, MessageBox.Action.CANCEL],
-          emphasizedAction: MessageBox.Action.Yes,
-          onClose: function (sAction) {
-            if (sAction === "YES") {
-              that.oSaveCall("submit");
+        if (this.getView().byId("_IDGenComboBox6").getSelectedKey() == "No") {
+          // checking validations for Work Schedule
+          var hoursEntered = this.getView().getModel("WSModel").getProperty("/WSHoursPerWeek");
+          var actualHours = this.getView().byId("Hoursperweek").getValue();
+          var oModelWS = this.getView().getModel("WSModel");
+          var oPreviewData = oModelWS.getProperty("/WSPreviewItems");
+          var oScheduleData = oModelWS.getProperty("/WSItems");
+          var isClaimOnlyNo = this.getView().byId("_IDGenComboBox6").getSelectedKey();
+          if (isClaimOnlyNo && isClaimOnlyNo == "No") {
+            if (!oPreviewData || (oScheduleData && oScheduleData.length > 0 && oScheduleData[0].HoursWorked == "")) {
+              MessageBox.error("You must create a work schedule for each new employee");
+              return;
             }
           }
-        });
-        // }
+
+          if (+hoursEntered != +actualHours) {
+            MessageBox.error("The work schedule entered does not match this employee’s working hours, please update the work schedule so that this matches");
+            return;
+          }
+
+          if (oPreviewData && oScheduleData.length < 7) {
+            MessageBox.warning(`The work schedule you have entered is less than 7 calendar days in length. 
+Please note that this schedule will repeat every ${oScheduleData.length} days, and any missed days in the week will not be considered as non-working days`, {
+              actions: [sap.m.MessageBox.Action.OK, sap.m.MessageBox.Action.CANCEL],
+              emphasizedAction: sap.m.MessageBox.Action.OK,
+              onClose: function (oAction) {
+                if (oAction === sap.m.MessageBox.Action.CANCEL) {
+                  return;
+                } else submitForm(this);
+              }.bind(this),
+            })
+          } else submitForm(this);
+        } else submitForm(this);
+
+        function submitForm(_self) {
+          MessageBox.alert("Do you want to submit the form?", {
+            title: "Submit Form",
+            actions: [MessageBox.Action.YES, MessageBox.Action.CANCEL],
+            emphasizedAction: MessageBox.Action.Yes,
+            onClose: function (sAction) {
+              if (sAction === "YES") {
+                _self.oSaveCall("submit", _self);
+              }
+            }
+          });
+        }
       },
 
       _dateForS4: function (date) {
@@ -3028,27 +3158,43 @@ sap.ui.define([
       },
       payload: function (purpose, delInd) {
 
-        var oModelWS = this.getView().getModel("WSModel") ? this.getView().getModel("WSModel").getProperty("/WSPreviewItems") : [];
-
-        // Preparing data for Work Schedules
-        var wsData = [];
-        for (let i = 0; i < oModelWS.length; i++) {
-          var objData = Object.entries(oModelWS[i]);
-          objData.forEach(function (oItem, index) {
-            if (oItem[1].DaysName) {
-              var prepareWS = {
-                "Formid": this.getView().byId("_IDGenInput2").getValue() != '' ? this.getView().byId("_IDGenInput2").getValue() : '',
-                "Counter": i.toString(),
-                "DaysName": oItem[1].DaysName,
-                "Type": "Hours",
-                "Value": oItem[1][oItem[0]],
-                "ScheduleDay": oItem[1].ScheduleDay
-              }
-              wsData.push(prepareWS);
+        if (this.getView().byId("_IDGenComboBox6").getSelectedItem() && this.getView().byId("_IDGenComboBox6").getSelectedItem().getKey() == "No") {
+          for (let i = 0; i < 7; i++) {
+            var prepareWS = {
+              "Formid": this.getView().byId("_IDGenInput2").getValue() != '' ? this.getView().byId("_IDGenInput2").getValue() : '',
+              "Counter": (i + 1).toString(),
+              "DaysName": "",
+              "Type": "H",
+              "Value": "0.0",
+              "ScheduleDay": (i + 1).toString(),
+              "DayKey": ""
             }
-          }.bind(this));
+            wsData.push(prepareWS);
+          }
         }
+        else {
+          var oModelWS = this.getView().getModel("WSModel") ? this.getView().getModel("WSModel").getProperty("/WSPreviewItems") : [];
 
+          // Preparing data for Work Schedules
+          var wsData = [];
+          for (let i = 0; i < oModelWS.length; i++) {
+            var objData = Object.entries(oModelWS[i]);
+            objData.forEach(function (oItem, index) {
+              if (oItem[1].DaysName) {
+                var prepareWS = {
+                  "Formid": this.getView().byId("_IDGenInput2").getValue() != '' ? this.getView().byId("_IDGenInput2").getValue() : '',
+                  "Counter": (i + 1).toString(),
+                  "DaysName": oItem[1].DaysName,
+                  "Type": "H",
+                  "Value": oItem[1][oItem[0]],
+                  "ScheduleDay": oItem[1].ScheduleDay,
+                  "DayKey": oItem[1].Daykey.toString()
+                }
+                wsData.push(prepareWS);
+              }
+            }.bind(this));
+          }
+        }
         var payload = {
           "Formid": this.getView().byId("_IDGenInput2").getValue() != '' ? this.getView().byId("_IDGenInput2").getValue() : '',
           "Initiator": this.getView().byId("idInitiator").getValue() != '' ? this.getView().byId("idInitiator").getValue() : '',
@@ -3369,14 +3515,10 @@ sap.ui.define([
           emphasizedAction: MessageBox.Action.YES,
           onClose: function (sAction) {
             if (sAction == MessageBox.Action.YES) {
-              // var oHistory, sPreviousHash;
-              // oHistory = History.getInstance();
-              // sPreviousHash = oHistory.getPreviousHash();
-              // if (sPreviousHash == undefined) {
-              // }
-              window.history.go(-1)
+              if (this.query.mode) window.parent.close();
+              else window.history.go(-1);
             }
-          }
+          }.bind(this)
         });
       },
       onDelete: function (oEvent) {
@@ -3597,13 +3739,17 @@ sap.ui.define([
       },
 
       onChangeContractType: function (oEvent) {
-        if (oEvent && oEvent.mParameters && oEvent.mParameters.id) {
-          this.getView().byId(oEvent.mParameters.id).setValueState(sap.ui.core.ValueState.None);
+        var value = oEvent.getSource().getSelectedItem();
+        if (value) {
+          oEvent.getSource().setValueState(sap.ui.core.ValueState.None);
+          var ContractType = this.getView().byId("_IDGenComboBox411").getSelectedKey();
+          if (ContractType == "4") {
+            this.getView().byId("_IDGenInput141").setSelectedKey("No");
+            this.getView().byId("_IDGenInput141").setEditable(false);
+          }
         }
-        var ContractType = this.getView().byId("_IDGenComboBox411").getSelectedKey();
-        if (ContractType == "4") {
-          this.getView().byId("_IDGenInput141").setSelectedKey("No");
-          this.getView().byId("_IDGenInput141").setEditable(false);
+        else {
+          oEvent.getSource().setValueState(sap.ui.core.ValueState.Error);
         }
       },
       onChangeClaimPosition: function (oEvent) {
@@ -3821,91 +3967,109 @@ sap.ui.define([
 
       onWorkSchedBut: function () {
         sap.ui.core.BusyIndicator.show();
-        var startDate = new Date(this.getView().byId("_IDGenDatePicker1").getValue());
-        var WSStartDate = new Date(this.getView().getModel("WSModel") ? this.getView().getModel("WSModel").getProperty("/WSStartDate") : "12/31/9999");
-        if (!this.oWorkSchedules) {
-          var oModelWS = new JSONModel();
-          this.oWorkSchedules = sap.ui.xmlfragment("com.gcc.newstarterqa.newstarterqa.fragment.WorkSchedules", this);
-          this.getView().addDependent(this.oWorkSchedules);
-        }
-        else var oModelWS = this.getView().getModel("WSModel");
-        if (startDate.toDateString() != WSStartDate.toDateString()) {
-          oModelWS.setProperty("/WSColumns", [{
-            width: "20%",
-            header: "Schedule Day",
-            demandPopin: false,
-            styleClass: "cellBorderLeft cellBorderRight"
-          }, {
-            width: "auto",
-            header: "Day",
-            styleClass: "cellBorderRight"
-          }, {
-            width: "30%",
-            header: "Hours Worked (decimal)",
-            styleClass: "cellBorderRight"
+        var startDate = this.getView().byId("_IDGenDatePicker1").getValue();
+        var hoursPerWeek = this.getView().byId("Hoursperweek").getValue();
+        if (startDate && hoursPerWeek) {
+          startDate = new Date(startDate)
+          this.getView().byId("_IDGenDatePicker1").setValueState(sap.ui.core.ValueState.None);
+          this.getView().byId("Hoursperweek").setValueState(sap.ui.core.ValueState.None);
+          var WSStartDate = new Date(this.getView().getModel("WSModel") ? this.getView().getModel("WSModel").getProperty("/WSStartDate") : "12/31/9999");
+          var oModelWS = this.getView().getModel("WSModel") ? this.getView().getModel("WSModel") : new JSONModel();
+          if (!this.oWorkSchedules) {
+            this.oWorkSchedules = sap.ui.xmlfragment("com.gcc.newstarterqa.newstarterqa.fragment.WorkSchedules", this);
+            this.getView().addDependent(this.oWorkSchedules);
           }
-          ]);
-          oModelWS.setProperty("/WSPreviewColumns", [{
-            width: "14%",
-            header: "Monday",
-            styleClass: "cellBorderLeft cellBorderRight colorCell"
-          }, {
-            width: "14%",
-            header: "Tuesday",
-            styleClass: "cellBorderRight colorCell"
-          }, {
-            width: "15%",
-            header: "Wednesday",
-            styleClass: "cellBorderRight colorCell"
-          }, {
-            width: "14%",
-            header: "Thursday",
-            styleClass: "cellBorderRight colorCell"
-          }, {
-            width: "14%",
-            header: "Friday",
-            styleClass: "cellBorderRight colorCell"
-          }, {
-            width: "15%",
-            header: "Saturday",
-            styleClass: "cellBorderRight colorCell"
-          }, {
-            width: "14%",
-            header: "Sunday",
-            styleClass: "cellBorderRight colorCell"
+          if (startDate.toDateString() != WSStartDate.toDateString()) {
+            oModelWS.setProperty("/WSColumns", [{
+              width: "20%",
+              header: "Schedule Day",
+              demandPopin: false,
+              styleClass: "cellBorderLeft cellBorderRight"
+            }, {
+              width: "auto",
+              header: "Day",
+              styleClass: "cellBorderRight"
+            }, {
+              width: "30%",
+              header: "Hours Worked (decimal)",
+              styleClass: "cellBorderRight"
+            }
+            ]);
+            oModelWS.setProperty("/WSPreviewColumns", [{
+              width: "14%",
+              header: "Monday",
+              styleClass: "cellBorderLeft cellBorderRight colorCell"
+            }, {
+              width: "14%",
+              header: "Tuesday",
+              styleClass: "cellBorderRight colorCell"
+            }, {
+              width: "15%",
+              header: "Wednesday",
+              styleClass: "cellBorderRight colorCell"
+            }, {
+              width: "14%",
+              header: "Thursday",
+              styleClass: "cellBorderRight colorCell"
+            }, {
+              width: "14%",
+              header: "Friday",
+              styleClass: "cellBorderRight colorCell"
+            }, {
+              width: "15%",
+              header: "Saturday",
+              styleClass: "cellBorderRight colorCell"
+            }, {
+              width: "14%",
+              header: "Sunday",
+              styleClass: "cellBorderRight colorCell"
+            }
+            ]);
+            if (!(approverFlag && initiatorFlag && bscFlag)) {
+              oModelWS.setProperty("/WSItems", [{
+                ScheduleDay: "1",
+                Day: this.oWeekDays.filter((el) => el.key == startDate.getDay())[0].day,
+                DayKey: startDate.getDay(),
+                HoursWorked: ""
+              }]);
+              oModelWS.setProperty("/DelButShow", false);
+              oModelWS.setProperty("/WSHoursPerWeek", "0.0");
+              oModelWS.setProperty("/PreviewTableShow", false);
+              oModelWS.setProperty("/PreviewText", "Preview Schedule");
+            } else {
+              this.calculateTotalHours();
+              oModelWS.setProperty("/DelButShow", true);
+            }
+            oModelWS.setProperty("/WSStartDate", new Date(this.getView().byId("_IDGenDatePicker1").getValue()));
+            this.getView().setModel(oModelWS, "WSModel");
           }
-          ]);
-          oModelWS.setProperty("/WSItems", [{
-            ScheduleDay: "1",
-            Day: this.oWeekDays.filter((el) => el.key == startDate.getDay())[0].day,
-            DayKey: startDate.getDay(),
-            HoursWorked: ""
-          }]);
-          oModelWS.setProperty("/DelButShow", false);
-          oModelWS.setProperty("/WSHoursPerWeek", "0.0");
-          oModelWS.setProperty("/WSStartDate", new Date(this.getView().byId("_IDGenDatePicker1").getValue()));
-          this.getView().setModel(oModelWS, "WSModel");
+          this.oWorkSchedules.open();
+        } else {
+          if (!startDate) {
+            this.getView().byId("_IDGenDatePicker1").setValueState(sap.ui.core.ValueState.Error);
+            MessageBox.error("Please fill the start date first");
+          } else {
+            this.getView().byId("Hoursperweek").setValueState(sap.ui.core.ValueState.Error);
+            MessageBox.error("Please fill Hours per week first");
+          }
         }
-        oModelWS.setProperty("/PreviewTableShow", false);
-        oModelWS.setProperty("/PreviewText", "Preview Schedule");
-        this.oWorkSchedules.open();
         sap.ui.core.BusyIndicator.hide();
       },
 
       onWSHoursWork: function (oEvent) {
         var value = parseFloat(oEvent.getSource().getValue());
-        if (value) {
-          if (!(isNaN(value) || value < 0 || value > 24)) {
-            oEvent.getSource().setValueState(sap.ui.core.ValueState.None);
-            // changing the value upto 1 decimal places without rounding off
-            value = (Math.floor(value * 10) / 10).toFixed(1);
-            oEvent.getSource().setValue(value);
-            // calculating the sum of all the work hours entered
-            this.calculateTotalHours();
-          }
-          else {
-            oEvent.getSource().setValueState(sap.ui.core.ValueState.Error);
-          }
+        if (!(isNaN(value) || value < 0 || value > 24)) {
+          oEvent.getSource().setValueState(sap.ui.core.ValueState.None);
+          // checking the flag that something has changed
+          this.WSValueChanged = true;
+          // changing the value upto 1 decimal places without rounding off
+          value = (Math.floor(value * 10) / 10).toFixed(1);
+          oEvent.getSource().setValue(value);
+          // calculating the sum of all the work hours entered
+          this.calculateTotalHours();
+        }
+        else {
+          oEvent.getSource().setValueState(sap.ui.core.ValueState.Error);
         }
       },
 
@@ -3945,8 +4109,33 @@ sap.ui.define([
         this.calculateTotalHours();
       },
 
-      onWorkSchedulesClose: function () {
-        this.oWorkSchedules.close();
+      onWorkSchedulesClose: function (isSave) {
+        if (isSave) {
+          var errorFound = this.checkWSData();
+          if (errorFound) MessageBox.error("Please fill all the details");
+          else {
+            var oModelWS = this.getView().getModel("WSModel");
+            this.preparePreviewData(oModelWS);
+            this.oWorkSchedules.close();
+          }
+        } else {
+          if (this.WSValueChanged) {
+            MessageBox.alert("Data will not be saved.\nDo you want to continue?", {
+              actions: [sap.m.MessageBox.Action.YES, sap.m.MessageBox.Action.NO],
+              emphasizedAction: sap.m.MessageBox.Action.YES,
+              onClose: function (oAction) {
+                if (oAction === sap.m.MessageBox.Action.YES) {
+                  this.WSValueChanged = false;
+                  this.oWorkSchedules.close();
+                }
+              }.bind(this)
+            });
+          } else {
+            this.oWorkSchedules.close();
+            if (!this.query)
+              this.getView().getModel("WSModel").setProperty("/WSPreviewItems", []);
+          }
+        }
       },
 
       oWeekDays: [
@@ -3992,7 +4181,6 @@ sap.ui.define([
         else {
           oModelWS.setProperty("/PreviewTableShow", false);
           oModelWS.getProperty("/WSItems").length > 1 ? oModelWS.setProperty("/DelButShow", true) : oModelWS.setProperty("/DelButShow", false);
-          oModelWS.setProperty("/DelButShow", true);
           oModelWS.setProperty("/PreviewText", "Preview Schedule");
         }
         this.getView().setModel(oModelWS, "WSModel");
@@ -4019,10 +4207,29 @@ sap.ui.define([
             counter += 1;
             previewData.push({});
           }
-          previewData[counter][items[i].Day] = { [items[i].Day]: items[i].HoursWorked, dataFound: "true", DaysName: items[i].Day, ScheduleDay: items[i].ScheduleDay };
+          previewData[counter][items[i].Day] = { [items[i].Day]: items[i].HoursWorked, dataFound: "true", DaysName: items[i].Day, ScheduleDay: items[i].ScheduleDay, Daykey: items[i].DayKey };
           previewData[counter].Type = "Hours";
         }
         oModelWS.setProperty("/WSPreviewItems", previewData);
+      },
+
+      checkWSData: function () {
+        var aControls = this.getView().getControlsByFieldGroupId("WSCheck");
+        var errorFlag = false;
+        aControls.forEach(function (oControl) {
+          if (oControl.getId != undefined && oControl.getId().includes("input")) {
+            if ((oControl.getValue != undefined && oControl.getValue() == "") || (oControl.getValueState != undefined && oControl.getValueState() === sap.ui.core.ValueState.Error)) {
+              oControl.setValueState(sap.ui.core.ValueState.Error);
+              errorFlag = true;
+            }
+            else if (oControl.getValue != undefined && oControl.getValue() != "") {
+              oControl.setValueState(sap.ui.core.ValueState.None);
+            }
+          }
+        });
+
+        if (errorFlag) return true;
+        else return false;
       }
 
     });

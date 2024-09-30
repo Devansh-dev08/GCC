@@ -4,22 +4,22 @@
 		<content>
         <HBox justifyContent="Start" class="headerDetails">
             <HBox width="50%" justifyContent="Start">
-                <Label text="Start Date" showColon="true" class="sapUiTinyMarginEnd fontHeader" design="Bold" />
-                <Text id="_IDGenText1" text="{ path: 'WSModel>/WSStartDate', formatter: '.formatter.dateFormat' }" class="fontHeader" />
+                <Label text="Start Date" showColon="true" class="sapUiTinyMarginEnd" design="Bold" />
+                <Text id="_IDGenText1" text="{ path: 'WSModel>/WSStartDate', formatter: '.formatter.dateFormat' }" />
             </HBox>
             <HBox width="50%" justifyContent="Start">
-                <Label text="Hours Per Week" showColon="true" class="sapUiTinyMarginEnd fontHeader" design="Bold" />
-                <Text text="{WSModel>/WSHoursPerWeek}" class="fontHeader" />
+                <Label text="Hours Per Week" showColon="true" class="sapUiTinyMarginEnd" design="Bold" />
+                <Text text="{WSModel>/WSHoursPerWeek}" />
             </HBox>
         </HBox>
         <!-- Table for entering hours worked -->
 		<Table alternateRowColors="true" items="{WSModel>/WSItems}" columns="{WSModel>/WSColumns}" width="auto" class="wsTable" >
             <headerToolbar>
-		        <Toolbar>
+		        <OverflowToolbar>
                     <ToolbarSpacer />
-                    <Button text="Add" type="Accept" press="onWSAddButton" visible="{= ${WSModel>/PreviewTableShow} !== true}" />
-                    <Button text="Delete" type="Reject" press="onWSDelButton" visible="{WSModel>/DelButShow}" />
-                </Toolbar>
+                    <Button text="Add" type="Accept" press="onWSAddButton" visible="{= ${WSModel>/PreviewTableShow} !== true}" enabled="{= ${oneModel>/disable/mode} !== 'bsc' || ${oneModel>/disable/mode} !== 'display'}" />
+                    <Button text="Delete" type="Reject" press="onWSDelButton" visible="{WSModel>/DelButShow}" enabled="{= ${oneModel>/disable/mode} !== 'bsc' || ${oneModel>/disable/mode} !== 'display'}" />
+                </OverflowToolbar>
             </headerToolbar>
             <columns>
 		        <Column width="{WSModel>width}" styleClass="{WSModel>styleClass}" minScreenWidth="Tablet" popinDisplay="WithoutHeader" >
@@ -27,16 +27,16 @@
                 </Column>
 		    </columns>
             <items>
-                <ColumnListItem vAlign="Middle" >
+                <ColumnListItem vAlign="Middle" fieldGroupIds="WSCheck" >
                     <cells>
                         <Text text="{WSModel>ScheduleDay}" textAlign="Center" />
                         <Text text="{WSModel>Day}" />
-                        <Input value="{WSModel>HoursWorked}" change="onWSHoursWork" placeholder="Enter Hours (0-24)" valueStateText="Enter correct value (between 0 to 24)" editable="{= ${WSModel>/PreviewTableShow} !== true}" />
+                        <Input value="{WSModel>HoursWorked}" change="onWSHoursWork" placeholder="Enter Hours (0-24)" valueStateText="Please enter a value between 0-24 hours" editable="{= ${WSModel>/PreviewTableShow} !== true}" />
                     </cells>
                 </ColumnListItem>
             </items>
         </Table>
-        <Button text="{WSModel>/PreviewText}" class="previewWSBut" press="onWSPreviewBut" type="Emphasized" />
+        <Button text="{WSModel>/PreviewText}" class="previewWSBut" press="onWSPreviewBut" type="Emphasized" visible="{= ${oneModel>/disable/mode} !== 'bsc' || ${oneModel>/disable/mode} !== 'display'}" />
         <!-- Table for previewing schedules -->
         <Table id="_IDGenTable1" items="{WSModel>/WSPreviewItems}" columns="{WSModel>/WSPreviewColumns}" width="auto" rememberSelections="true" class="sapUiResponsiveMargin" visible="{WSModel>/PreviewTableShow}">
             <columns>
@@ -57,7 +57,7 @@
                         </Text>
                         <Text text="{WSModel>Tuesday/Tuesday}" textAlign="Center" >
                             <customData>
-                                <core:CustomData key="p13nData" value="{path: 'WSModel>Tuesday/dataFound}', formatter: '.formatter.WSDataFormat'}" writeToDom="true" />
+                                <core:CustomData key="p13nData" value="{WSModel>Tuesday/dataFound}" writeToDom="true" />
                             </customData>
                         </Text>
                         <Text text="{WSModel>Wednesday/Wednesday}" textAlign="Center" >
@@ -90,8 +90,11 @@
             </items>
         </Table>
 		</content>
+        <beginButton>
+            <Button text="Save &amp; Close" press="onWorkSchedulesClose('X')" visible="{= ${oneModel>/disable/mode} !== 'bsc' || ${oneModel>/disable/mode} !== 'display'}" />
+        </beginButton>
 		<endButton>
-			<Button text="Cancel" press="onWorkSchedulesClose" />
+			<Button text="Cancel" press="onWorkSchedulesClose('')" />
 		</endButton>
 	</Dialog>
 </core:FragmentDefinition>

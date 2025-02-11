@@ -28,7 +28,7 @@
 									<Input id="_IDGenInput2" editable="false" />
 									<!--  School Name  -->
 									<Label id="_IDGenLabel4" text="{i18n>Org}" showColon="true" />
-									<ComboBox id="select08" value="{AbsData>/FinalData/0/customString3}" items="{path: 'AbsData>/OrgValues', templateShareable:false}" change="onOrgChange" >
+									<ComboBox id="select08" value="{AbsData>/FinalData/0/customString3}" items="{path: 'AbsData>/OrgValues', templateShareable:false, sorter: {path: 'AbsData>value'} }" change="onOrgChange" >
 										<items>
 											<core:Item key="{AbsData>key}" text="{AbsData>value} ({AbsData>key})" />
 										</items>

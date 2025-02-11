@@ -58,7 +58,7 @@ sap.ui.define([
                     .then(() => {
                         if (!oModel1.getData().email) {
                             oModel1.setData(mock);
-                            var useremail = "test00157472@noemail.gloucestershire.gov.uk";
+                            var useremail = "test00097293@noemail.gloucestershire.gov.uk";
                         }
                         else {
                             var useremail = oModel1.getData().email;
@@ -73,14 +73,10 @@ sap.ui.define([
                             var formid = this.query.formId;
                             this.s4Form = true;
                             oModel.setProperty("/Param", this.query);
-                            if (this.query.mode == 'display') {
+                            if (this.query.mode) {
                                 this.getView().byId("Delete").setVisible(false);
                                 this.getView().byId("Submit").setVisible(false);
                                 this.getView().byId("Save").setText("Save");
-                            }
-                            else if (this.query.mode == "initiator") {
-                                this.getView().byId("Delete").setVisible(false);
-                                this.getView().byId("Submit").setVisible(false);
                             }
                             this.S4Data(oModel, formid, useremail);
                         }
@@ -160,7 +156,7 @@ sap.ui.define([
                     type: 'GET',
                     contentType: "application/json",
                     success: function (data) {
-                        console.log("success" + data);
+
                         data.d.results.sort((a, b) => a.label_defaultValue.localeCompare(b.label_defaultValue))
                         // data.d.results = this.removeDuplicates(data.d.results);
                         oModel.setProperty("/dropdownSick", data.d.results);
@@ -304,7 +300,7 @@ sap.ui.define([
                 //     type: 'GET',
                 //     contentType: "application/json",
                 //     success: function (data) {
-                //         console.log("success" + data);
+
                 //         username = data.d.results[0].username;
                 //     },
                 //     error: function (request) {
@@ -312,38 +308,51 @@ sap.ui.define([
                 //     }
                 // });
                 await $.ajax({
-                    url: serviceUrl + "/odata/v2/cust_ZFLM_MULTI_USERS_NEW?$filter=externalName eq '" + email.d.results[0].personIdExternal + "' and cust_Role eq 'I'&$format=json",
+                    url: serviceUrl + "/odata/v2/cust_ZFLM_MULTI_USER_NEW?$filter=externalName eq '" + email.d.results[0].personIdExternal + "' and cust_Role eq 'I'&$format=json",
                     type: 'GET',
                     contentType: "application/json",
                     success: async function (data) {
-                        console.log("success" + data);
                         if (data.d.results.length != 0) {
-                            var cust_Value = data.d.results[0].cust_Organization.split(",");
+                            var values = data.d.results.map((value, index) => { return { key: (index), text: (value.cust_Organization) }; });
                             var val = [];
-                            cust_Value.forEach(async function (item) {
-                                $.ajax({
-                                    url: serviceUrl + "/odata/v2/cust_PersonnelArea?$filter= externalCode eq '" + item + "'&$format=json",
+                            values.forEach(async function (item) {
+                                await $.ajax({
+                                    url: serviceUrl + "/odata/v2/cust_PersonnelArea?$filter= externalCode eq '" + item.text + "'&$format=json",
                                     type: 'GET',
                                     contentType: "application/json",
                                     success: function (data) {
                                         var req = {
-                                            key: item,
+                                            key: item.text,
                                             value: data.d.results[0].externalName
                                         };
                                         val.push(req);
+
                                         oModel.setProperty("/OrgValues", val);
                                     },
-                                    error: function () {
-                                        console.log("Error in Assigning Multiple Personnel Area");
+                                    error: function (e) {
+                                        console.log("error: " + e);
                                     }
                                 });
                             });
+                            if (values.length == 1) {
+                                this.getView().byId("select08").setEditable(false);
+                                this.getView().byId("select08").setSelectedKey(values[0].text);
+                            }
                         } else {
-                            this.getView().byId("select08").setEditable(false);
+                            MessageBox.error("You have not been set-up with the authorisation to launch this form. Please call ContactUs on 01452 425888 if you believe this is in error.", {
+                                title: "Error Message",
+                                actions: [MessageBox.Action.OK],
+                                onClose: function (oAction) {
+                                    if (oAction) {
+                                        if (this.query) window.parent.close();
+                                        else window.history.go(-1);
+                                    }
+                                }.bind(this)
+                            });
                         }
                     }.bind(this),
                     error: function () {
-                        console.log("Error in fetching Multiple Organization");
+                        console.log("error");
                     }
                 });
                 this.getOwnerComponent().getModel("S4hService").read("/ZSFGT_HEADER_AR02Set('" + formid + "')", {
@@ -358,6 +367,9 @@ sap.ui.define([
                         oModel.setProperty("/FinalData", jsonData);
                         oModel.setProperty("/PersonDet", { d: { results: [{ firstName: name[1], lastName: name[2], personIdExternal: initiatorCode }] } })
                         this.getView().byId("select08").setSelectedKey(oData.OrganisationCode);
+                        oModel.setProperty("/lastSelectedOrg", oData.OrganisationCode);
+                        this.findApprover(oData.OrganisationCode)
+                            .catch((e) => MessageBox.error(e));
                         this.getView().byId("_IDGenInput2").setValue(oData.Formid);
                         this.getView().byId("_HIDGenFormId1").setValue(oData.Formid);
                         this._fetchLogData(oData.Formid);
@@ -365,20 +377,7 @@ sap.ui.define([
                         oModel.setProperty("/todayDate", new Date());
                         this.getView().byId("checkbox1").setSelected(oData.NotifyApprover == "X" ? true : false);
                         if (oModel.getProperty("/Param").mode != "display")
-                            this.dropdownEmp(oData.OrganisationCode, oModel)
-                        // $.ajax({
-                        //     url: serviceUrl + "/odata/v2/EmpJob?$filter=customString3 eq '" + oData.OrganisationCode + "'&$format=json",
-                        //     type: 'GET',
-                        //     contentType: "application/json",
-                        //     success: function (data) {
-                        //         if (data.d.results.length > 0) {
-                        //             console.log("success" + data);
-                        //         }
-                        //     }.bind(this),
-                        //     error: function (e) {
-                        //         console.log("error: " + e);
-                        //     }
-                        // });
+                            this.dropdownEmp(oData.OrganisationCode, oModel);
                     }.bind(this),
                     error: function (oData) {
                         console.log("Error S4h");
@@ -586,7 +585,7 @@ sap.ui.define([
                         console.log("error: " + e);
                     }
                 });
-                var initDetails;
+                var initDetails, actualDate;
                 await $.ajax({
                     url: serviceUrl + "/odata/v2/PerPerson(personIdExternal='" + email.d.results[0].personIdExternal + "')/personalInfoNav?$format=json",
                     type: 'GET',
@@ -615,7 +614,7 @@ sap.ui.define([
                         //getting the date from model
                         var modelDate = oModel.getProperty("/PersonDet").d.results[0].startDate;
                         actualDate = this.dateToAjax(modelDate);
-                        console.log("success" + data);
+
                     }.bind(this),
                     error: function (e) {
                         console.log("error: " + e);
@@ -629,7 +628,7 @@ sap.ui.define([
                     contentType: "application/json",
                     success: function (data) {          // salutation
                         oModel.setProperty("/Salutation", data);
-                        console.log("success" + data);
+
                     }.bind(this),
                     error: function (e) {
                         console.log("error: " + e);
@@ -637,65 +636,45 @@ sap.ui.define([
                 });
 
                 await $.ajax({
-                    url: serviceUrl + "/odata/v2/EmpEmployment(personIdExternal='" + initDetails.personIdExternal + "',userId='" + initDetails.personIdExternal + "')/jobInfoNav?$format=json",
+                    url: serviceUrl + "/odata/v2/EmpEmployment?$filter=personIdExternal eq '" + initDetails.personIdExternal + "'&$expand=jobInfoNav&$format=json",
                     type: 'GET',
                     contentType: "application/json", //job Info
                     success: function (data) {
-                        oModel.setProperty("/JobTitle", data);
-                        console.log("success" + data);
-                        if (data.d.results[0].managerId == "NO_MANAGER") {
-                            MessageBox.error("Line Manager is missing, Form cannot be Initiated", {
-                                title: "Error Message",
-                                actions: [sap.m.MessageBox.Action.OK],
-                                onClose: function (oAction) {
-                                    if (oAction) {
-                                        window.history.go(-1);
-                                    }
-                                }
-                            });
-                        }
-                        managerId = data.d.results[0].managerId
+                        oModel.setProperty("/JobTitle", data.d.results[0].jobInfoNav);
                     }.bind(this),
                     error: function (e) {
                         console.log("error: " + e);
                     }
                 });
-                let cust_Value, values, cust_UserName;
+                let values, cust_UserName;
                 // await $.ajax({
                 //     url: serviceUrl + "/odata/v2/UserAccount?$format=json&$filter=personIdExternal eq '" + initDetails.personIdExternal + "'",
                 //     type: 'GET',
                 //     contentType: "application/json",
                 //     success: function (data) {
-                //         console.log("success" + data);
-                //         cust_UserName = data.d.results[0].username;
 
-                // Changes for SC-98
+                // cust_UserName = data.d.results[0].username;
+                var customString3 = "";
                 $.ajax({
-                    url: serviceUrl + `/odata/v2/cust_ZFLM_MULTI_USER_NEW?$filter=externalName eq '${initDetails.personIdExternal}' and cust_Role eq 'I' &$format=json`,
+                    url: serviceUrl + "/odata/v2/cust_ZFLM_MULTI_USER_NEW?$filter=externalName eq '" + initDetails.personIdExternal + "' and cust_Role eq 'I'&$format=json",
                     type: 'GET',
                     contentType: "application/json",
                     success: async function (data) {
-                        // Consolidating all the data in one property
-                        var person = oModel.getProperty("/PersonDet");
-                        var salut = oModel.getProperty("/Salutation");
-                        var job = oModel.getProperty("/JobTitle");
-                        var finalData = [];
-                        var customString3;
                         if (data.d.results.length != 0) {
-                            cust_Value = data.d.results[0].cust_Organization.split(",");
+                            values = data.d.results.map((value, index) => { return { key: (index), text: (value.cust_Organization) }; });
                             var val = [];
-                            cust_Value.forEach(async function (item) {
+                            values.forEach(async function (item) {
                                 await $.ajax({
-                                    url: serviceUrl + "/odata/v2/cust_PersonnelArea?$filter= externalCode eq '" + item + "'&$format=json",
+                                    url: serviceUrl + "/odata/v2/cust_PersonnelArea?$filter= externalCode eq '" + item.text + "'&$format=json",
                                     type: 'GET',
                                     contentType: "application/json",
                                     success: function (data) {
-                                        console.log("success" + data);
                                         var req = {
-                                            key: item,
+                                            key: item.text,
                                             value: data.d.results[0].externalName
                                         };
                                         val.push(req);
+
                                         oModel.setProperty("/OrgValues", val);
                                     },
                                     error: function (e) {
@@ -703,61 +682,69 @@ sap.ui.define([
                                     }
                                 });
                             }.bind(this));
-                            if (cust_Value.length == 1) {
+                            if (values.length == 1) {
                                 this.getView().byId("select08").setEditable(false);
+                                this.getView().byId("select08").setSelectedKey(values[0].text);
+                                this.findApprover(values[0].text)
+                                    .then(() => this._logCreation("I", customString3))
+                                    .catch((e) => MessageBox.error(e));
                                 await $.ajax({
-                                    url: serviceUrl + "/odata/v2/cust_PersonnelArea?$filter= externalCode eq '" + cust_Value[0] + "'&$format=json",
+                                    url: serviceUrl + "/odata/v2/cust_PersonnelArea?$filter= externalCode eq '" + values[0].text + "'&$format=json",
                                     type: 'GET',
                                     contentType: "application/json",
                                     success: function (data) {
-                                        customString3 = data.d.results[0].externalName + " (" + cust_Value[0] + ")";
-                                        oModel.setProperty("/OrgValues", { key: cust_Value[0], value: data.d.results[0].externalName });
-                                        this.getView().byId("select08").setSelectedKey(cust_Value[0]);
-                                    }.bind(this),
+                                        var req = {
+                                            key: values[0].text,
+                                            value: data.d.results[0].externalName
+                                        };
+                                        val.push(req);
+                                        oModel.setProperty("/OrgValues", val);
+                                        customString3 = data.d.results[0].externalName + " (" + values[0].text + ")"
+                                    },
                                     error: function (e) {
                                         console.log("error: " + e);
                                     }
                                 });
-                                this.orgIdToName(cust_Value[0]);
+                                this.dropdownEmp(values[0].text, oModel);
                             }
-                        } else {
-                            await $.ajax({
-                                url: serviceUrl + "/odata/v2/cust_PersonnelArea?$filter= externalCode eq '" + job.d.results[0].customString3 + "'&$format=json",
-                                type: 'GET',
-                                contentType: "application/json",
-                                success: function (data) {
-                                    customString3 = data.d.results[0].externalName + " (" + job.d.results[0].customString3 + ")";
-                                    this.getView().byId("select08").setSelectedKey(job.d.results[0].customString3);
-                                    this.getView().byId("select08").setEditable(false);
-                                }.bind(this),
-                                error: function (e) {
-                                    console.log("error: " + e);
+                            // Consolidating all the data in one property
+                            var person = oModel.getProperty("/PersonDet");
+                            var salut = oModel.getProperty("/Salutation");
+                            var job = oModel.getProperty("/JobTitle");
+                            var finalData = [];
+                            for (let i = 0; i < job.results.length; i++) {
+
+                                var firstName = person.d.results[i].firstName;
+                                var lastName = person.d.results[i].lastName;
+                                var personIdExternal = person.d.results[i].personIdExternal;
+
+                                var salutation = salut.d.results[i].label;
+
+                                var jobTitle = job.results[i].jobTitle;
+                                var final = {
+                                    firstName: firstName,
+                                    lastName: lastName,
+                                    personIdExternal: personIdExternal,
+                                    label: salutation,
+                                    jobTitle: jobTitle,
+                                    customString3: customString3
                                 }
-                            });
-                            this.orgIdToName(job.d.results[0].customString3);
-                        }
-                        for (let i = 0; i < job.d.results.length; i++) {
-
-                            var firstName = person.d.results[i].firstName;
-                            var lastName = person.d.results[i].lastName;
-                            var personIdExternal = person.d.results[i].personIdExternal;
-
-                            var salutation = salut.d.results[i].label;
-                            this._logCreation("I", customString3);
-
-                            var jobTitle = job.d.results[i].jobTitle;
-                            var final = {
-                                firstName: firstName,
-                                lastName: lastName,
-                                personIdExternal: personIdExternal,
-                                label: salutation,
-                                jobTitle: jobTitle,
-                                customString3: customString3
+                                finalData.push(final);
                             }
-                            finalData.push(final);
+                            oModel.setProperty("/FinalData", finalData);
                         }
-                        oModel.setProperty("/FinalData", finalData);
-
+                        else {
+                            MessageBox.error("You have not been set-up with the authorisation to launch this form. Please call ContactUs on 01452 425888 if you believe this is in error.", {
+                                title: "Error Message",
+                                actions: [MessageBox.Action.OK],
+                                onClose: function (oAction) {
+                                    if (oAction) {
+                                        if (this.query) window.parent.close();
+                                        else window.history.go(-1);
+                                    }
+                                }.bind(this)
+                            });
+                        }
                     }.bind(this),
                     error: function (e) {
                         console.log("error: " + e);
@@ -858,6 +845,27 @@ sap.ui.define([
                 this.getView().getModel("AbsData").setProperty("/CreateNew", oProperty);
             },
 
+            findApprover: function (orgCode) {
+                return new Promise(
+                    function (resolve, reject) {
+                        $.ajax({
+                            url: serviceUrl + "/odata/v2/cust_ZFLM_MULTI_USER_NEW?$filter=cust_Organization eq '" + orgCode + "' and cust_Role eq 'A'&$format=json",
+                            type: 'GET',
+                            contentType: "application/json",
+                            success: function (data) {
+                                if (data.d.results.length != 0) {
+                                    managerId = data.d.results[0].externalName;
+                                    resolve(data.d.results[0].externalName);
+                                } else reject("No approver is maintained for selected organisation.");
+                            }.bind(this),
+                            error: function (e) {
+                                console.log("error: " + e);
+                                reject(e.responseText);
+                            }
+                        });
+                    }.bind(this))
+            },
+
             onOrgChange: function (oEvent) {
                 var oModel = this.getView().getModel("AbsData");
                 if (oEvent.getSource().getSelectedItem() == null) {
@@ -865,48 +873,57 @@ sap.ui.define([
                     oEvent.getSource().setValueState(sap.ui.core.ValueState.Error);
                 }
                 else {
+                    var orgName = oEvent.getSource().getSelectedItem().getKey();
                     if (oModel.getProperty("/lastSelectedOrg") && oModel.getProperty("/lastSelectedOrg") != oEvent.getSource().getSelectedItem().getKey()) {
                         MessageBox.warning(`Changing the organization will erase all form data.
                             Do you want to proceed?`, {
                             actions: [sap.m.MessageBox.Action.YES, sap.m.MessageBox.Action.NO],
+                            emphasizedAction: sap.m.MessageBox.Action.NO,
                             onClose: function (oAction) {
                                 oEvent.getSource().setValueState(sap.ui.core.ValueState.None);
                                 if (oAction === sap.m.MessageBox.Action.YES) {
-                                    var orgName = oEvent.getSource().getSelectedItem().getKey();
                                     oModel.setProperty("/lastSelectedOrg", orgName);
-                                    this.orgIdToName(orgName);
+                                    this.dropdownEmp(orgName, oModel)
 
-                                    // clearing out the data 
-                                    this.getView().getModel("AbsData").setProperty("/FinalEmpData", []);
-                                    this.getView().getModel("AbsData").setProperty("/FinalEmpDataCurr", []);
-                                    var today = new Date();
-                                    var StartminDate = new Date();
-                                    StartminDate.setMonth(StartminDate.getMonth() - 2);
-                                    StartminDate.setDate(1);
-                                    var newRow = [{
-                                        empName: "",
-                                        personIdExternal: "",
-                                        userId: "",
-                                        timeType: "",
-                                        timeTypeCode: "",
-                                        startDate: "",
-                                        endDate: "",
-                                        startMinDate: StartminDate,
-                                        startMaxDate: today,
-                                        endMinDate: new Date(),
-                                        description: "",
-                                        descriptionCode: "",
-                                        quantityInDays: "",
-                                        quantityInHours: "",
-                                        enabledAbs: false,
-                                        enabledDate: false,
-                                        enabledDesc: false,
-                                        enabledLostDays: false,
-                                        enabledLostHrs: false,
-                                        valueStateStartDate: "None",
-                                        valueStateEndDate: "None"
-                                    }]
-                                    this.getView().getModel("AbsData").setProperty("/CreateNew", newRow);
+                                    //finding the new Approver
+                                    this.findApprover(orgName)
+                                        .then(() => {
+                                            // clearing out the data 
+                                            this.getView().getModel("AbsData").setProperty("/FinalEmpData", []);
+                                            this.getView().getModel("AbsData").setProperty("/FinalEmpDataCurr", []);
+                                            var today = new Date();
+                                            var StartminDate = new Date();
+                                            StartminDate.setMonth(StartminDate.getMonth() - 2);
+                                            StartminDate.setDate(1);
+                                            var newRow = [{
+                                                empName: "",
+                                                personIdExternal: "",
+                                                userId: "",
+                                                timeType: "",
+                                                timeTypeCode: "",
+                                                startDate: "",
+                                                endDate: "",
+                                                startMinDate: StartminDate,
+                                                startMaxDate: today,
+                                                endMinDate: new Date(),
+                                                description: "",
+                                                descriptionCode: "",
+                                                quantityInDays: "",
+                                                quantityInHours: "",
+                                                enabledAbs: false,
+                                                enabledDate: false,
+                                                enabledDesc: false,
+                                                enabledLostDays: false,
+                                                enabledLostHrs: false,
+                                                valueStateStartDate: "None",
+                                                valueStateEndDate: "None"
+                                            }]
+                                            this.getView().getModel("AbsData").setProperty("/CreateNew", newRow);
+                                        })
+                                        .catch((e) => {
+                                            MessageBox.error(e)
+                                            oEvent.getSource().setValueState(sap.ui.core.ValueState.Error)
+                                        })
                                 }
                                 else {
                                     this.getView().byId("select08").setSelectedKey(oModel.getProperty("/lastSelectedOrg"));
@@ -916,9 +933,17 @@ sap.ui.define([
                     }
                     else {
                         oEvent.getSource().setValueState(sap.ui.core.ValueState.None);
-                        var orgName = oEvent.getSource().getSelectedItem().getKey();
-                        oModel.setProperty("/lastSelectedOrg", orgName);
-                        this.orgIdToName(orgName)
+                        // finding approver of the selected organization
+                        this.findApprover(orgName)
+                            .then(() => {
+                                var orgName = oEvent.getSource().getSelectedItem().getKey();
+                                oModel.setProperty("/lastSelectedOrg", orgName);
+                                this.dropdownEmp(orgName, oModel)
+                            })
+                            .catch((e) => {
+                                MessageBox.error(e)
+                                oEvent.getSource().setValueState(sap.ui.core.ValueState.Error)
+                            })
                     }
                 }
             },
@@ -1114,10 +1139,10 @@ sap.ui.define([
                         oModel.setProperty(sPath + "/valueStateEndDate", "Error");
                         MessageBox.error("A maximum of three consecutive days are allowed for Industrial Action. Please amend the dates");
                     }
+                    oModel.setProperty(sPath + "/timeTypeCode", timeTypeCode);
                     if (sPath.includes("CreateNew")) {
                         var sEmpName = oBindingContext.getProperty("empName");
                         this.lostDays(timeType, sEmpName, sStartDate, sEndDate, oModel, sPath, oBindingContext);
-                        oModel.setProperty(sPath + "/timeTypeCode", timeTypeCode);
                         oModel.setProperty(sPath + "/enabledDate", true);
                         oEvent.getSource().setValueState(sap.ui.core.ValueState.None);
                         if (timeType.includes("Sickness")) {
@@ -1256,7 +1281,7 @@ sap.ui.define([
                     });
                 }
 
-                var personnel = this.getView().getModel("AbsData").getProperty("/FinalData/0/customString3") != undefined ? this.getView().getModel("AbsData").getProperty("/FinalData/0/customString3") : perArea;
+                var personnel = this.getView().getModel("AbsData").getProperty("/FinalData/0/customString3") ? this.getView().getModel("AbsData").getProperty("/FinalData/0/customString3") : perArea;
                 var salutation = this.getView().getModel("AbsData").getProperty("/Salutation").d.results[0];
                 var log_payload = {
                     "Formid": this.getView().byId("_IDGenInput2").getValue(),
@@ -1937,7 +1962,6 @@ sap.ui.define([
 
                 var prefix = sap.ui.require.toUrl(this.getOwnerComponent().getManifestEntry('/sap.app/id').replaceAll('.', '/')) + "/";
                 var sURL = prefix + "workflow/rest/v1/workflow-instances";
-                var sURL1 = prefix + "workflow/rest/v1/task-instances";
 
                 $.support.cors = true;
                 $.ajax(sURL, {
@@ -1946,43 +1970,23 @@ sap.ui.define([
                     crossDomain: true,
                     contentType: "application/json"
                 }).done(function (data, textStatus, jqXHR) {
-                    console.log("---workflow Data---");
-                    $.support.cors = true;
                     if (data) {
-                        var url = sURL1 + "?workflowInstanceId=" + data.id
-                        $.ajax(url, {
-                            method: "GET",
-                            crossDomain: true,
-                            contentType: "application/json"
-                        }).done(function (taskdata, textStatus, jqXHR) {
-                            console.log("---task Data---");
-                            console.log(taskdata);
-                            console.log("Workflow has been triggered and Form has been Submitted");
-                            sap.ui.core.BusyIndicator.hide()
-                            this._logCreation("S", "");
-                            MessageBox.success(`Form: ${this.getView().byId("_IDGenInput2").getValue()} is submitted successfully
-                            
-                            Please call ContactUs on 01452 425888 should you have any queries regarding this e-Form.`, {
-                                title: "Success Message",
-                                actions: [MessageBox.Action.OK],
-                                emphasizedAction: MessageBox.Action.OK,
-                                onClose: function (sAction) {
-                                    if (sAction == MessageBox.Action.OK) {
-                                        // var oHistory, sPreviousHash;
-                                        // oHistory = History.getInstance();
-                                        // sPreviousHash = oHistory.getPreviousHash();
-                                        // if (sPreviousHash == undefined) {
-                                        // }
-                                        window.history.go(-1);
-                                    }
+                        console.log("Workflow has been triggered and Form has been Submitted");
+                        sap.ui.core.BusyIndicator.hide()
+                        this._logCreation("S", "");
+                        MessageBox.success(`Form: ${this.getView().byId("_IDGenInput2").getValue()} is submitted successfully
+                        
+                        Please call ContactUs on 01452 425888 should you have any queries regarding this e-Form.`, {
+                            title: "Success Message",
+                            actions: [MessageBox.Action.OK],
+                            emphasizedAction: MessageBox.Action.OK,
+                            onClose: function (sAction) {
+                                if (sAction == MessageBox.Action.OK) {
+                                    window.history.go(-1);
                                 }
-                            });
-                        }.bind(this)).fail(function (XMLHttpRequest, textStatus) {
-                            MessageBox.error(`Some error occurred. Please try again `);
-                            sap.ui.core.BusyIndicator.hide();
+                            }
                         });
                     }
-
                 }.bind(this)).fail(function (XMLHttpRequest, textStatus) {
                     console.log("error");
                     MessageBox.error(`Some error occurred. Please try again`);
@@ -2067,36 +2071,6 @@ sap.ui.define([
                     const actualDate = `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
                     return actualDate;
                 } else return "";
-            },
-
-            orgIdToName: function (customString3) {
-                var that = this;
-                var oModel = that.getView().getModel("AbsData");
-                this.dropdownEmp(customString3, oModel)
-                // $.ajax({
-                //     url: serviceUrl + "/odata/v2/EmpJob?$filter=customString3 eq '" + customString3 + "'&$format=json",
-                //     type: 'GET',
-                //     contentType: "application/json",
-                //     success: function (data) {
-                //         if (data.d.results.length > 0) {
-                //             console.log("success" + data);
-                //             var job = data;
-                //             var finalData = [];
-                //             var finalDataCurr = [];
-                //             // oModel.setProperty("/FinalEmpDataCurr", finalData);
-                //             // oModel.setProperty("/FinalEmpData", finalDataCurr);
-                //             // that.getView().setModel(oModel, "AbsData");
-                //             for (let k = 0; k < job.d.results.length; k++) {
-                //                 that.idToName(finalData, job, k, oModel, customString3);
-                //                 that.idToNameCurrMonth(finalDataCurr, job, k, oModel, customString3);
-                //             }
-                //         }
-
-                //     },
-                //     error: function (e) {
-                //         console.log("error: " + e);
-                //     }
-                // });
             },
 
             getPrevMonthAbsences: function (emplData, empEmplData, perPersData, oModel, customString3) {
@@ -2312,7 +2286,7 @@ sap.ui.define([
                     type: 'GET',
                     contentType: "application/json",
                     success: function (data) {
-                        console.log("success" + data);
+
                         employeeData = data.d.results;
                     }.bind(this),
                     error: function (e) {

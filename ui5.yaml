@@ -18,7 +18,7 @@ server:
         backend:
           - path: /odata
             url: https://api55.sapsf.eu:443
-            destination: sf-api
+            destination: SFSF_new_QA
           - path: /sap
             url: http://s4devwz1.sap.gloscc.gov.uk:44300
             client: '310'

@@ -23,3 +23,7 @@
 .sapMTB.sapMTB-Transparent-CTX {
     background: #8cb8da;
 }
+
+.sapMInput.compulsoryUpper .sapMInputBaseInner {
+    text-transform: uppercase;
+}

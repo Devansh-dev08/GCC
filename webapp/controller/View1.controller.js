@@ -541,7 +541,7 @@ sap.ui.define([
 
             onNIChange: function (oEvent) {
                 var value = oEvent.getSource().getValue();
-                var regex = /^[A-Z]{2} \d{2} \d{2} \d{2} [A-D]$/;
+                var regex = /^(?!BG|GB|NK|KN|TN|NT|ZZ)[A-CEGHJ-PR-TW-Z][A-CEGHJ-NPR-TW-Z](?:\s*\d{2}){3}\s*[A-D]$/;
                 if (!regex.test(value) && value != "") {
                     oEvent.oSource.setValueState(sap.ui.core.ValueState.Error);
                     oEvent.oSource.setValueStateText("Please enter a valid National ID of this type: National Insurance Number. You should use the format: AA NN NN NN A; the last character can only be A, B, C or D.");

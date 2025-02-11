@@ -5,12 +5,13 @@ sap.ui.define([
     "sap/m/library",
     "sap/ui/core/Item",
     "sap/m/upload/Uploader",
-    "sap/m/StandardListItem"
+    "sap/m/StandardListItem",
+    "../model/formatter"
 ],
     /**
      * @param {typeof sap.ui.core.mvc.Controller} Controller
      */
-    function (Controller, MessageBox, MobileLibrary, Item, Uploader, ListItem) {
+    function (Controller, MessageBox, MobileLibrary, Item, Uploader, ListItem, formatter) {
         "use strict";
 
         var ListMode = MobileLibrary.ListMode, guidId = "", prefix = "", displayMode = false;
@@ -36,6 +37,7 @@ sap.ui.define([
         };
 
         return Controller.extend("zerotouch.controller.Main", {
+            formatter: formatter,
             onInit: function () {
                 this.excelData = new sap.ui.model.json.JSONModel();
                 this.getView().setModel(this.excelData, "excelData");
@@ -76,7 +78,7 @@ sap.ui.define([
                     .then(() => {
                         if (!oModel.getData().email) {
                             oModel.setData(mock);
-                            var useremail = "devansh.agarwal@hcl.com";
+                            var useremail = "test00014577@noemail.gloucestershire.gov.uk";
                         }
                         else {
                             var useremail = oModel.getData().email;
@@ -105,10 +107,19 @@ sap.ui.define([
                                     if (oData && oData.userid) {
                                         this.getView().byId('_IDGenInput1').setValue(oData.userid);
                                         this.excelData.setProperty("/BudgetHolder", oData);
-                                    }
+                                    } else
+                                        MessageBox.error("Cannot find the user", {
+                                            onClose: function () {
+                                                window.history.go(-1);
+                                            }
+                                        });
                                 }.bind(this),
                                 error: function (resp) {
-                                    MessageBox.error(JSON.parse(resp.responseText).error.message.value)
+                                    MessageBox.error(JSON.parse(resp.responseText).error.message.value, {
+                                        onClose: function () {
+                                            return;
+                                        }
+                                    });
                                 }.bind(this)
                             });
 
@@ -122,6 +133,30 @@ sap.ui.define([
                                 error: function (resp) {
                                     MessageBox.error(JSON.parse(resp.responseText).error.message.value)
                                 }.bind(this)
+                            });
+
+                            // Fetching settings application data for future date validation
+                            this.getOwnerComponent().getModel("settingsService").read("/zrtgtgw_settings_appSet", {
+                                success: function (oData) {
+                                    if (oData.results.length > 0) {
+                                        this.excelData.setProperty("/S4Settings", oData.results[0]);
+                                    }
+                                }.bind(this),
+                                error: function (e) {
+                                    MessageBox.error(`Could not proceed because ${JSON.parse(e.responseText).error.message.value}`)
+                                }
+                            });
+
+                            // Fetching all the error messages from backend
+                            this.getOwnerComponent().getModel().read("/zrtrgtgw_msgSet", {
+                                success: function (oData) {
+                                    if (oData.results.length > 0) {
+                                        this.excelData.setProperty("/errorMessages", oData.results);
+                                    }
+                                }.bind(this),
+                                error: function (e) {
+                                    MessageBox.error(`Could not proceed because ${JSON.parse(e.responseText).error.message.value}`)
+                                }
                             });
                         }
                         else {
@@ -263,49 +298,121 @@ sap.ui.define([
 
                 var oModel = this.getView().getModel("excelData");
                 var messageLog = oModel.getProperty("/MessageLog") ? oModel.getProperty("/MessageLog") : [];
-                items.forEach(function (data, index, o) {
+                var errorMess = oModel.getProperty("/errorMessages");
+                items.forEach(function (data, index) {
                     // code for validating the Input
                     if (data.Vendor != "") {
                         //validating Reference Number
-                        !this.specialCharacterCheck(data.Reference) ? messageLog.push({ Item: index + 1, Message: "Reference may only contain standard alphanumeric characters" }) : "";
+                        !this.specialCharacterCheck(data.Reference) ? messageLog.push({ Item: (index + 2).toString(), Message: errorMess.filter((el) => el.ErrorCode == "0011")[0].Description }) : "";
 
-                        //validating Invoice Date
-                        !this.invoiceDateCheck(data.InvoiceDate) ? messageLog.push({ Item: index + 1, Message: "Invoice Date cannot be future dated" }) : "";
+                        // checking the condition only when the future date claims are not allowed
+                        if (!this.getView().getModel("excelData").getProperty("/S4Settings/Futureinvoice")) {
+                            //validating Invoice Date
+                            !this.invoiceDateCheck(data.InvoiceDate) ? messageLog.push({ Item: (index + 2).toString(), Message: errorMess.filter((el) => el.ErrorCode == "0012")[0].Description }) : "";
+                        }
                     } else {
                         //validating gl code
-                        !this.glCheck(data.GlCode) ? messageLog.push({ Item: index + 1, Message: "Only codes starting with 2,3,4 or 5 may be used for expenditures" }) : "";
+                        const glValidations = this.glCheck(data.GlCode, data.Cciowbs);
+                        glValidations.check ? glValidations.wbs ? messageLog.push({ Item: (index + 2).toString(), Message: errorMess.filter((el) => el.ErrorCode == "0024")[0].Description }) : messageLog.push({ Item: (index + 2).toString(), Message: errorMess.filter((el) => el.ErrorCode == "0023")[0].Description }) : "";
 
                         //validating Item Description
-                        !this.specialCharacterCheck(data.ItemDesc) ? messageLog.push({ Item: index + 1, Message: "Special characters, line feeds or carriage returns are not permitted in this description" }) : "";
+                        !this.specialCharacterCheck(data.ItemDesc) ? messageLog.push({ Item: (index + 2).toString(), Message: errorMess.filter((el) => el.ErrorCode == "0014")[0].Description }) : "";
                     }
                 }.bind(this));
 
+                // checking duplicates in the file and items
+                messageLog = this.checkDuplicates(oModel, items, messageLog);
+
                 if (messageLog.length > 0) {
+                    messageLog.sort(function (a, b) {
+                        if (+a.Item > +b.Item) return 1;
+                        if (+a.Item < +b.Item) return -1;
+                    });
+                    oModel.setProperty("/ErrorMessages", messageLog);
                     if (!this._messLog) {
-                        oModel.setProperty("/ErrorMessages", messageLog);
                         this._messLog = sap.ui.xmlfragment("zerotouch.fragment.ErrorMessages", this);
                         this.getView().addDependent(this._messLog);
-                        this._messLog.open();
                     }
+                    this._messLog.open();
                     return true;
                 } else return false;
             },
 
+            checkDuplicates: function (oModel, arr, errorMessages) {
+                // finding duplicates in the array w.r.t to some fields
+                var duplicates = {};
+
+                // Map to store occurrences of vendor-reference combinations
+                const seen = new Map();
+
+                // Checking if the uploading file have any duplicates
+                arr.forEach((item, index) => {
+                    if (item.Vendor && item.Reference) {
+                        const key = `${item.Vendor}-${item.Reference}`;
+                        if (seen.has(key)) {
+                            // If the key is already seen, add both current and previous index to duplicates
+                            if (!duplicates[key]) {
+                                duplicates[key] = [seen.get(key)]; // Add the first occurrence
+                            }
+                            duplicates[key].push(index); // Add the current occurrence
+                        } else {
+                            seen.set(key, index);
+                        }
+                    }
+                });
+
+                // Generate error messages for duplicates
+                for (const [key, indexes] of Object.entries(duplicates)) {
+                    if (indexes.length > 1) {
+                        errorMessages.push({ Item: (indexes.join(", ")).toString(), Message: `Duplicate found for Vendor-Reference '${key}' at indexes: ${indexes.join(", ")}` }
+                        );
+                    }
+                }
+
+                // checking if the uploading file have some duplicates in already uploaded file
+                var items = oModel.getProperty("/items") ? oModel.getProperty("/items") : [];
+                duplicates = [];
+                items.forEach((item, index) => {
+                    if (item.Vendor && item.Reference) {
+                        const key = `${item.Vendor}-${item.Reference}`;
+                        if (seen.has(key)) {
+                            // If the key is already seen, add both current and previous index to duplicates
+                            if (!duplicates[key]) {
+                                duplicates[key] = [seen.get(key)]; // Add the first occurrence
+                            }
+                            duplicates[key].push(index); // Add the current occurrence
+                        } else {
+                            seen.set(key, index);
+                        }
+                    }
+                });
+
+                // Generate error messages for duplicates
+                for (const [key, indexes] of Object.entries(duplicates)) {
+                    if (indexes.length > 1) {
+                        errorMessages.push({ Item: (indexes[0]).toString(), Message: `The combination for Vendor-Reference '${key}' is already loaded`});
+                    }
+                }
+
+                return errorMessages;
+            },
+
             onMessageClose: function () {
                 if (this._messLog) {
-                    this._messLog.destroy(true);
+                    this._messLog.close();
                 }
-                window.location.assign(window.location.origin + "/site" + window.location.search.split("&")[0] + window.location.hash.split("?")[0])
+                // window.history.go(-1);
             },
 
             _AddRow: function () {
                 this._addRow = sap.ui.xmlfragment("zerotouch.fragment.Addrowpopup", this);
                 this.getView().addDependent(this._addRow);
+                var futureInv = this.getView().getModel("excelData").getProperty("/S4Settings/Futureinvoice");
                 var addFirstRow = {
                     Vendor: "",
                     VendorName: "",
                     InvoiceDate: "",
-                    MaxInvDate: new Date(),
+                    MaxInvDate: futureInv ? new Date("9999-12-31") : new Date(),
                     Reference: "",
                     items: [{
                         Cciowbs: "",
@@ -381,7 +488,7 @@ sap.ui.define([
                 var oModel = this.getView().getModel("excelData").getProperty("/addRow");
                 var len = oModel.items.length;
                 if (oModel.items[len - 1].Cciowbs == "") {
-                    MessageBox.error("Kindly enter the Cost Centre/Internal Order/WBS first.");
+                    MessageBox.error(this.getView().getModel("excelData").getProperty("/errorMessages").filter((el) => el.ErrorCode == "0017")[0].Description);
                 }
                 else {
                     var addFirstRow = {
@@ -443,7 +550,7 @@ sap.ui.define([
             },
 
             specialCharacterCheck: function (value) {
-                const specialCharRegex = /^[a-zA-Z0-9 -]+$/
+                const specialCharRegex = /^[a-zA-Z0-9 -/]+$/
                 if (!specialCharRegex.test(value)) return false;
                 else return true;
             },
@@ -453,14 +560,23 @@ sap.ui.define([
                 else return true;
             },
 
-            glCheck: function (value) {
-                const glRegex = /^[^2-5]{1}/
-                if (glRegex.test((Number(value).toString()))) return false;
-                else return true;
+            glCheck: function (value, ccIoWbs) {
+                if (value && ccIoWbs) {
+                    var newVal = ccIoWbs.toUpperCase().replace(/\-/g, "");
+                    const xWbs = /^([X])([A-Z])(\d{6})([A-Z])$/, yWbs = /^([Y])(\d{4})(\d{5})([A-Z]{1,7})$/;
+                    if (xWbs.test(newVal) || yWbs.test(newVal)) {
+                        const glRegex = /^[4][8][0-9]+$/;
+                        if (glRegex.test((Number(value).toString()))) return { check: false, wbs: true };
+                        else return { check: true, wbs: true };
+                    } else {
+                        const glRegex = /^[^80][0-9]+$/
+                        if (glRegex.test((Number(value).toString()))) return { check: false, wbs: false };
+                        else return { check: true, wbs: false };
+                    }
+                } else return false;
             },
 
             onVendorChange: function (oEvent) {
-
                 var oModel = this.getView().getModel("excelData");
                 var Vendor = oEvent.getSource().getValue();
                 const id = oEvent.getSource().getId();
@@ -492,7 +608,7 @@ sap.ui.define([
                     oEvent.getSource().setValueState(sap.ui.core.ValueState.None);
                     const checkValidations = this.specialCharacterCheck(value)
                     if (!checkValidations) {
-                        MessageBox.error("Reference may only contain standard alphanumeric characters.");
+                        MessageBox.error(this.getView().getModel("excelData").getProperty("/errorMessages").filter((el) => el.ErrorCode == "0011")[0].Description);
                         oEvent.getSource().setValueState(sap.ui.core.ValueState.Error);
                     }
                     else oEvent.getSource().setValueState(sap.ui.core.ValueState.None);
@@ -528,7 +644,7 @@ sap.ui.define([
                         // If WBS starts with X
                         { Wbs: /^([X])([A-Z])(\d{6})([A-Z])$/ },
                         // if WBS starts with Y
-                        { Wbs: /^([Y])(\d{4})(\d{5})([A-Z]{3})$/ },
+                        { Wbs: /^([Y])(\d{4})(\d{5})([A-Z]{1,7})$/ },
                         //regex for Internal Order
                         { IoNumber: /^[OGCVRTPWA]\d{8}$/ }
                     ]
@@ -549,6 +665,7 @@ sap.ui.define([
                             this.getOwnerComponent().getModel().read(`/zrtgtgw_ci_ccSet`, {
                                 filters: [filterLog],
                                 success: function (oData) {
+                                    var errorMess = oModel.getProperty("/errorMessages");
                                     if (oData.results[0] && oData.results[0].CcWbsIo && oData.results[0].Description && oData.results[0].budgetManager) {
                                         oModel.setProperty("/Approvers", oData.results);
                                         oModel.setProperty(sPath + "/CciowbsName", oData.results[0].Description);
@@ -563,7 +680,7 @@ sap.ui.define([
                                         oModel.setProperty(sPath + "/BudgetHold", "");
                                         oModel.setProperty(sPath + "/BudgetHoldEmail", "");
                                         sap.ui.getCore().byId(id).setValueState(sap.ui.core.ValueState.Error);
-                                        sap.ui.getCore().byId(id).setValueStateText("Cost Center not approved for the User");
+                                        sap.ui.getCore().byId(id).setValueStateText(ccIoWbs == "CostCentre" ? errorMess.filter((el) => el.ErrorCode == "0006")[0].Description : ccIoWbs == "Wbs" ? errorMess.filter((el) => el.ErrorCode == "0019")[0].Description : errorMess.filter((el) => el.ErrorCode == "0020")[0].Description);
                                     }
                                     else {
                                         oModel.setProperty("/Approvers", []);
@@ -571,6 +688,7 @@ sap.ui.define([
                                         oModel.setProperty(sPath + "/BudgetHold", "");
                                         oModel.setProperty(sPath + "/BudgetHoldEmail", "");
                                         sap.ui.getCore().byId(id).setValueState(sap.ui.core.ValueState.Error);
+                                        sap.ui.getCore().byId(id).setValueStateText(ccIoWbs == "CostCentre" ? errorMess.filter((el) => el.ErrorCode == "0006")[0].Description : ccIoWbs == "Wbs" ? errorMess.filter((el) => el.ErrorCode == "0019")[0].Description : errorMess.filter((el) => el.ErrorCode == "0020")[0].Description);
                                     }
                                 }.bind(this),
                                 error: function (resp) {
@@ -602,8 +720,8 @@ sap.ui.define([
                 const id = oEvent.getSource().getId();
                 var glCode = oEvent.getSource().getValue();
                 if (glCode != "" || glCode != null) {
-                    const glValidations = this.glCheck(glCode);
-                    if (glValidations) {
+                    const glValidations = this.glCheck(glCode, oModel.getProperty(sPath + "/Cciowbs"));
+                    if (!glValidations.check) {
                         oEvent.getSource().setValueState(sap.ui.core.ValueState.None);
                         this.getOwnerComponent().getModel().read(`/zrtgtgw_ci_glSet('${glCode}')`, {
                             success: function (oData) {
@@ -623,7 +741,10 @@ sap.ui.define([
                         });
                     }
                     else {
-                        MessageBox.error("Only codes starting with 2,3,4 or 5 may be used for expenditures");
+                        if (glValidations.wbs)
+                            MessageBox.error(this.getView().getModel("excelData").getProperty("/errorMessages").filter((el) => el.ErrorCode == "0024")[0].Description);
+                        else
+                            MessageBox.error(this.getView().getModel("excelData").getProperty("/errorMessages").filter((el) => el.ErrorCode == "0023")[0].Description);
                         oEvent.getSource().setValueState(sap.ui.core.ValueState.Error);
                     }
                 }
@@ -692,7 +813,7 @@ sap.ui.define([
                     const checkValidations = this.specialCharacterCheck(value)
                     if (!checkValidations) {
                         oEvent.getSource().setValueState(sap.ui.core.ValueState.Error);
-                        MessageBox.error("Special characters, line feeds or carriage returns are not permitted in this description.");
+                        MessageBox.error(this.getView().getModel("excelData").getProperty("/errorMessages").filter((el) => el.ErrorCode == "0014")[0].Description);
                     }
                     else oEvent.getSource().setValueState(sap.ui.core.ValueState.None);
 
@@ -738,7 +859,7 @@ sap.ui.define([
                     }
                 });
 
-                if (flag) MessageBox.error(`Please fill the required fields.`);
+                if (flag) MessageBox.error(this.getView().getModel("excelData").getProperty("/errorMessages").filter((el) => el.ErrorCode == "0021")[0].Description);
                 else {
 
                     var addedData = this.getView().getModel("excelData").getProperty("/addRow");
@@ -928,7 +1049,7 @@ sap.ui.define([
             },
 
             onFileTypeMismatch: function (oEvent) {
-                MessageBox.error("Invalid filetype. Please load a valid file.")
+                MessageBox.error(this.getView().getModel("excelData").getProperty("/errorMessages").filter((el) => el.ErrorCode == "0015")[0].Description)
             },
 
             onAttachClose: function () {
@@ -956,13 +1077,13 @@ sap.ui.define([
                         totalTax += Number(item.getBindingContext("excelData").getObject().VatAmount);
                     }
                 });
-                this.getView().byId("_IDGenInput3").setValue(totalValue);
-                this.getView().byId("_IDGenInput4").setValue(totalTax);
+                this.getView().byId("_IDGenInput3").setValue(totalValue.toFixed(2));
+                this.getView().byId("_IDGenInput4").setValue(totalTax.toFixed(2));
                 this._onTotalChange(totalValue, totalTax);
             },
 
             _onTotalChange: function (total, tax) {
-                this.getView().byId("_IDGenInput5").setValue(total + tax);
+                this.getView().byId("_IDGenInput5").setValue((total + tax).toFixed(2));
             },
 
             _payload: function (Items, purpose) {
@@ -997,7 +1118,7 @@ sap.ui.define([
                         // checking for error messages from backend
                         if (oData.HeadToMsgNav.results.length > 0) {
                             this.getView().getModel("excelData").setProperty("/MessageLog", oData.HeadToMsgNav.results);
-                        }
+                        } else this.getView().getModel("excelData").setProperty("/MessageLog", []);
                         const errorFound = this.checkErrors(oData.HeadToItemNav.results);
                         if (!errorFound) {
                             var gettingItems = this.getView().getModel("excelData").getProperty("/items");
@@ -1019,52 +1140,56 @@ sap.ui.define([
             },
 
             _payloadForSubmit: function (Items, purpose) {
-                var vendorItems = [];
-                var dateFormat = sap.ui.core.format.DateFormat.getDateInstance({ pattern: "dd.MM.yyyy" });
-                for (let i = 0; i < Items.length; i++) {
-                    var temp_payload = {
-                        "Guid": guidId.split("-").join(""),
-                        "Item": (i + 1).toString(),
-                        "LineType": Items[i].Vendor ? "H" : "I",
-                        "Vendor": Items[i].Vendor,
-                        "VendorName": Items[i].VendorName,
-                        "InvoiceDate": dateFormat.format(new Date(Items[i].InvoiceDate)),
-                        "Reference": Items[i].Reference,
-                        "Cciowbs": Items[i].Cciowbs,
-                        "CciowbsName": Items[i].CciowbsName,
-                        "CostCentre": Items[i].CostCentre ? Items[i].CostCentre : "",
-                        "IoNumber": Items[i].IoNumber ? Items[i].IoNumber : "",
-                        "Wbs": Items[i].Wbs ? Items[i].Wbs : "",
-                        "BudgetManager": Items[i].BudgetManager,
-                        "BudgetManagerEmail": Items[i].BudgetManagerEmail,
-                        "GlCode": Items[i].GlCode,
-                        "GlName": Items[i].GlName,
-                        "ItemValue": (Items[i].ItemValue).toString(),
-                        "Vat": Items[i].Vat,
-                        "VatAmount": Items[i].VATAmount ? Items[i].VATAmount.toString() : "",
-                        "ItemDesc": Items[i].ItemDesc
+                if (!Items || (Items && Items.length == 0)) {
+                    MessageBox.error("Please add atleast one item");
+                } else {
+                    var vendorItems = [];
+                    var dateFormat = sap.ui.core.format.DateFormat.getDateInstance({ pattern: "dd.MM.yyyy" });
+                    for (let i = 0; i < Items.length; i++) {
+                        var temp_payload = {
+                            "Guid": guidId.split("-").join(""),
+                            "Item": (i + 1).toString(),
+                            "LineType": Items[i].Vendor ? "H" : "I",
+                            "Vendor": Items[i].Vendor,
+                            "VendorName": Items[i].VendorName,
+                            "InvoiceDate": dateFormat.format(new Date(Items[i].InvoiceDate)),
+                            "Reference": Items[i].Reference,
+                            "Cciowbs": Items[i].Cciowbs,
+                            "CciowbsName": Items[i].CciowbsName,
+                            "CostCentre": Items[i].CostCentre ? Items[i].CostCentre : "",
+                            "IoNumber": Items[i].IoNumber ? Items[i].IoNumber : "",
+                            "Wbs": Items[i].Wbs ? Items[i].Wbs : "",
+                            "BudgetManager": Items[i].BudgetManager,
+                            "BudgetManagerEmail": Items[i].BudgetManagerEmail,
+                            "GlCode": Items[i].GlCode,
+                            "GlName": Items[i].GlName,
+                            "ItemValue": (Items[i].ItemValue).toString(),
+                            "Vat": Items[i].Vat,
+                            "VatAmount": Items[i].VATAmount ? Items[i].VATAmount.toString() : "",
+                            "ItemDesc": Items[i].ItemDesc
+                        }
+                        vendorItems.push(temp_payload)
                     }
-                    vendorItems.push(temp_payload)
-                }
 
-                var payload =
-                {
-                    "Guid": guidId.split("-").join(""),
-                    "BudgetHolder": this.getView().byId("_IDGenInput1").getValue(),
-                    "BudgetManager": this.getView().byId("_IDGenInput2").getValue(),
-                    "Reason": this.getView().byId("_IDGenComboBox1").getSelectedItem() ? this.getView().byId("_IDGenComboBox1").getSelectedItem().getText() : this.getView().byId("_IDGenComboBox1").getValue(),
-                    "InvoiceAttach": this.getView().byId("_IDGenLink1").getText(),
-                    "SubmitDate": dateFormat.format(new Date()),
-                    "ApproveDate": "",
-                    "TermsCheckbox": "X",
-                    "TotalExVat": this.getView().byId("_IDGenInput3").getValue(),
-                    "Tax": this.getView().byId("_IDGenInput4").getValue(),
-                    "Total": this.getView().byId("_IDGenInput5").getValue(),
-                    "Purpose": purpose,
-                    "HeadToItemNav": vendorItems
-                }
+                    var payload =
+                    {
+                        "Guid": guidId.split("-").join(""),
+                        "BudgetHolder": this.getView().byId("_IDGenInput1").getValue(),
+                        "BudgetManager": this.getView().byId("_IDGenInput2").getValue(),
+                        "Reason": this.getView().byId("_IDGenComboBox1").getSelectedItem() ? this.getView().byId("_IDGenComboBox1").getSelectedItem().getText() : this.getView().byId("_IDGenComboBox1").getValue(),
+                        "InvoiceAttach": this.getView().byId("_IDGenLink1").getText(),
+                        "SubmitDate": dateFormat.format(new Date()),
+                        "ApproveDate": "",
+                        "TermsCheckbox": "X",
+                        "TotalExVat": this.getView().byId("_IDGenInput3").getValue(),
+                        "Tax": this.getView().byId("_IDGenInput4").getValue(),
+                        "Total": this.getView().byId("_IDGenInput5").getValue(),
+                        "Purpose": purpose,
+                        "HeadToItemNav": vendorItems
+                    }
 
-                return payload;
+                    return payload;
+                }
             },
 
             onSubmit: function () {
@@ -1092,7 +1217,7 @@ sap.ui.define([
                             if (!flag) {
                                 if (!this.getView().byId("_IDGenCheckBox1").getSelected()) {
                                     sap.ui.core.BusyIndicator.hide();
-                                    MessageBox.error(`Please confirm that you understood the guidlines`);
+                                    MessageBox.error(this.getView().getModel("excelData").getProperty("/errorMessages").filter((el) => el.ErrorCode == "0016")[0].Description);
                                 }
                                 else {
 
@@ -1153,11 +1278,6 @@ sap.ui.define([
                         emphasizedAction: MessageBox.Action.OK,
                         onClose: function (sAction) {
                             if (sAction) {
-                                // var oHistory, sPreviousHash;
-                                // oHistory = History.getInstance();
-                                // sPreviousHash = oHistory.getPreviousHash();
-                                // if (sPreviousHash == undefined) {
-                                // }
                                 window.history.go(-1);
                             }
                         }

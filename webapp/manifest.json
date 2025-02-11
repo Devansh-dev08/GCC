@@ -24,6 +24,15 @@
           "localUri": "localService/metadata.xml",
           "odataVersion": "2.0"
         }
+      },
+      "settingsService": {
+        "uri": "/sap/opu/odata/sap/ZRTRGTGW_SETTING_SRV/",
+        "type": "OData",
+        "settings": {
+          "annotations": [],
+          "localUri": "localService/metadata.xml",
+          "odataVersion": "2.0"
+        }
       }
     },
     "crossNavigation": {
@@ -87,8 +96,14 @@
         "dataSource": "mainService",
         "preload": true,
         "settings": {}
+      },
+      "settingsService": {
+        "dataSource": "settingsService",
+        "preload": true,
+        "settings": {}
       }
     },
+    "handleValidation": true,
     "resources": {
       "css": [
         {

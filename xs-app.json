@@ -5,7 +5,7 @@
     {
       "source": "^/sap/(.*)$",
       "target": "/sap/$1",
-      "destination": "s4hanartdev_CLONING",
+      "destination": "s4hanartqa",
       "authenticationType": "xsuaa",
       "csrfProtection": false
     },

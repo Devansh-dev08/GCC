@@ -20,8 +20,8 @@
 					<ComboBox id="_IDGenComboBox1" class="sapUiTinyMarginBegin" width="500px" required="true" change="onReasonChange" items="{excelData>/reasonDropdown}" valueStateText="Enter a valid reason" editable="{= ${excelData>/Parameters/mode} !== 'display'}" >
 						<core:Item key="{excelData>ReasonCode}" text="{excelData>ReasonDesc}" />
 					</ComboBox>
-					<Label id="_IDGenLabel4" text="Submit Date" class="sapUiMediumMarginBegin sapUiSmallMarginTop sapUiMediumMarginEnd" labelFor="_IDGenDatePicker2"/>
-					<Label id="_IDGenLabel5" text="Approve Date" class="sapUiLargeMarginBegin sapUiSmallMarginTop" labelFor="_IDGenDatePicker3"/>
+					<Label id="_IDGenLabel4" text="Submit Date" class="sapUiMediumMarginBegin sapUiSmallMarginTop sapUiMediumMarginEnd" labelFor="_IDGenDatePicker1"/>
+					<Label id="_IDGenLabel5" text="Approve Date" class="sapUiLargeMarginBegin sapUiSmallMarginTop" labelFor="_IDGenDatePicker2"/>
 				</HBox>
 				<HBox id="_IDGenHBox3">
 					<Label id="_IDGenLabel6" text="Invoice Attachment" showColon="true" required="true" labelFor="_IDGenLink1" class="sapUiTinyMarginBegin sapUiTinyMarginTop" width="140px"/>
@@ -32,12 +32,12 @@
 				</HBox>
 				<CheckBox id="_IDGenCheckBox1" class="sapUiTinyMarginBegin" editable="{= ${excelData>/Parameters/mode} !== 'display'}" text="Transactions entered comply with the guidelines for processing payments via this interface and could not be processed via SAP purchase orders"/>
 				<HBox id="_IDGenHBox4" justifyContent="Center">
-					<Label id="_IDGenLabel7" text="Total (ex-VAT)" showColon="true" labelFor="_IDGenInput5" class="sapUiTinyMarginTop"/>
-					<Input id="_IDGenInput3" width="80px" class="sapUiTinyMarginBegin sapUiTinyMarginEnd" editable="false" required="true" />
-					<Label id="_IDGenLabel8" text="Tax" showColon="true" labelFor="_IDGenInput6" class="sapUiTinyMarginTop"/>
-					<Input id="_IDGenInput4" width="80px" class="sapUiTinyMarginBegin sapUiTinyMarginEnd" editable="false" required="true" />
-					<Label id="_IDGenLabel9" text="Total" showColon="true" labelFor="_IDGenInput7" class="sapUiTinyMarginTop"/>
-					<Input id="_IDGenInput5" width="80px" class="sapUiTinyMarginBegin" editable="false" required="true" />
+					<Label id="_IDGenLabel7" text="Total (ex-VAT)" showColon="true" labelFor="_IDGenInput3" class="sapUiTinyMarginTop"/>
+					<Input id="_IDGenInput3" width="140px" class="sapUiTinyMarginBegin sapUiTinyMarginEnd" editable="false" required="true" />
+					<Label id="_IDGenLabel8" text="Tax" showColon="true" labelFor="_IDGenInput4" class="sapUiTinyMarginTop"/>
+					<Input id="_IDGenInput4" width="140px" class="sapUiTinyMarginBegin sapUiTinyMarginEnd" editable="false" required="true" />
+					<Label id="_IDGenLabel9" text="Total" showColon="true" labelFor="_IDGenInput5" class="sapUiTinyMarginTop"/>
+					<Input id="_IDGenInput5" width="140px" class="sapUiTinyMarginBegin" editable="false" required="true" />
 				</HBox>
 			</VBox>
 		</Panel>
@@ -102,16 +102,16 @@
 					<Text id="_IDGenText15" text="{excelData>VendorName}"  width="auto"/>
 					<DatePicker id="_IDGenDatePicker3" value="{excelData>InvoiceDate}" editable="false" width="auto" displayFormat="dd.MM.yyyy" class="removeBG" />
 					<!-- <Text id="" text="{excelData>InvoiceDate}"  width="auto"/> -->
-					<Text id="_IDGenText16" text="{excelData>Reference}"  width="auto"/>
+					<Text id="_IDGenText16" text="{path: 'excelData>Reference', formatter: '.formatter.Char16'}"  width="auto" />
 					<Text id="_IDGenText17" text="{excelData>Cciowbs}"  width="auto"/>
 					<Text id="_IDGenText18" text="{excelData>CciowbsName}"  width="auto"/>
 					<Text id="_IDGenText19" text="{excelData>BudgetManager}"  width="auto"/>
 					<Text id="_IDGenText20" text="{excelData>GlCode}"  width="auto"/>
 					<Text id="_IDGenText21" text="{excelData>GlName}"  width="auto"/>
-					<Text id="_IDGenText22" text="{excelData>ItemValue}"  width="auto"/>
+					<Text id="_IDGenText22" text="{path: 'excelData>ItemValue', formatter: '.formatter.deciPlaces'}"  width="auto"/>
 					<Text id="_IDGenText23" text="{excelData>Vat}"  width="auto"/>
-					<Text id="_IDGenText24" text="{excelData>VATAmount}"  width="auto"/>
-					<Text id="_IDGenText25" text="{excelData>ItemDesc}"  width="auto"/>
+					<Text id="_IDGenText24" text="{path: 'excelData>VATAmount', formatter: '.formatter.deciPlaces'}"  width="auto"/>
+					<Text id="_IDGenText25" text="{path: 'excelData>ItemDesc', formatter: '.formatter.Char50'}"  width="auto"/>
 				</ColumnListItem>
 			</items>
 		</Table>

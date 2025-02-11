@@ -43,23 +43,6 @@
           "odataVersion": "2.0"
         }
       },
-      "ConcurAccessToken": {
-        "uri": "/oauth2",
-        "type": "OData",
-        "settings": {
-          "annotations": [],
-          "localUri": "localService/metadata.xml",
-          "odataVersion": "2.0"
-        }
-      },
-      "ConcurUserVal": {
-        "uri": "/profile",
-        "type": "OData",
-        "settings": {
-          "annotations": [],
-          "localUri": "localService/metadata.xml"
-        }
-      },
       "ZSFGTGW_APP_LOGIN_SRV": {
         "uri": "/sap/opu/odata/sap/ZSFGTGW_APP_LOGIN_SRV",
         "type": "OData",
@@ -133,12 +116,15 @@
         "settings": {}
       },
       "ZSFGTGW_EX01_SRV": {
-        "uri": "/sap/opu/odata/sap/ZSFGTGW_EX01_SRV",
-        "type": "OData",
+        "dataSource": "ZSFGTGW_EX01_SRV",
+        "preload": true,
         "settings": {
-          "annotations": [],
-          "localUri": "localService/ZSFGTGW_EX01_SRV/metadata.xml",
-          "odataVersion": "2.0"
+          "defaultBindingMode": "TwoWay",
+          "defaultCountMode": "Inline",
+          "refreshAfterChange": false,
+          "metadataUrlParams": {
+            "sap-value-list": "none"
+          }
         }
       },
       "logService": {
@@ -164,20 +150,6 @@
             "sap-value-list": "none"
           }
         }
-      },
-      "ConcurAccess": {
-        "dataSource": "ConcurAccessToken",
-        "preload": true,
-        "settings": {
-          "headers": {
-            "Content-Type": "application/x-www-form-urlencoded"
-          }
-        }
-      },
-      "ConcurUser": {
-        "dataSource": "ConcurUserVal",
-        "preload": true,
-        "settings": {}
       }
     },
     "resources": {

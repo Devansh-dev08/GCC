@@ -5,7 +5,14 @@
     {
       "source": "^/odata/(.*)$",
       "target": "/odata/$1",
-      "destination": "gloucesterD",
+      "destination": "SFSF_new_QA",
+      "authenticationType": "none",
+      "csrfProtection": false
+    },
+    {
+      "source": "^/admin/odata/(.*)$",
+      "target": "/odata/$1",
+      "destination": "SFSF_new_QA",
       "authenticationType": "none",
       "csrfProtection": false
     },

@@ -25,6 +25,10 @@
     display: inline;
 }
 
+.sapMInput.compulsoryUpper .sapMInputBaseInner {
+    text-transform: uppercase;
+}
+
 /* .equalColumns .columns {
 	min-width: 100%;
 } */

@@ -2,15 +2,16 @@
 xmlns:smartform="sap.ui.comp.smartform" 
 xmlns:mvc="sap.ui.core.mvc" 
 xmlns:core="sap.ui.core" 
-xmlns:l="sap.ui.layout" 
+xmlns:l="sap.ui.layout"
+xmlns:f="sap.ui.layout.form"
 xmlns="sap.m" 
 controllerName="pd01qa.controller.View1" displayBlock="true">
-    <Page id="page">
+    <Page id="page" showHeader="false">
         <content>
             <IconTabBar id="_IDGenIconTabBar1" backgroundDesign="Solid" expandable="true" select="onTabChange">
                 <items>
                     <IconTabFilter id="_IDGenIconTabFilter1" text="Form" key="Form">
-                        <VBox id="_IDGenVBox1" class="sapUiSmallMargin">
+                        <VBox id="_IDGenVBox1">
                             <!--  Begin of INTRODUCTION  -->
                             <Panel id="_IDGenPanel1" expandable="true" expanded="true" stickyHeader="true" 
                                     headerText="{i18n>Intro}" width="auto" class="sapUiResponsiveMargin">
@@ -20,35 +21,27 @@ controllerName="pd01qa.controller.View1" displayBlock="true">
 
                             <!-- Begin OF HEADER  -->
                             <Panel id="_IDGenPanel2" stickyHeader="true" headerText="{i18n>head}" width="auto" class="sapUiResponsiveMargin">
-                                <HBox id="_IDGenHBox1" width="auto" justifyContent="Start" class="sapUiMediumMarginBegin sapUiSmallMarginEnd">
+                            <f:SimpleForm id="_IDGenSimpleForm1" layout="ColumnLayout" labelSpanM="4" labelSpanL="3" labelSpanXL="3" adjustLabelSpan="false" emptySpanXL="0" emptySpanL="0" emptySpanM="0" emptySpanS="0" columnsM="2" columnsL="3" columnsXL="3" >
+								<f:content>
                                     <!--  Initiator details  -->
-                                    <HBox id="_IDGenHBox2" width="550px">
-                                        <Label id="_IDGenLabel1" text="{i18n>Initi}" width="130px" labelFor="_IDGenInput1" showColon="true" class="sapUiSmallMarginTop sapUiTinyMarginBottom"/>
-                                        <Input id="_IDGenInput1" value="{InitData>/initNameP/salutationLabel} {InitData>/initNameP/fullName}" width="auto" editable="false" class="sapUiTinyMargin sapUiTinyMarginEnd"/>
-                                    </HBox>
+                                        <Label id="_IDGenLabel1" text="{i18n>Initi}" labelFor="_IDGenInput1" showColon="true" />
+                                        <Input id="_IDGenInput1" value="{InitData>/initNameP/salutationLabel} {InitData>/initNameP/fullName}" editable="false" />
+                                         <!--  Form Date  -->
+                                        <Label id="_IDGenLabel4" text="{i18n>Date}" labelFor="_IDGenInput4" showColon="true" />
+                                        <DatePicker id="_IDGenInput4" value="{path: 'InitData>/FormCreationDate', formatter: '.formatter._formatDate'}" editable="false" />
                                     <!--  Form ID  -->
-                                    <HBox id="_IDGenHBox3">
-                                        <Label id="_IDGenLabel2" text="{i18n>Form}" width="130px" labelFor="_IDGenInput2" showColon="true" class="sapUiSmallMarginTop sapUiTinyMarginBottom"/>
-                                        <Input id="_IDGenInput2" width="auto" editable="false" class="sapUiTinyMargin sapUiTinyMarginEnd"/>
-                                    </HBox>
-                                </HBox>
-                                <HBox id="_IDGenHBox4" width="auto" justifyContent="Start" class="sapUiSmallMarginEnd sapUiMediumMarginBegin">
+                                        <Label id="_IDGenLabel2" text="{i18n>Form}" labelFor="_IDGenInput2" showColon="true" />
+                                        <Input id="_IDGenInput2" editable="false" />
                                     <!--  School Name  -->
-                                    <HBox id="_IDGenHBox5" width="550px">
-                                        <Label id="_IDGenLabel3" text="{i18n>School}" width="130px" labelFor="orgInput" showColon="true" class="sapUiSmallMarginTop sapUiTinyMarginBottom"/>
+                                        <Label id="_IDGenLabel3" text="{i18n>School}" labelFor="orgInput" showColon="true" />
                                         <!-- <Input width="230px" editable="false" class="sapUiTinyMargin sapUiTinyMarginEnd"/> -->
-                                        <ComboBox id="orgInput" value="{InitData>/OrgNameP}" selectedKey="{InitData>/selectedOrg}" items="{path: 'InitData>/OrgValues', templateShareable:false}" change="onOrgChange" enabled="{= ${InitData>/disable/mode} !== 'display'}" editable="{InitData>/multiOrgFound}" >
+                                        <ComboBox id="orgInput" value="{InitData>/OrgNameP}" selectedKey="{InitData>/selectedOrg}" items="{path: 'InitData>/OrgValues', templateShareable:false, sorter: {path: 'InitData>value'} }" change="onOrgChange" enabled="{= ${InitData>/disable/mode} !== 'display'}" editable="{InitData>/multiOrgFound}" >
                                  <items>
                                     <core:Item key="{InitData>key}" text="{InitData>value} ({InitData>key})" />
                                  </items>
                               </ComboBox>
-                                    </HBox>
-                                    <!--  Form Date  -->
-                                    <HBox id="_IDGenHBox6">
-                                        <Label id="_IDGenLabel4" text="{i18n>Date}" width="130px" labelFor="_IDGenInput4" showColon="true" class="sapUiSmallMarginTop sapUiTinyMarginBottom"/>
-                                        <DatePicker id="_IDGenInput4" width="auto" value="{path: 'InitData>/FormCreationDate', formatter: '.formatter._formatDate'}" editable="false" class="sapUiTinyMargin sapUiTinyMarginEnd" />
-                                    </HBox>
-                                </HBox>
+                                        </f:content>
+							</f:SimpleForm>
                             </Panel>
                             <!--  END OF HEADER  -->
 
@@ -60,10 +53,10 @@ controllerName="pd01qa.controller.View1" displayBlock="true">
                                         tooltip="{i18n>dateOfChange}" displayFormat="dd MMM yyyy" />
                                 </HBox>
                                 <HBox id="_IDGenHBox8" width="auto" class="sapUiMediumMarginBegin">
-                                    <Label id="_IDGenLabel6" required="true" text="{i18n>employee}" labelFor="_IDGenSelect1" showColon="true" class="sapUiTinyMarginTop sapUiTinyMarginBottom" width="200px"/>
+                                    <Label id="_IDGenLabel6" required="true" text="{i18n>employee}" labelFor="_IDGenSelect2" showColon="true" class="sapUiTinyMarginTop sapUiTinyMarginBottom" width="200px"/>
                                     <ComboBox editable="{= ${InitData>/disable/mode} !== 'display'}" id="_IDGenSelect2" width="500px" value="" tooltip="{i18n>employeeWithChange}" items="{path: 'InitData>/dropdownInfoP', length: 10000}" change="oEmployeeSelect">
                                         <items>
-                                            <core:Item id="_IDGenItem1" key="{InitData>userId}" text="{InitData>lastName} {InitData>firstName} {InitData>userId} {InitData>jobTitle}"/>
+                                            <core:Item id="_IDGenItem1" key="{InitData>personIdExternal}" text="{InitData>lastName} {InitData>firstName} {InitData>userId} {InitData>jobTitle}"/>
                                         </items>
                                     </ComboBox>
                                 </HBox>
@@ -84,7 +77,7 @@ controllerName="pd01qa.controller.View1" displayBlock="true">
                                         </HBox>
                                         <HBox id="_IDGenHBox12" width="230px" class="sapUiSmallMarginBegin">
                                             <Label id="_IDGenLabel9" text="Change Of Name" labelFor="ChangeOfNameCheckbox" design="Bold" class="sapUiSmallMarginTop sapUiTinyMarginBottom "/>
-                                            <CheckBox id="ChangeOfNameCheckbox" select="OnCoNameStatus" tooltip="{i18n>CoNameCheck}" editable="{= ${InitData>/disable/mode} !== 'display'}" class="sapUiTinyMarginTop sapUiSmallMarginBegin"/>
+                                            <CheckBox id="ChangeOfNameCheckbox" select="OnCoNameStatus" tooltip="{i18n>CoNameCheck}" editable="{= ${InitData>/disable/mode} !== 'display'}"  class="sapUiTinyMarginTop sapUiSmallMarginBegin"/>
                                         </HBox>
                                     </HBox>
                                 </VBox>
@@ -152,7 +145,7 @@ controllerName="pd01qa.controller.View1" displayBlock="true">
                                                 </HBox>
                                                 <HBox id="_IDGenHBox25" width="auto">
                                                     <Label id="_IDGenLabel28" text="{i18n>postCode}" labelFor="input6" width="230px" class="sapUiTinyMarginTop"/>
-                                                    <Input id="input6" width="170px" editable="false"/>
+                                                    <Input id="input6" width="170px" editable="false" />
                                                 </HBox>
                                                 <HBox id="_IDGenHBox26" width="auto">
                                                     <Label id="_IDGenLabel29" text="{i18n>homeTelePer}" labelFor="input7" width="230px" class="sapUiTinyMarginTop"/>
@@ -168,7 +161,7 @@ controllerName="pd01qa.controller.View1" displayBlock="true">
                                                 </HBox>
                                             </VBox>
                                             <!--  ______Update______________________  -->
-                                            <VBox id="_IDGenVBox4" width="auto" justifyContent="Start">
+                                            <VBox id="_IDGenVBox4" width="auto" justifyContent="Start" fieldGroupIds="permAddress" >
                                                 <layoutData>
                                                     <FlexItemData id="_IDGenFlexItemData2" growFactor="0" baseSize="0" backgroundDesign="Solid" styleClass="sapUiTinyMargin grid1" minWidth="550px"/>
                                                 </layoutData>
@@ -181,7 +174,7 @@ controllerName="pd01qa.controller.View1" displayBlock="true">
                                                 </HBox>
                                                 <HBox id="_IDGenHBox31" width="auto" class="sapUiMediumMarginTop">
                                                     <Label id="_IDGenLabel34" text="{i18n>Street}" labelFor="_IDGenInput5" required="true" width="230px" class="sapUiTinyMarginTop"/>
-                                                    <Input id="_IDGenInput5" width="230px" editable="{= ${InitData>/disable/mode} !== 'display'}" tooltip="{i18n>streetTip}"/>
+                                                    <Input id="_IDGenInput5" width="230px" editable="{= ${InitData>/disable/mode} !== 'display'}" tooltip="{i18n>streetTip}" required="true" valueStateText="Street &amp; House No is a required field" change="onInputField"  />
                                                 </HBox>
                                                 <HBox id="_IDGenHBox32" width="auto">
                                                     <Label id="_IDGenLabel35" text="{i18n>secondAddress}" labelFor="_IDGenInput6" width="230px" class="sapUiTinyMarginTop"/>
@@ -197,12 +190,12 @@ controllerName="pd01qa.controller.View1" displayBlock="true">
                                                                 tooltip = "{i18n>districtTip}"/>
                                                         </HBox>  -->
                                                 <HBox id="_IDGenHBox34" width="auto">
-                                                    <Label id="_IDGenLabel37" text="{i18n>city}" labelFor="_IDGenInput8" required="false" width="230px" class="sapUiTinyMarginTop"/>
-                                                    <Input id="_IDGenInput8" width="230px" editable="{= ${InitData>/disable/mode} !== 'display'}" tooltip="{i18n>cityTip}"/>
+                                                    <Label id="_IDGenLabel37" text="{i18n>city}" labelFor="_IDGenInput8" required="true" width="230px" class="sapUiTinyMarginTop"/>
+                                                    <Input id="_IDGenInput8" width="230px" editable="{= ${InitData>/disable/mode} !== 'display'}" tooltip="{i18n>cityTip}" required="true" valueStateText="City is a required field" change="onInputField" />
                                                 </HBox>
                                                 <HBox id="_IDGenHBox35" width="auto">
-                                                    <Label id="_IDGenLabel38" text="{i18n>county}" labelFor="_IDGenInput9" required="false" width="230px" class="sapUiTinyMarginTop"/>
-                                                    <ComboBox id="_IDGenSelect3" width="230px" value="" editable="{= ${InitData>/disable/mode} !== 'display'}"
+                                                    <Label id="_IDGenLabel38" text="{i18n>county}" labelFor="_IDGenSelect3" width="230px" class="sapUiTinyMarginTop"/>
+                                                    <ComboBox id="_IDGenSelect3" width="230px" change="onDropValid" value="" editable="{= ${InitData>/disable/mode} !== 'display'}"
                                                             tooltip="{i18n>countyTip}" items="{path: 'InitData>/countyDrop',length: 500, sorter: { path: 'countyLabel' }}">
                                                         <items>
                                                             <core:Item id="_IDGenItem2" key="{InitData>externalCode}" text="{InitData>countyLabel}"/>
@@ -211,25 +204,25 @@ controllerName="pd01qa.controller.View1" displayBlock="true">
                                                 </HBox>
                                                 <HBox id="_IDGenHBox36" width="auto">
                                                     <Label id="_IDGenLabel39" text="{i18n>postCode}" labelFor="_IDGenInput9" required="true" width="230px" class="sapUiTinyMarginTop"/>
-                                                    <Input id="_IDGenInput9" width="170px" editable="{= ${InitData>/disable/mode} !== 'display'}" valueStateText="Postal code should be of 6-8 letters" tooltip="{i18n>postCodeTip}" change="onPostChange" maxLength="8" />
+                                                    <Input id="_IDGenInput9" width="170px" editable="{= ${InitData>/disable/mode} !== 'display'}" required="true" valueStateText="Postal code should be of 6-8 letters" tooltip="{i18n>postCodeTip}" change="onPostChange" maxLength="8" class="compulsoryUpper" />
                                                 </HBox>
                                                 <HBox id="_IDGenHBox37" width="auto">
                                                     <Label id="_IDGenLabel40" text="{i18n>homeTelePer}" labelFor="_IDGenInput10" width="230px" class="sapUiTinyMarginTop"/>
-                                                    <Input id="_IDGenInput10" width="230px" type="Number" editable="{= ${InitData>/disable/mode} !== 'display'}" tooltip="{i18n>homeTeleTip}" maxLength="11" change="onTeleChange" liveChange="onLiveTeleChange"/>
+                                                    <Input id="_IDGenInput10" width="230px" type="Number" editable="{= ${InitData>/disable/mode} !== 'display'}" tooltip="{i18n>homeTeleTip}" maxLength="11" change="onTeleChange($event,'')" liveChange="onLiveTeleChange($event,'')" valueStateText="Please re-enter the telephone number in a valid format and contact your Pay and Conditions Administrator if you have any further difficulties" />
                                                 </HBox>
                                                 <HBox id="_IDGenHBox38" width="auto">
                                                     <Label id="_IDGenLabel41" text="{i18n>mobileTele}" required="true" labelFor="_IDGenInput11" width="230px" class="sapUiTinyMarginTop"/>
-                                                    <Input id="_IDGenInput11" width="230px" type="Number" editable="{= ${InitData>/disable/mode} !== 'display'}" tooltip="{i18n>mobileTeleTip}" maxLength="11" change="onTeleChange" liveChange="onLiveTeleChange" />
+                                                    <Input id="_IDGenInput11" width="230px" type="Number" required="true" editable="{= ${InitData>/disable/mode} !== 'display'}" tooltip="{i18n>mobileTeleTip}" maxLength="11" change="onTeleChange($event,'X')" liveChange="onLiveTeleChange($event,'X')" valueStateText="Please re-enter the telephone number in a valid format and contact your Pay and Conditions Administrator if you have any further difficulties" />
                                                 </HBox>
                                                 <HBox id="_IDGenHBox39" width="auto">
-                                                    <Label id="_IDGenLabel42" text="{i18n>email}" labelFor="_IDGenInput12" width="230px" class="sapUiTinyMarginTop"/>
+                                                    <Label id="_IDGenLabel42" text="{i18n>email}" labelFor="_IDGenInput12" required="true" width="230px" class="sapUiTinyMarginTop"/>
                                                     <Input id="_IDGenInput12" width="230px" type="Email" editable="{= ${InitData>/disable/mode} !== 'display'}" 
-                                                        tooltip="{i18n>emailTip}" change = "onEmailChange"/>
+                                                        tooltip="{i18n>emailTip}" required="true" change = "onEmailChange" valueStateText="Email is a required field" />
                                                 </HBox>
                                                 <HBox id="_IDGenHBox40" width="auto">
-                                                    <Label id="_IDGenLabel43" text="{i18n>confirmEmail}" labelFor="_IDGenInput13" width="230px" class="sapUiTinyMarginTop"/>
-                                                    <Input id="_IDGenInput13" width="230px" type="Email" editable="{= ${InitData>/disable/mode} !== 'display'}" 
-                                                        tooltip="{i18n>confirmEmailTip}" change="onEmailChangePermanent"/>
+                                                    <Label id="_IDGenLabel43" text="{i18n>confirmEmail}" labelFor="_IDGenInput13" required="true" width="230px" class="sapUiTinyMarginTop"/>
+                                                    <Input id="_IDGenInput13" width="230px" type="Email" required="true" editable="{= ${InitData>/disable/mode} !== 'display'}" 
+                                                        tooltip="{i18n>confirmEmailTip}" change="onEmailChangePermanent" valueStateText="Please note that the email addresses must match. Re-enter the email addresses" />
                                                 </HBox>
                                             </VBox>
                                         </FlexBox>
@@ -300,12 +293,12 @@ controllerName="pd01qa.controller.View1" displayBlock="true">
                                                         </HBox>  -->
                                             </VBox>
                                             <!--  _________UPDATE__________  -->
-                                            <VBox id="_IDGenVBox6" width="auto" justifyContent="Start">
+                                            <VBox id="_IDGenVBox6" width="auto" justifyContent="Start" fieldGroupIds="firstEmerAddress">
                                                 <layoutData>
                                                     <FlexItemData id="_IDGenFlexItemData4" growFactor="0" baseSize="0" backgroundDesign="Solid" styleClass="sapUiTinyMargin grid1" minWidth="550px"/>
                                                 </layoutData>
                                                 <HBox id="_IDGenHBox52" width="auto">
-                                                    <Label id="_IDGenLabel56" text=" " labelFor="_IDGenLabel33" width="230px" design="Bold"/>
+                                                    <Label id="_IDGenLabel56" text=" " width="230px" design="Bold"/>
                                                     <Label id="_IDGenLabel57" text=" " design="Bold" width="auto"/>
                                                 </HBox>
                                                 <HBox id="_IDGenHBox53" width="70%" class="sapUiMediumMarginTop labelMargin">
@@ -313,7 +306,7 @@ controllerName="pd01qa.controller.View1" displayBlock="true">
                                                 </HBox>
                                                 <HBox id="_IDGenHBox54" width="auto" class="sapUiMediumMarginTop">
                                                     <Label id="_IDGenLabel59" text="{i18n>Street}" labelFor="_IDGenInput14" required="true" width="230px" class="sapUiTinyMarginTop"/>
-                                                    <Input id="_IDGenInput14" width="230px" editable="{= ${InitData>/disable/mode} !== 'display'}" tooltip="{i18n>streetTip}"/>
+                                                    <Input id="_IDGenInput14" width="230px" required="true" editable="{= ${InitData>/disable/mode} !== 'display'}" tooltip="{i18n>streetTip}" valueStateText="Street &amp; House No is a required field" change="onInputField" />
                                                 </HBox>
                                                 <HBox id="_IDGenHBox55" width="auto">
                                                     <Label id="_IDGenLabel60" text="{i18n>secondAddress}" labelFor="_IDGenInput15" width="230px" class="sapUiTinyMarginTop"/>
@@ -329,12 +322,12 @@ controllerName="pd01qa.controller.View1" displayBlock="true">
                                                                 tooltip = "{i18n>districtTip}"/>
                                                         </HBox>  -->
                                                 <HBox id="_IDGenHBox57" width="auto">
-                                                    <Label id="_IDGenLabel62" text="{i18n>city}" labelFor="_IDGenInput17" required="false" width="230px" class="sapUiTinyMarginTop"/>
-                                                    <Input id="_IDGenInput17" width="230px" editable="{= ${InitData>/disable/mode} !== 'display'}" tooltip="{i18n>cityTip}"/>
+                                                    <Label id="_IDGenLabel62" text="{i18n>city}" labelFor="_IDGenInput17" width="230px" class="sapUiTinyMarginTop" required="true"/>
+                                                    <Input id="_IDGenInput17" width="230px" editable="{= ${InitData>/disable/mode} !== 'display'}" tooltip="{i18n>cityTip}" required="true" valueStateText="City is a required field" change="onInputField" />
                                                 </HBox>
                                                 <HBox id="_IDGenHBox58" width="auto">
-                                                    <Label id="_IDGenLabel63" text="{i18n>county}" labelFor="_IDGenSelect4" required="false" width="230px" class="sapUiTinyMarginTop"/>
-                                                    <ComboBox id="_IDGenSelect4" width="230px" value="" editable="{= ${InitData>/disable/mode} !== 'display'}" 
+                                                    <Label id="_IDGenLabel63" text="{i18n>county}" labelFor="_IDGenSelect4" width="230px" class="sapUiTinyMarginTop"/>
+                                                    <ComboBox id="_IDGenSelect4" change="onDropValid" width="230px" value="" editable="{= ${InitData>/disable/mode} !== 'display'}" 
                                                             tooltip="{i18n>countyTip}" items="{path: 'InitData>/countyDrop',length: 500, sorter: { path: 'countyLabel' }}">
                                                         <items>
                                                             <core:Item id="_IDGenItem3" key="{InitData>externalCode}" text="{InitData>countyLabel}"/>
@@ -343,19 +336,19 @@ controllerName="pd01qa.controller.View1" displayBlock="true">
                                                 </HBox>
                                                 <HBox id="_IDGenHBox59" width="auto">
                                                     <Label id="_IDGenLabel64" text="{i18n>postCode}" labelFor="_IDGenInput18" required="true" width="230px" class="sapUiTinyMarginTop"/>
-                                                    <Input id="_IDGenInput18" width="170px" editable="{= ${InitData>/disable/mode} !== 'display'}" tooltip="{i18n>postCodeTip}" valueStateText="Postal code should be of 6-8 letters" change="onPostChange" maxLength="8" />
+                                                    <Input id="_IDGenInput18" width="170px" editable="{= ${InitData>/disable/mode} !== 'display'}" required="true" tooltip="{i18n>postCodeTip}" valueStateText="Postal code should be of 6-8 letters" change="onPostChange" maxLength="8" class="compulsoryUpper" />
                                                 </HBox>
                                                 <HBox id="_IDGenHBox62" width="auto">
                                                     <Label id="_IDGenLabel67" text="{i18n>nextOfKin}" labelFor="_IDGenInput21" required="true" width="230px" class="sapUiTinyMarginTop"/>
-                                                    <Input id="_IDGenInput21" width="230px" editable="{= ${InitData>/disable/mode} !== 'display'}" tooltip="{i18n>kinFnameTip}"/>
+                                                    <Input id="_IDGenInput21" width="230px" editable="{= ${InitData>/disable/mode} !== 'display'}" required="true" tooltip="{i18n>kinFnameTip}" valueStateText="First name is a required field" change="onInputField" />
                                                 </HBox>
                                                 <HBox id="_IDGenHBoxSurne" width="auto">
                                                     <Label id="_IDGenLabelSurne" text="{i18n>nextOfKinSur}" labelFor="_IDGenInputSurne" required="true" width="230px" class="sapUiTinyMarginTop"/>
-                                                    <Input id="_IDGenInputSurne" width="230px" editable="{= ${InitData>/disable/mode} !== 'display'}" tooltip="{i18n>kinLnameTip}"/>
+                                                    <Input id="_IDGenInputSurne" width="230px" editable="{= ${InitData>/disable/mode} !== 'display'}" required="true" tooltip="{i18n>kinLnameTip}" valueStateText="Last name is a required field" change="onInputField" />
                                                 </HBox>
                                                 <HBox id="_IDGenHBox63" width="auto">
                                                     <Label id="_IDGenLabel68" text="{i18n>relationship}" labelFor="_IDGenComboBox1" required="true" width="230px" class="sapUiTinyMarginTop"/>
-                                                    <ComboBox id="_IDGenComboBox1" width="230px" value="" editable="{= ${InitData>/disable/mode} !== 'display'}" tooltip="{i18n>relationshipTip}" items="{InitData>/relationDrop}">
+                                                    <ComboBox id="_IDGenComboBox1" width="230px" change="onDropValid" value="" required="true" editable="{= ${InitData>/disable/mode} !== 'display'}" tooltip="{i18n>relationshipTip}" items="{InitData>/relationDrop}" valueStateText="Relationship is a required field" >
                                                         <items>
                                                             <core:Item id="_IDGenItem11" key="{InitData>optionId}" text="{InitData>relationLabel}"/>
                                                         </items>
@@ -363,7 +356,7 @@ controllerName="pd01qa.controller.View1" displayBlock="true">
                                                 </HBox>
                                                 <HBox id="_IDGenHBox60" width="auto">
                                                     <Label id="_IDGenLabel65" text="{i18n>homeTele}" labelFor="_IDGenInput19" width="230px" required="true" class="sapUiTinyMarginTop"/>
-                                                    <Input id="_IDGenInput19" width="230px" type="Number" editable="{= ${InitData>/disable/mode} !== 'display'}" tooltip="{i18n>homeTeleTip}" maxLength="11" change="onTeleChange" liveChange="onLiveTeleChange" />
+                                                    <Input id="_IDGenInput19" width="230px" type="Number" required="true" editable="{= ${InitData>/disable/mode} !== 'display'}" tooltip="{i18n>homeTeleTip}" maxLength="11" change="onTeleChange($event,'X')" liveChange="onLiveTeleChange($event,'X')" valueStateText="Please re-enter the telephone number in a valid format and contact your Pay and Conditions Administrator if you have any further difficulties" />
                                                 </HBox>
                                                 <!--  <HBox id="_IDGenHBox61" width="auto">
                                                             <Label 
@@ -444,7 +437,7 @@ controllerName="pd01qa.controller.View1" displayBlock="true">
                                                         </HBox>  -->
                                             </VBox>
                                             <!--  ______Update______________________  -->
-                                            <VBox id="_IDGenVBox8" width="auto" justifyContent="Start">
+                                            <VBox id="_IDGenVBox8" width="auto" justifyContent="Start" fieldGroupIds="secEmerAddress">
                                                 <layoutData>
                                                     <FlexItemData id="_IDGenFlexItemData6" growFactor="0" baseSize="0" backgroundDesign="Solid" styleClass="sapUiTinyMargin grid1" minWidth="550px"/>
                                                 </layoutData>
@@ -457,7 +450,7 @@ controllerName="pd01qa.controller.View1" displayBlock="true">
                                                 </HBox>
                                                 <HBox id="_IDGenHBox77" width="auto" class="sapUiMediumMarginTop">
                                                     <Label id="_IDGenLabel84" text="{i18n>Street}" labelFor="_IDGenInput23" required="true" width="230px" class="sapUiTinyMarginTop"/>
-                                                    <Input id="_IDGenInput23" width="230px" editable="{= ${InitData>/disable/mode} !== 'display'}" tooltip="{i18n>streetTip}"/>
+                                                    <Input id="_IDGenInput23" width="230px" required="true" editable="{= ${InitData>/disable/mode} !== 'display'}" tooltip="{i18n>streetTip}" valueStateText="Street &amp; House No is a required field" change="onInputField" />
                                                 </HBox>
                                                 <HBox id="_IDGenHBox78" width="auto">
                                                     <Label id="_IDGenLabel85" text="{i18n>secondAddress}" labelFor="_IDGenInput24" width="230px" class="sapUiTinyMarginTop"/>
@@ -473,12 +466,12 @@ controllerName="pd01qa.controller.View1" displayBlock="true">
                                                                 tooltip = "{i18n>districtTip}"/>
                                                         </HBox>  -->
                                                 <HBox id="_IDGenHBox80" width="auto">
-                                                    <Label id="_IDGenLabel87" text="{i18n>city}" labelFor="_IDGenInput26" required="false" width="230px" class="sapUiTinyMarginTop"/>
-                                                    <Input id="_IDGenInput26" width="230px" editable="{= ${InitData>/disable/mode} !== 'display'}" tooltip="{i18n>cityTip}"/>
+                                                    <Label id="_IDGenLabel87" text="{i18n>city}" labelFor="_IDGenInput26" width="230px" class="sapUiTinyMarginTop" required="true" />
+                                                    <Input id="_IDGenInput26" width="230px" editable="{= ${InitData>/disable/mode} !== 'display'}" tooltip="{i18n>cityTip}" required="true" valueStateText="City is a required field" change="onInputField" />
                                                 </HBox>
                                                 <HBox id="_IDGenHBox81" width="auto">
                                                     <Label id="_IDGenLabel88" text="{i18n>county}" labelFor="_IDGenSelect5" required="false" width="230px" class="sapUiTinyMarginTop"/>
-                                                    <ComboBox id="_IDGenSelect5" width="230px" value="" editable="{= ${InitData>/disable/mode} !== 'display'}" 
+                                                    <ComboBox id="_IDGenSelect5" width="230px" change="onDropValid" value="" editable="{= ${InitData>/disable/mode} !== 'display'}" 
                                                             tooltip="{i18n>countyTip}" items="{path: 'InitData>/countyDrop',length: 500, sorter: { path: 'countyLabel' }}">
                                                         <items>
                                                             <core:Item id="_IDGenItem4" key="{InitData>externalCode}" text="{InitData>countyLabel}"/>
@@ -487,19 +480,19 @@ controllerName="pd01qa.controller.View1" displayBlock="true">
                                                 </HBox>
                                                 <HBox id="_IDGenHBox82" width="auto">
                                                     <Label id="_IDGenLabel89" text="{i18n>postCode}" labelFor="_IDGenInput27" required="true" width="230px" class="sapUiTinyMarginTop"/>
-                                                    <Input id="_IDGenInput27" width="170px" editable="{= ${InitData>/disable/mode} !== 'display'}" tooltip="{i18n>postCodeTip}" valueStateText="Postal code should be of 6-8 letters" change="onPostChange" maxLength="8" />
+                                                    <Input id="_IDGenInput27" width="170px" required="true" editable="{= ${InitData>/disable/mode} !== 'display'}" tooltip="{i18n>postCodeTip}" valueStateText="Postal code should be of 6-8 letters" change="onPostChange" maxLength="8" class="compulsoryUpper" />
                                                 </HBox>
                                                 <HBox id="_IDGenHBox83" width="auto">
                                                     <Label id="_IDGenLabel90" text="{i18n>nextOfKin}" labelFor="_IDGenInput28" required="true" width="230px" class="sapUiTinyMarginTop"/>
-                                                    <Input id="_IDGenInput28" width="230px" editable="{= ${InitData>/disable/mode} !== 'display'}" tooltip="{i18n>kinFnameTip}"/>
+                                                    <Input id="_IDGenInput28" width="230px" required="true" editable="{= ${InitData>/disable/mode} !== 'display'}" tooltip="{i18n>kinFnameTip}" valueStateText="First name is a required field" change="onInputField" />
                                                 </HBox>
                                                 <HBox id="_IDGenHBoxSurSne" width="auto">
                                                     <Label id="_IDGenLabelSurSne" text="{i18n>nextOfKinSur}" labelFor="_IDGenInputSurSne" required="true" width="230px" class="sapUiTinyMarginTop"/>
-                                                    <Input id="_IDGenInputSurSne" width="230px" editable="{= ${InitData>/disable/mode} !== 'display'}" tooltip="{i18n>kinLnameTip}"/>
+                                                    <Input id="_IDGenInputSurSne" width="230px" required="true" editable="{= ${InitData>/disable/mode} !== 'display'}" tooltip="{i18n>kinLnameTip}" valueStateText="Last name is a required field" change="onInputField" />
                                                 </HBox>
                                                 <HBox id="_IDGenHBox84" width="auto">
                                                     <Label id="_IDGenLabel91" text="{i18n>relationship}" labelFor="_IDGenComboBox2" required="true" width="230px" class="sapUiTinyMarginTop"/>
-                                                    <ComboBox id="_IDGenComboBox2" width="230px" value="" editable="{= ${InitData>/disable/mode} !== 'display'}" tooltip="{i18n>relationshipTip}" items="{InitData>/relationDrop}">
+                                                    <ComboBox id="_IDGenComboBox2" change="onDropValid" required="true" width="230px" value="" editable="{= ${InitData>/disable/mode} !== 'display'}" tooltip="{i18n>relationshipTip}" items="{InitData>/relationDrop}" valueStateText="Relationship is a required field" >
                                                         <items>
                                                             <core:Item id="_IDGenItem12" key="{InitData>optionId}" text="{InitData>relationLabel}"/>
                                                         </items>
@@ -507,7 +500,7 @@ controllerName="pd01qa.controller.View1" displayBlock="true">
                                                 </HBox>
                                                 <HBox id="_IDGenHBox85" width="auto">
                                                     <Label id="_IDGenLabel92" text="{i18n>homeTele}" labelFor="_IDGenInput30" width="230px" required="true" class="sapUiTinyMarginTop"/>
-                                                    <Input id="_IDGenInput30" width="230px" type="Number" editable="{= ${InitData>/disable/mode} !== 'display'}" tooltip="{i18n>homeTeleTip}" maxLength="11" change="onTeleChange" liveChange="onLiveTeleChange" />
+                                                    <Input id="_IDGenInput30" width="230px" type="Number" required="true" editable="{= ${InitData>/disable/mode} !== 'display'}" tooltip="{i18n>homeTeleTip}" maxLength="11" change="onTeleChange($event,'X')" liveChange="onLiveTeleChange($event,'X')" valueStateText="Please re-enter the telephone number in a valid format and contact your Pay and Conditions Administrator if you have any further difficulties" />
                                                 </HBox>
                                                 <!--  <HBox id="_IDGenHBox86" width="auto">
                                                             <Label 
@@ -556,7 +549,7 @@ controllerName="pd01qa.controller.View1" displayBlock="true">
                                                 </HBox>
                                             </VBox>
                                             <!-- ___update___ -->
-                                            <VBox id="_IDGenVBox10" width="auto" justifyContent="Start">
+                                            <VBox id="_IDGenVBox10" width="auto" justifyContent="Start" fieldGroupIds="bankDetails">
                                                 <layoutData>
                                                     <FlexItemData id="_IDGenFlexItemData8" growFactor="0" baseSize="0" backgroundDesign="Solid" styleClass="sapUiTinyMargin grid1" minWidth="550px"/>
                                                 </layoutData>
@@ -564,9 +557,9 @@ controllerName="pd01qa.controller.View1" displayBlock="true">
                                                     <Label id="_IDGenLabe99" text="New Details" design="Bold"/>
                                                 </HBox>
                                                 <HBox id="_IDGenHBox93" width="auto" class="sapUiTinyMarginTop">
-                                                    <Label id="_IDGenLabelA1" text="{i18n>effectiveDate}" labelFor="_IDGenInput32" required="true" width="230px" class="sapUiTinyMarginTop"/>
-                                                    <ComboBox id="_nextMonthsDrop" width="230px" value="" tooltip="{i18n>nextSeven}" 
-                                                        editable="{= ${InitData>/disable/mode} !== 'display'}" items="{InitData>/nextSevenMonths}" change="oMonthSelect">
+                                                    <Label id="_IDGenLabelA1" text="{i18n>effectiveDate}" labelFor="_nextMonthsDrop" required="true" width="230px" class="sapUiTinyMarginTop"/>
+                                                    <ComboBox id="_nextMonthsDrop" width="230px" value="" required="true" tooltip="{i18n>nextSeven}" 
+                                                        editable="{= ${InitData>/disable/mode} !== 'display'}" items="{InitData>/nextSevenMonths}" change="oMonthSelect" valueStateText="Effective Month is a required field" >
                                                         <items>
                                                             <core:Item id="_months" key="{InitData>key}" text="{InitData>months}"/>
                                                         </items>
@@ -574,7 +567,7 @@ controllerName="pd01qa.controller.View1" displayBlock="true">
                                                 </HBox>
                                                 <HBox id="_IDGenHBox94" width="auto">
                                                     <Label id="_IDGenLabelA2" text="{i18n>sortCode}" labelFor="_IDGenInput33" required="true" width="230px" class="sapUiTinyMarginTop"/>
-                                                    <Input id="_IDGenInput33" maxLength="6" change="onSortCodeChange" editable="{= ${InitData>/disable/mode} !== 'display'}" tooltip="{i18n>sortCodeTip}"/>
+                                                    <Input id="_IDGenInput33" maxLength="6" required="true" liveChange="numberValidation" change="onSortCodeChange" editable="{= ${InitData>/disable/mode} !== 'display'}" tooltip="{i18n>sortCodeTip}" valueStateText="Sort Code is a required field" />
                                                 </HBox>
                                                 <HBox id="_IDGenHBox95" width="auto">
                                                     <Label id="_IDGenLabelA3" text="{i18n>society}" width="230px" class="sapUiTinyMarginTop"/>
@@ -582,10 +575,10 @@ controllerName="pd01qa.controller.View1" displayBlock="true">
                                                 </HBox>
                                                 <HBox id="_IDGenHBox96" width="auto">
                                                     <Label id="_IDGenLabelA4" text="{i18n>accNumber}" labelFor="_IDGenInput34" required="true" width="230px" class="sapUiTinyMarginTop"/>
-                                                    <Input id="_IDGenInput34" width="230px" editable="{= ${InitData>/disable/mode} !== 'display'}" tooltip="{i18n>accNumberTip}" maxLength="8"/>
+                                                    <Input id="_IDGenInput34" width="230px" required="true" liveChange="numberValidation" editable="{= ${InitData>/disable/mode} !== 'display'}" tooltip="{i18n>accNumberTip}" maxLength="8" change="onBankAccChange" valueStateText="The account number must be an 8 digit number" />
                                                 </HBox>
                                                 <HBox id="_IDGenHBox97" width="auto">
-                                                    <Label id="_IDGenLabelA5" text="{i18n>buildingRefNo}" labelFor="_IDGenInput35" required="false" width="230px" class="sapUiTinyMarginTop"/>
+                                                    <Label id="_IDGenLabelA5" text="{i18n>buildingRefNo}" labelFor="_IDGenInput35" width="230px" class="sapUiTinyMarginTop"/>
                                                     <Input id="_IDGenInput35" width="230px" editable="{= ${InitData>/disable/mode} !== 'display'}" tooltip="{i18n>buildingRefNoTip}" maxLength="16"/>
                                                 </HBox>
                                             </VBox>
@@ -630,7 +623,7 @@ controllerName="pd01qa.controller.View1" displayBlock="true">
                                                 </HBox>
                                             </VBox>
                                             <!-- _____update____  -->
-                                            <VBox id="_IDGenVBox13" width="auto" justifyContent="Start">
+                                            <VBox id="_IDGenVBox13" width="auto" justifyContent="Start" fieldGroupIds="nameChange">
                                                 <layoutData>
                                                     <FlexItemData id="_IDGenFlexItemData10" growFactor="0" baseSize="0" backgroundDesign="Solid" styleClass="sapUiTinyMargin grid1" minWidth="550px"/>
                                                 </layoutData>
@@ -638,8 +631,8 @@ controllerName="pd01qa.controller.View1" displayBlock="true">
                                                     <Label id="_IDGenLabel99" text="New Details" design="Bold"/>
                                                 </HBox>
                                                 <HBox id="_IDGenHBoxA5" width="auto" class="sapUiSmallMarginTop">
-                                                    <Label id="_IDGenLabelA11" text="{i18n>title1}" labelFor="_IDGenInput36" required="true" width="230px" class="sapUiTinyMarginTop"/>
-                                                    <ComboBox id="_IDGenSelect6" width="230px" value="" editable="{= ${InitData>/disable/mode} !== 'display'}" items="{InitData>/salutaionDrop}" tooltip="{i18n>titleTip}">
+                                                    <Label id="_IDGenLabelA11" text="{i18n>title1}" labelFor="_IDGenSelect6" required="true" width="230px" class="sapUiTinyMarginTop"/>
+                                                    <ComboBox id="_IDGenSelect6" change="onDropValid" width="230px" required="true" value="" editable="{= ${InitData>/disable/mode} !== 'display'}" items="{InitData>/salutaionDrop}" tooltip="{i18n>titleTip}" valueStateText="Title is a required field">
                                                         <items>
                                                             <core:Item id="_IDGenItem10" key="{InitData>salutId}" text="{InitData>salutLabel}"/>
                                                         </items>
@@ -647,18 +640,18 @@ controllerName="pd01qa.controller.View1" displayBlock="true">
                                                 </HBox>
                                                 <HBox id="_IDGenHBoxA6" width="auto">
                                                     <Label id="_IDGenLabelA12" text="{i18n>surname}" labelFor="_IDGenInput37" required="true" width="230px" class="sapUiTinyMarginTop"/>
-                                                    <Input id="_IDGenInput37" type="Text" width="230px" editable="{= ${InitData>/disable/mode} !== 'display'}" tooltip="{i18n>surnameTip}"/>
+                                                    <Input id="_IDGenInput37" type="Text" width="230px" required="true" editable="{= ${InitData>/disable/mode} !== 'display'}" tooltip="{i18n>surnameTip}" valueStateText="Surname is a required field" change="onInputField" />
                                                 </HBox>
                                                 <HBox id="_IDGenHBoxA10" width="auto">
-                                                    <Label id="_IDGenLabelA16" text="{i18n>middlename}" labelFor="_IDGenInput50" required="false" width="230px" class="sapUiTinyMarginTop"/>
+                                                    <Label id="_IDGenLabelA16" text="{i18n>middlename}" labelFor="_IDGenInput50" width="230px" class="sapUiTinyMarginTop"/>
                                                     <Input id="_IDGenInput50" type="Text" width="230px" editable="{= ${InitData>/disable/mode} !== 'display'}" tooltip="{i18n>midNameTip}"/>
                                                 </HBox>
                                                 <HBox id="_IDGenHBoxA7" width="auto">
                                                     <Label id="_IDGenLabelA13" text="{i18n>name}" labelFor="_IDGenInput38" required="true" width="230px" class="sapUiTinyMarginTop"/>
-                                                    <Input id="_IDGenInput38" type="Text" width="230px" editable="{= ${InitData>/disable/mode} !== 'display'}" tooltip="{i18n>nameTip}"/>
+                                                    <Input id="_IDGenInput38" type="Text" width="230px" required="true" editable="{= ${InitData>/disable/mode} !== 'display'}" tooltip="{i18n>nameTip}" valueStateText="Name is a required field" change="onInputField" />
                                                 </HBox>
                                                 <HBox id="_IDGenHBoxA8" width="auto" class="sapUiTinyMarginBottom">
-                                                    <Label id="_IDGenLabelA14" text="{i18n>knownAs}" labelFor="_IDGenInput39" required="false" width="230px" class="sapUiTinyMarginTop"/>
+                                                    <Label id="_IDGenLabelA14" text="{i18n>knownAs}" labelFor="_IDGenInput39" width="230px" class="sapUiTinyMarginTop"/>
                                                     <Input id="_IDGenInput39" type="Text" width="230px" editable="{= ${InitData>/disable/mode} !== 'display'}" tooltip="{i18n>knownAsTip}"/>
                                                 </HBox>
                                             </VBox>
@@ -674,14 +667,12 @@ controllerName="pd01qa.controller.View1" displayBlock="true">
                                     <!--  Hidden Comment Box  -->
                                     <VBox id="your_comments_boxA" visible="false">
                                         <Text id="textcommentA" text="Authorisation and Rejection Comments"/>
-                                        <TextArea id="_IDGenTextAreaA" editable="false" width="100%" tooltip="{i18n>yourCommentsTip}" height="150px" growing="true" growingMaxLines="5"/>
+                                        <TextArea id="_IDGenTextAreaA" editable="false" cols="100" rows="5" tooltip="{i18n>yourCommentsTip}" />
                                     </VBox>
                                     <!--  END Of Hidden Comment Box  -->
                                     <Text id="textcommentB" text="Your Comments" class="sapUiTinyMarginTop"/>
-                                    <TextArea id="_IDGenTextAreaB" width="100%" tooltip="{i18n>yourCommentsTip}" height="60px" growing="true" growingMaxLines="5"/>
-                                    <FlexBox id="_addCommentFBox" height="auto" alignItems="Center" justifyContent="End">
-                                        <Button id="_addComment" text="Add Comments" press="onAddCommentPress" type="Emphasized" class="sapUiTinyMarginTop sapUiSmallMarginBegin sapUiSmallMarginEnd" tooltip="{i18n>confirmTip}"/>
-                                    </FlexBox>
+                                    <TextArea id="_IDGenTextAreaB" cols="100" rows="3" tooltip="{i18n>yourCommentsTip}" />
+                                    <Button id="_addComment" text="Add Comment" press="onAddCommentPress" type="Emphasized" tooltip="{i18n>confirmTip}"/>
                                 </VBox>
                             </Panel>
                             <!--  End Of "YOUR COMMENTS"  -->

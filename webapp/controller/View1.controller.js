@@ -11,8 +11,6 @@ sap.ui.define([
     function (Controller, MessageBox, History, JSONModel, formatter) {
         "use strict";
         var phoneFlag;
-        var emailFlag;
-        var emailType;
         var flag = "0";
         var errText = [];
         var initiatorCode = "", modeFlag = false;
@@ -34,6 +32,17 @@ sap.ui.define([
 
                 //getting the paramter from the app url
                 this.getOwnerComponent().getRouter().getRoute("RouteView1").attachPatternMatched(this._onRouteMatched, this);
+
+                // var name = this.getView().byId("_IDGenSelect2");
+                // name.addEventDelegate({
+                //     onAfterRendering: this.setFilter.bind(this)
+                // });
+            },
+            onAfterRendering() {this.setFilter();},
+            setFilter: function () {
+                this.getView().byId("_IDGenSelect2").setFilterFunction(function (sTerm, oItem) {
+                    return oItem.getText().includes(sTerm);
+                });
             },
 
             _onRouteMatched: async function (oEvent) {
@@ -56,7 +65,7 @@ sap.ui.define([
                     .then(async () => {
                         if (!oModel1.getData().email) {
                             oModel1.setData(mock);
-                            var useremail = "test00171345@noemail.gloucestershire.gov.uk";
+                            var useremail = "test00157472@noemail.gloucestershire.gov.uk";
                         }
                         else {
                             var useremail = oModel1.getData().email;
@@ -88,6 +97,10 @@ sap.ui.define([
                                                 }
                                             });
                                         });
+
+                                    if (this.query.mode == "initiator" || !this.query.mode)
+                                        // loading dropdowns
+                                        this.loadDropdowns(oModel);
                                 });
                             // await $.ajax({
                             //     url: prefix + "odata/v2/PerEmail?$filter=emailAddress eq '" + useremail + "' &$format=json",
@@ -143,6 +156,7 @@ sap.ui.define([
                                 this.getView().byId("_IDGenButton11").setVisible(true); // PRint
                                 this.getView().byId("_IDGenButton8").setVisible(false); //Delete
                                 this.getView().byId("_IDGenButton9").setVisible(false); //Submit
+                                this.getView().byId("_IDGenButton10").setText("Save");
 
                                 // unhiding
                                 // this.getView().byId("_IDGenVBox12").setVisible(true); //section A checkboxes
@@ -160,8 +174,7 @@ sap.ui.define([
                                 });
                             }
                             else if (this.query.mode == "initiator") {
-                                // loading dropdowns
-                                this.loadDropdowns(oModel);
+                                this.getView().byId("_IDGenButton10").setText("Save");
                                 modeFlag = true;
                                 this.getView().byId("_confirmButtonIDEmp").setVisible(false); // Confirmed
                                 this.getView().byId("_IDGenButton11").setVisible(true); // PRint
@@ -208,7 +221,7 @@ sap.ui.define([
                                             this._SFServices(oModel, initi, response)
                                                 .then(() => {
                                                     // Generating log for initiated status
-                                                    // setTimeout(this._logCreation("I"), 3000);
+                                                    setTimeout(this._logCreation("I"), 3000);
                                                 })
 
                                             // getting the form id
@@ -447,141 +460,148 @@ sap.ui.define([
                     })// data loaded bracket
             },
 
-            _getEmplData: async function (orgCode, LastDateISO) {
+            _getEmplData: async function (orgCode, LastDateISO, actualDate) {
 
-                var terminated, retired, suspended, discarded, reportedNoShow;
-                await $.ajax({
-                    url: prefix + "odata/v2/PickListValueV2?$filter=PickListV2_id eq 'employee-status' and status eq 'A'&$format=json",
-                    type: 'GET',
-                    contentType: "application/json",
-                    success: function (data) {
-                        for (let a = 0; a < data.d.results.length; a++) {
-                            if (data.d.results[a].label_defaultValue == "Discarded") {
-                                discarded = data.d.results[a].optionId;
-                            }
-                            if (data.d.results[a].label_defaultValue == "Terminated") {
-                                terminated = data.d.results[a].optionId;
-                            }
-                            if (data.d.results[a].label_defaultValue == "Retired") {
-                                retired = data.d.results[a].optionId;
-                            }
-                            if (data.d.results[a].label_defaultValue == "Suspended") {
-                                suspended = data.d.results[a].optionId;
-                            }
-                            if (data.d.results[a].label_defaultValue == "Reported No Show") {
-                                reportedNoShow = data.d.results[a].optionId;
-                            }
-                        }
-                    },
-                    error: function (e) {
-                        console.log(`PickListValueV2 entity failed for employee-status while getting employee dropdown`);
-                        console.log(`Error: ${JSON.parse(e.responseText)}`);
-                    }
-                });
-
-                let uri = `odata/v2/EmpJob?$filter=customString3 eq '${orgCode}' and emplStatus ne '${discarded}' and emplStatus ne '${terminated}' and emplStatus ne '${retired}' and emplStatus ne '${suspended}' and emplStatus ne '${reportedNoShow}'&$format=json`
-                uri = LastDateISO ? uri + `&toDate=${LastDateISO}` : uri;
-                fetchingEmpData(uri, orgCode, LastDateISO, this);
-                // Getting all the employees from the personnel area
-                async function fetchingEmpData(uri, orgCode, LastDateISO, _self) {
-                    let employeeData = [];
+                if (orgCode) {
+                    this.getView().getModel("InitData").setProperty("/dropdownInfoP", []);
+                    sap.ui.core.BusyIndicator.show();
+                    var terminated, retired, suspended, discarded, reportedNoShow;
                     await $.ajax({
-                        url: prefix + uri,
+                        url: prefix + "odata/v2/PickListValueV2?$filter=PickListV2_id eq 'employee-status' and status eq 'A'&$format=json",
                         type: 'GET',
                         contentType: "application/json",
                         success: function (data) {
-                            employeeData = data.d.results;
-                            if (data.d.__next) {
-                                var uri = "/odata/v2" + data.d.__next.split("/odata/v2")[1];
-                                fetchingEmpData(uri, orgCode, LastDateISO, _self);
+                            for (let a = 0; a < data.d.results.length; a++) {
+                                if (data.d.results[a].label_defaultValue == "Discarded") {
+                                    discarded = data.d.results[a].optionId;
+                                }
+                                if (data.d.results[a].label_defaultValue == "Terminated") {
+                                    terminated = data.d.results[a].optionId;
+                                }
+                                if (data.d.results[a].label_defaultValue == "Retired") {
+                                    retired = data.d.results[a].optionId;
+                                }
+                                if (data.d.results[a].label_defaultValue == "Suspended") {
+                                    suspended = data.d.results[a].optionId;
+                                }
+                                if (data.d.results[a].label_defaultValue == "Reported No Show") {
+                                    reportedNoShow = data.d.results[a].optionId;
+                                }
                             }
                         },
                         error: function (e) {
-                            sap.ui.core.BusyIndicator.hide();
-                            console.log(`EmpJob entity failed for ${orgCode} while getting employee dropdown`);
-                            console.log("error: " + JSON.parse(e.responseText));
+                            sap.ui.core.BusyIndicator.show();
+                            console.log(`PickListValueV2 entity failed for employee-status while getting employee dropdown`);
+                            console.log(`Error: ${JSON.parse(e.responseText)}`);
                         }
                     });
 
-                    employeeData = _self.filterEmplData(employeeData);
-                    var findPostDate = Number((new Date(LastDateISO.split("-")[0], LastDateISO.split("-")[2], 0).getTime()));
-
-                    let a = new sap.ui.model.odata.ODataModel(prefix + "odata/v2", false);
-                    a.bTokenHandling = false;
-                    if (employeeData.length > 180) {
-                        for (let i = 0; i < employeeData.length / 180; i++) {
-                            employeeDetails(employeeData.slice(i * 180, (i + 1) * 180), _self);
-                        }
+                    let uri = `odata/v2/EmpJob?$format=json&$filter=customString3 eq '${orgCode}' and emplStatus ne '${discarded}' and emplStatus ne '${terminated}' and emplStatus ne '${retired}' and emplStatus ne '${suspended}' and emplStatus ne '${reportedNoShow}'`
+                    if (LastDateISO) {
+                        uri += ` and endDate gt datetime'${actualDate}T00:00:00' and startDate le datetime'${actualDate}T00:00:00'&toDate=${LastDateISO}`;
                     }
-                    else {
-                        employeeDetails(employeeData, _self);
-                    }
-
-                    function employeeDetails(emplData, _self) {
-                        let batchData = [];
-                        a.clearBatch();
-                        emplData.forEach(function (oItem) {
-                            batchData.push(a.createBatchOperation(
-                                "/EmpEmployment?$filter=userId eq '" + oItem.userId + "'",
-                                "GET"
-                            ));
+                    fetchingEmpData(uri, orgCode, actualDate, this);
+                    // Getting all the employees from the personnel area
+                    async function fetchingEmpData(uri, orgCode, actualDate, _self) {
+                        let employeeData = [];
+                        await $.ajax({
+                            url: prefix + uri,
+                            type: 'GET',
+                            contentType: "application/json",
+                            success: function (data) {
+                                employeeData = data.d.results;
+                                if (data.d.__next) {
+                                    var uri = "/odata/v2" + data.d.__next.split("/odata/v2")[1];
+                                    fetchingEmpData(uri, orgCode, actualDate, _self);
+                                }
+                            },
+                            error: function (e) {
+                                sap.ui.core.BusyIndicator.hide();
+                                console.log(`EmpJob entity failed for ${orgCode} while getting employee dropdown`);
+                                console.log("error: " + JSON.parse(e.responseText));
+                            }
                         });
-                        a.addBatchReadOperations(batchData);
-                        a.setUseBatch(true);
-                        a.submitBatch(function (data) {
-                            batchData = [];
+
+                        employeeData = _self.filterEmplData(employeeData);
+                        var findPostDate = actualDate ? Number((new Date(actualDate.split("-")[0], actualDate.split("-")[1], 0).getTime())) : "";
+
+                        let a = new sap.ui.model.odata.ODataModel(prefix + "odata/v2", false);
+                        a.bTokenHandling = false;
+                        if (employeeData.length > 180) {
+                            for (let i = 0; i < employeeData.length / 180; i++) {
+                                employeeDetails(employeeData.slice(i * 180, (i + 1) * 180), _self);
+                            }
+                        }
+                        else {
+                            employeeDetails(employeeData, _self);
+                        }
+
+                        function employeeDetails(emplData, _self) {
+                            let batchData = [];
                             a.clearBatch();
-                            data.__batchResponses.forEach(function (oId) {
+                            emplData.forEach(function (oItem) {
                                 batchData.push(a.createBatchOperation(
-                                    "/PerPersonal?$filter=personIdExternal eq '" + oId.data.results[0].personIdExternal + "'",
+                                    "/EmpEmployment?$filter=userId eq '" + oItem.userId + "'",
                                     "GET"
                                 ));
-                            })
+                            });
                             a.addBatchReadOperations(batchData);
                             a.setUseBatch(true);
                             a.submitBatch(function (data) {
-                                if (data.__batchResponses) {
-                                    var EmpData = [];
-                                    for (let i = 0; i < data.__batchResponses.length; i++) {
-                                        try {
-                                            var postingDate = _self.unixDateRegex(emplData[i].endDate) > findPostDate ? findPostDate : _self.unixDateRegex(emplData[i].endDate);
-                                            var temp = {
-                                                firstName: data.__batchResponses[i].data.results[0].firstName,
-                                                lastName: data.__batchResponses[i].data.results[0].lastName,
-                                                userId: emplData[i].userId,
-                                                jobTitle: emplData[i].customString1,
-                                                personIdExternal: data.__batchResponses[i].data.results[0].personIdExternal,
-                                                postingDate: `/Date(${postingDate})/`
-                                            };
-                                            EmpData.push(temp);
-                                        } catch (e) {
-                                            console.log("Inconsistent data found for " + emplData[i].userId);
+                                batchData = [];
+                                a.clearBatch();
+                                data.__batchResponses.forEach(function (oId) {
+                                    batchData.push(a.createBatchOperation(
+                                        "/PerPersonal?$filter=personIdExternal eq '" + oId.data.results[0].personIdExternal + "'",
+                                        "GET"
+                                    ));
+                                })
+                                a.addBatchReadOperations(batchData);
+                                a.setUseBatch(true);
+                                a.submitBatch(function (data) {
+                                    if (data.__batchResponses) {
+                                        var EmpData = [];
+                                        for (let i = 0; i < data.__batchResponses.length; i++) {
+                                            try {
+                                                var postingDate = _self.unixDateRegex(emplData[i].endDate) > findPostDate ? findPostDate : _self.unixDateRegex(emplData[i].endDate);
+                                                var temp = {
+                                                    firstName: data.__batchResponses[i].data.results[0].firstName,
+                                                    lastName: data.__batchResponses[i].data.results[0].lastName,
+                                                    userId: emplData[i].userId,
+                                                    jobTitle: emplData[i].customString1,
+                                                    personIdExternal: data.__batchResponses[i].data.results[0].personIdExternal,
+                                                    postingDate: `/Date(${postingDate})/`
+                                                };
+                                                EmpData.push(temp);
+                                            } catch (e) {
+                                                console.log("Inconsistent data found for " + emplData[i].userId);
+                                            }
                                         }
+                                        var existingData = _self.getView().getModel("InitData").getProperty("/dropdownInfoP");
+                                        var finalData = existingData ? existingData.concat(EmpData) : EmpData;
+                                        finalData.sort((a, b) => {
+                                            // Sort by Last name
+                                            if (a.lastName < b.lastName) return -1;
+                                            if (a.lastName > b.lastName) return 1;
+
+                                            // a.firstName.localeCompare(b.firstName)
+                                            if (a.firstName < b.firstName) return -1;
+                                            if (a.firstName > b.firstName) return 1;
+
+                                            //Sort by UserId
+                                            if (a.userId < b.userId) return -1;
+                                            if (a.userId > b.userId) return 1;
+                                        });
+                                        _self.getView().getModel("InitData").setProperty("/dropdownInfoP", finalData);
+                                        sap.ui.core.BusyIndicator.hide();
                                     }
-                                    var existingData = _self.getView().getModel("InitData").getProperty("/dropdownInfoP");
-                                    var finalData = existingData ? existingData.concat(EmpData) : EmpData;
-                                    finalData.sort((a, b) => {
-                                        // Sort by Last name
-                                        if (a.lastName < b.lastName) return -1;
-                                        if (a.lastName > b.lastName) return 1;
-
-                                        // a.firstName.localeCompare(b.firstName)
-                                        if (a.firstName < b.firstName) return -1;
-                                        if (a.firstName > b.firstName) return 1;
-
-                                        //Sort by UserId
-                                        if (a.userId < b.userId) return -1;
-                                        if (a.userId > b.userId) return 1;
-                                    });
-                                    _self.getView().getModel("InitData").setProperty("/dropdownInfoP", finalData);
+                                    else {
+                                        console.log(`No Employee Found for ${empl.d.results[0].personIdExternal}`);
+                                    }
                                     sap.ui.core.BusyIndicator.hide();
-                                }
-                                else {
-                                    console.log(`No Employee Found for ${empl.d.results[0].personIdExternal}`);
-                                }
-                                sap.ui.core.BusyIndicator.hide();
+                                });
                             });
-                        });
+                        }
                     }
                 }
             },
@@ -630,38 +650,23 @@ sap.ui.define([
 
                 return new Promise(
                     async function (resolve, reject) {
-                        var username;
-                        var multiOrgFound = false;
                         await $.ajax({
-                            url: prefix + "odata/v2/UserAccount?$format=json&$filter=personIdExternal eq '" + initiator + "'",
-                            type: 'GET',
-                            contentType: "application/json",
-                            success: function (data) {
-                                username = data.d.results[0].username;
-                            },
-                            error: function (e) {
-                                console.log(`UserAccount entity failed for ${initiator}`);
-                                reject(e);
-                            }
-                        });
-                        await $.ajax({
-                            url: prefix + "odata/v2/cust_ZFLM_MULTI_USERS?$filter=cust_UserName eq '" + username + "'&$format=json",
+                            url: prefix + "odata/v2/cust_ZFLM_MULTI_USER_NEW?$filter=externalName eq '" + initiator + "' and cust_Role eq 'I'&$format=json",
                             type: 'GET',
                             contentType: "application/json",
                             success: async function (data) {
                                 if (data.d.results.length != 0) {
-                                    var cust_Value = data.d.results[0].cust_Value.split(",");
-                                    multiOrgFound = true;
-                                    oModel.setProperty("/OrgNameP", "");
+                                    var values = data.d.results.map((value, index) => { return { key: (index), text: (value.cust_Organization) }; });
                                     var val = [];
-                                    cust_Value.forEach(async function (item) {
+                                    oModel.setProperty("/OrgNameP", "");
+                                    values.forEach(async function (item) {
                                         $.ajax({
-                                            url: prefix + "odata/v2/cust_PersonnelArea?$filter= externalCode eq '" + item + "'&$format=json",
+                                            url: prefix + "odata/v2/cust_PersonnelArea?$filter= externalCode eq '" + item.text + "'&$format=json",
                                             type: 'GET',
                                             contentType: "application/json",
                                             success: function (data) {
                                                 var req = {
-                                                    key: item,
+                                                    key: item.text,
                                                     value: data.d.results[0].externalName
                                                 };
                                                 val.push(req);
@@ -669,14 +674,45 @@ sap.ui.define([
                                                 resolve(true);
                                             },
                                             error: function (e) {
-                                                console.log(`cust_PersonnelArea entity failed for ${item}`);
+                                                console.log(`cust_PersonnelArea entity failed for ${item.text}`);
                                                 reject(e);
                                             }
                                         });
                                     });
+                                    if (values.length == 1) {
+                                        resolve(false);
+                                        oModel.setProperty("/multiOrgFound", false);
+                                        $.ajax({
+                                            url: prefix + "odata/v2/cust_PersonnelArea?$filter= externalCode eq '" + values[0].text + "'&$format=json",
+                                            type: 'GET',
+                                            contentType: "application/json",
+                                            success: function (data) {
+                                                var req = {
+                                                    key: values[0].text,
+                                                    value: data.d.results[0].externalName
+                                                };
+                                                val.push(req);
+                                                oModel.setProperty("/OrgValues", val);
+                                                oModel.setProperty("/selectedOrg", values[0].text);
+                                            },
+                                            error: function (e) {
+                                                console.log("error: " + e);
+                                            }
+                                        });
+                                    }
                                 } else {
                                     resolve(false);
                                     oModel.setProperty("/multiOrgFound", false);
+                                    MessageBox.error("You have not been set-up with the authorisation to launch this form. Please call ContactUs on 01452 425888 if you believe this is in error.", {
+                                        title: "Error Message",
+                                        actions: [MessageBox.Action.OK],
+                                        onClose: function (oAction) {
+                                            if (oAction) {
+                                                if (this.query) window.parent.close();
+                                                else window.history.go(-1);
+                                            }
+                                        }.bind(this)
+                                    });
                                 }
                             }.bind(this),
                             error: function (e) {
@@ -693,13 +729,13 @@ sap.ui.define([
                 this.getOwnerComponent().getModel("ZSFGTGT_PD01_SRV").read("/zsf_pd01_hSet('" + this.query.formId + "')?$format=json",
                     {
                         success: function (oData) {
-                            console.log(oData.Formid);
                             //Header Values
                             this.getView().byId("_IDGenInput2").setValue(oData.Formid);
                             this.getView().byId("_IDGenInput1").setValue(oData.Initiator);
-                            this.getView().byId("_IDGenInput4").setValue(oData.Zdate);
+                            this.getView().byId("_IDGenInput4").setDateValue(new Date(oData.Zdate.split("/").reverse().join("/")));
                             this.getView().byId("orgInput").setValue(oData.OrgName);
-                            this.getView().byId("datepicker01").setValue(oData.EffDate);
+                            oModel.setProperty("/lastSelectedOrg", oData.OrgName.split("(")[1].split(")")[0]);
+                            this.getView().byId("datepicker01").setDateValue(new Date(oData.EffDate.split("/").reverse().join("/")));
                             this.getView().byId("datepicker01").setEditable(false);
                             this.getView().byId("_IDGenSelect2").setValue(oData.SelectEmployee);
                             this.getView().byId("_IDGenSelect2").setSelectedKey(oData.SelEmpCode);
@@ -742,7 +778,6 @@ sap.ui.define([
                 this.getOwnerComponent().getModel("ZSFGTGT_PD01_SRV").read("/zsf_pd01_hSet('" + this.query.formId + "')/hdr_to_sec_b_nav?$format=json",
                     {
                         success: function (oData) {
-                            console.log(oData.results[0].Formid);
                             //SecB CheckBoxes
                             var checkboxPAdd = oData.results[0].ParmAddress == "X" ? true : false
                             this.getView().byId("_IDGenCheckBox4").setSelected(checkboxPAdd);
@@ -788,8 +823,8 @@ sap.ui.define([
                             this.getView().byId("_IDGenInput13").setValue(oData.results[0].ParConEmail);
                             this.configData = {
                                 phoneTypeP: oData.results[0].ParPhnType,
-                                phoneTypeB: oData.results[0].ParMobType,
-                                emailTypeP: oData.results[0].ParEmailType,
+                                phoneTypeL: oData.results[0].ParMobType,
+                                emailTypeB: oData.results[0].ParEmailType,
                                 isPhonePrimary: oData.results[0].PhnFlag ? true : false,
                                 isHomePrimary: oData.results[0].MobFlag ? true : false,
                                 isEmailPrimary: oData.results[0].EmailPrimary ? true : false
@@ -884,7 +919,6 @@ sap.ui.define([
                 this.getOwnerComponent().getModel("ZSFGTGT_PD01_SRV").read("/zsf_pd01_hSet('" + this.query.formId + "')/hdr_to_sec_c_nav?$format=json",
                     {
                         success: function (oData) {
-                            console.log(oData.results[0].Formid);
                             //Values
                             // Current Details
                             this.getView().byId("_IDGenText36").setValue(oData.results[0].SortCodecur);
@@ -915,7 +949,6 @@ sap.ui.define([
                 this.getOwnerComponent().getModel("ZSFGTGT_PD01_SRV").read("/zsf_pd01_hSet('" + this.query.formId + "')/hdr_to_sec_d_nav?$format=json",
                     {
                         success: function (oData) {
-                            console.log(oData.results[0].Formid);
                             //Values
                             // Current Details
                             this.getView().byId("_IDGenText40").setValue(oData.results[0].Titlecur);
@@ -945,17 +978,18 @@ sap.ui.define([
                 this.getOwnerComponent().getModel("ZSFGTGT_PD01_SRV").read("/zsf_pd01_hSet('" + this.query.formId + "')/hdr_to_comm_nav?$format=json",
                     {
                         success: function (oData) {
-                            var comm = oData.results[0].comment;
-                            if (comm != "") {
-                                comm = "";
-                                for (let i = 0; i < oData.results.length; i++) {
-                                    comm += oData.results[i].comment + "\n";
+                            if (oData && oData.results[0]) {
+                                this.getView().byId("your_comments_boxA").setVisible(true);
+                                var comm = oData.results[0].comment;
+                                if (comm != "") {
+                                    comm = "";
+                                    for (let i = 0; i < oData.results.length; i++) {
+                                        comm += oData.results[i].comment + "\n";
+                                    }
+                                    this.getView().byId("_IDGenTextAreaA").setValue(comm);
+                                    this.getView().byId("_IDGenTextAreaA").setVisible(true);
                                 }
-                                this.getView().byId("_IDGenTextAreaA").setValue(comm);
-                                this.getView().byId("_IDGenTextAreaA").setVisible(true);
-
                             }
-
                         }.bind(this),
                         error: function (oData) {
                             console.log("Error", oData);
@@ -1028,6 +1062,7 @@ sap.ui.define([
                                                 oModel.setProperty("/OrgValues", req);
                                                 oModel.setProperty("/OrgNameP", temp);
                                                 oModel.setProperty("/selectedOrg", data.d.results[0].externalCode);
+                                                resolve();
                                             },
                                             error: function () {
                                                 console.log(`Error in Assigning Multiple Personnel Area`);
@@ -1139,11 +1174,11 @@ sap.ui.define([
                     success: function (data) {
                         if (this.configData) {
                             this.configData.phoneTypeP = data.d.results.filter((el) => el.externalCode == "P")[0].optionId;
-                            this.configData.phoneTypeB = data.d.results.filter((el) => el.externalCode == "B")[0].optionId;
+                            this.configData.phoneTypeL = data.d.results.filter((el) => el.externalCode == "L")[0].optionId;
                         } else {
                             this.configData = {
                                 phoneTypeP: data.d.results.filter((el) => el.externalCode == "P")[0].optionId,
-                                phoneTypeB: data.d.results.filter((el) => el.externalCode == "B")[0].optionId
+                                phoneTypeL: data.d.results.filter((el) => el.externalCode == "L")[0].optionId
                             };
                         }
                     }.bind(this),
@@ -1159,10 +1194,10 @@ sap.ui.define([
                     contentType: "application/json",
                     success: function (data) {
                         if (this.configData)
-                            this.configData.emailTypeP = data.d.results.filter((el) => el.externalCode == "P")[0].optionId;
+                            this.configData.emailTypeB = data.d.results.filter((el) => el.externalCode == "B")[0].optionId;
                         else
                             this.configData = {
-                                emailTypeP: data.d.results.filter((el) => el.externalCode == "P")[0].optionId
+                                emailTypeB: data.d.results.filter((el) => el.externalCode == "B")[0].optionId
                             };
                     }.bind(this),
                     error: function (e) {
@@ -1205,31 +1240,78 @@ sap.ui.define([
                 return Number(match[1]);
             },
 
-            s4Log: function (org, that) {
-                var Status = 'I';
-                var log_payload = {
-                    "Formid": that.getView().byId("_IDGenInput2").getValue(),
-                    "StartedOn": that.getView().byId("_IDGenInput4").getValue(),
-                    "Status": Status,
-                    "Type": "PD01",
-                    "OrganizationName": org,
-                    "InitCode": initiatorCode,
-                    "Initiator": that.getView().byId("_IDGenInput1").getValue(),
-                    "Description": "Personal Details Form",
-                    "FormOwner": that.getView().byId("_IDGenInput1").getValue(),
-                    "FormOwnerCode": initiatorCode,
-                    "AvailableFrom": new Date(),
+            _logCreation: async function (status) {
+
+                if (!(this.managerId || this.managerName)) {
+                    await $.ajax({
+                        url: prefix + "odata/v2/EmpJob?$format=json&$filter=userId eq '" + this.initiatorCode + "'",
+                        type: 'GET',
+                        contentType: "application/json",
+                        success: async function (data) {       //first name, last name Etc.
+                            this.managerId = data.d.results[0].managerId;
+                        }.bind(this),
+                        error: function (e) {
+                            console.log(`EmpJob entity failed for ${this.initiatorCode} while creating log`);
+                        }.bind(this)
+                    });
+
+                    var empName, salutation;
+                    await $.ajax({
+                        url: prefix + "odata/v2/PerPerson(personIdExternal='" + this.managerId + "')/personalInfoNav?$format=json",
+                        type: 'GET',
+                        contentType: "application/json",
+                        success: function (data) {       //first name, last name Etc.
+                            empName = data.d.results[0].firstName + " " + data.d.results[0].lastName;
+                            salutation = data.d.results[0].salutation;
+                        }.bind(this),
+                        error: function (e) {
+                            console.log(`PerPerson entity failed for ${managerId} while creating log`);
+                        }
+                    });
+
+                    await $.ajax({
+                        url: prefix + "odata/v2/PicklistOption(" + salutation + "L)/picklistLabels?$format=json",
+                        type: 'GET',
+                        contentType: "application/json",
+                        success: function (data) {       //first name, last name Etc.
+                            this.managerName = data.d.results[0].label + " " + empName;
+                        }.bind(this),
+                        error: function (e) {
+                            console.log("error: " + e);
+                        }
+                    });
                 }
-                that.getOwnerComponent().getModel("ZSFGTGW_LOG_SRV").create("/zsf_logSet", log_payload,
+
+                var log_payload = {
+                    "Formid": this.getView().byId("_IDGenInput2").getValue(),
+                    "StartedOn": this.getView().byId("_IDGenInput4").getValue(),
+                    "Status": status,
+                    "Type": "PD01",
+                    "OrganizationName": this.getView().byId("orgInput").getValue(),
+                    "OrgCode": this.getView().byId("orgInput").getValue().match(/\((.*?)\)/)[1],
+                    "Initiator": this.getView().byId("_IDGenInput1").getValue(),
+                    "InitCode": this.initiatorCode,
+                    "Description": "Personal Details Form",
+                    "FormOwner": status == "S" ? this.managerName : this.getView().byId("_IDGenInput1").getValue(),
+                    "FormOwnerCode": status == "S" ? this.managerId : this.initiatorCode,
+                    "ApproverName": this.managerName,
+                    "ApproverCode": this.managerId,
+                    "AvailableFrom": new Date().toLocaleDateString('en-GB'),
+                }
+
+                this.getOwnerComponent().getModel("ZSFGTGW_LOG_SRV").create("/zsf_logSet", log_payload,
                     {
                         success: function (oData) {
                             console.log(`${oData.Formid} log created`);
-
                         }.bind(this),
                         error: function (oData) {
-                            console.log("Error", oData);
+                            console.log("Error in log creation", oData);
                         }
                     });
+            },
+
+            onMessageClose: function () {
+                this.oMessage.close();
             },
 
             onTabChange: function (oEvent) {
@@ -1291,6 +1373,14 @@ sap.ui.define([
                 return appModulePath;
             },
 
+            numberValidation: function (oEvent) {
+                var value = oEvent.getParameter("newValue");
+                var regex = /^\d+$/g;
+                if (!regex.test(value)) {
+                    oEvent.getSource().setValue(value.slice(0, value.length - 1));
+                }
+            },
+
             OnCoAddress: function (oEvent) {
                 var bSelected1 = oEvent.getParameter("selected");
                 this.byId("_PanelSecB").setVisible(bSelected1);
@@ -1318,6 +1408,14 @@ sap.ui.define([
 
             OnCoFirstEmergencyAdd: function (oEvent) {
                 var bSelected5 = oEvent.getParameter("selected");
+                if (!bSelected5 && this.getView().byId("_IDGenCheckBox6").getSelected()) {
+                    var firstEmerStreet = this.getView().byId("_IDGenInput42").getValue();
+                    var newFirstEmerStreet = this.getView().byId("_IDGenInput14").getValue();
+                    if (!(firstEmerStreet || newFirstEmerStreet)) {
+                        this.getView().byId("_IDGenCheckBox6").setSelected(false);
+                        this._FlexBoxC.setVisible(false);
+                    }
+                }
                 this._FlexBoxB.setVisible(bSelected5);
                 // this._AddHBox.setVisible(bSelected5);
 
@@ -1325,6 +1423,15 @@ sap.ui.define([
 
             OnCoSecondEmergencyAdd: function (oEvent) {
                 var bSelected6 = oEvent.getParameter("selected");
+                if (bSelected6 && !this.getView().byId("_IDGenCheckBox5").getSelected()) {
+                    var firstEmerStreet = this.getView().byId("_IDGenInput42").getValue();
+                    var newFirstEmerStreet = this.getView().byId("_IDGenInput14").getValue();
+                    if (!(firstEmerStreet || newFirstEmerStreet)) {
+                        MessageBox.error("Please enter first emergency contact before");
+                        oEvent.getSource().setSelected(false);
+                        return;
+                    }
+                }
                 this._FlexBoxC.setVisible(bSelected6);
                 // this._AddHBox.setVisible(bSelected6);
 
@@ -1348,62 +1455,70 @@ sap.ui.define([
                         oModel.setProperty("/payGroupP", data);
                         // ------------NEXT SEVEN MONTHS------------
                         var empPayGroup = data.d.results[0].payGroup;
-                        var months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-                        var today = new Date();
-                        var monthIndex = today.getMonth();
-                        var currentMonthIndex = monthIndex;
-                        var currentYear = today.getFullYear();
-                        var lastYear = currentYear - 1;
-                        var todayDate = Number(new Date().toISOString().substring(0, 10).replaceAll('-', ''));
                         var nextSevenMonths = [];
                         $.ajax({
                             url: prefix + "odata/v2/cust_ZFLM_GCC_MSSDEAD/$count?$filter= cust_PayrollArea eq '" + empPayGroup + "'&$format=json",
                             type: 'GET',
                             contentType: "application/json",
-                            success: function (data) {
-                                var recordCount = data;
-                                // oModel.setProperty("/countyPermanentP", data);
+                            success: function (recordCount) {
+                                var today = new Date();
+                                var fiscMonth = today.getMonth() - 3 < 0 ? today.getMonth() + 10 : today.getMonth() - 2;
+                                var fiscYear = today.getMonth() - 3 < 0 ? today.getFullYear() - 1 : today.getFullYear();
+                                var nextFiscMonth = fiscMonth + 1 > 12 ? 1 : fiscMonth + 1;
+                                var nextFiscYear = fiscMonth + 1 > 12 ? fiscYear + 1 : fiscYear;
                                 if (recordCount !== "0") {
-                                    var urlP = prefix + "odata/v2/cust_ZFLM_GCC_MSSDEAD?$filter= cust_PayrollArea eq '" + empPayGroup + "' and (cust_PayrollYear eq '" + lastYear + "' or cust_PayrollYear eq '" + currentYear + "' )&$format=json";
+                                    var urlP = prefix + `odata/v2/cust_ZFLM_GCC_MSSDEAD?$filter= cust_PayrollArea eq '${empPayGroup}' and ((cust_PayrollYear eq '${fiscYear}' and cust_PayrollPeriod eq '${fiscMonth}' ) or (cust_PayrollYear eq '${nextFiscYear}' and cust_PayrollPeriod eq '${nextFiscMonth}'))&$format=json`;
                                 } else {
-                                    var urlP = prefix + "odata/v2/cust_ZFLM_GCC_MSSDEAD?$filter= cust_PayrollArea eq null and (cust_PayrollYear eq '" + lastYear + "' or cust_PayrollYear eq '" + currentYear + "' )&$format=json";
+                                    var urlP = prefix + `odata/v2/cust_ZFLM_GCC_MSSDEAD?$filter= cust_PayrollArea eq null and ((cust_PayrollYear eq '${fiscYear}' and cust_PayrollPeriod eq '${fiscMonth}' ) or (cust_PayrollYear eq '${nextFiscYear}' and cust_PayrollPeriod eq '${nextFiscMonth}'))&$format=json`;
                                 }
                                 $.ajax({
                                     url: urlP,
                                     type: 'GET',
                                     contentType: "application/json",
                                     success: function (data) {
-                                        var locked = "";
                                         var nextMonth = "";
+                                        var todayDate = Number(new Date().toISOString().substring(0, 10).replaceAll('-', ''));
+                                        var postingAllowed = false;
                                         for (let i = 0; i < data.d.results.length; i++) {
                                             var PayrollLockDates = data.d.results[i];
-                                            var startDateArray = PayrollLockDates.cust_StartDate.split('.');
-                                            var startDate = Number(startDateArray[2] + startDateArray[1] + startDateArray[0]);
-                                            var startMonth = Number(startDateArray[1])
-                                            var endDateArray = PayrollLockDates.cust_EndDate.split('.');
-                                            var endDate = Number(endDateArray[2] + endDateArray[1] + endDateArray[0]);
-                                            if (todayDate >= startDate && todayDate <= endDate) {
-                                                locked = "X";
-                                                if (currentMonthIndex == startMonth - 1) {
-                                                    nextMonth = "X";
-                                                }
-                                                var lockedCon = {
-                                                    locked: locked,
-                                                    nextMonth: nextMonth
-                                                }
-                                                oModel.setProperty("/lockedP", lockedCon);
-                                                break;
+                                            var dateSplitter = PayrollLockDates.cust_StartDate.search("/") >= 0 ? "/" : ".";
+                                            var startDateArray = PayrollLockDates.cust_StartDate.split(dateSplitter);
+                                            var payrollStartDate = Number(startDateArray[2] + startDateArray[1] + startDateArray[0]);
+                                            var endDateArray = PayrollLockDates.cust_EndDate.split(dateSplitter);
+                                            var payrollEndDate = Number(endDateArray[2] + endDateArray[1] + endDateArray[0]);
+                                            if (todayDate >= payrollStartDate && todayDate <= payrollEndDate) {
+                                                postingAllowed = true
                                             }
+                                            // var PayrollLockDates = data.d.results[i];
+                                            // var startDateArray = PayrollLockDates.cust_StartDate.split('.');
+                                            // var startDate = Number(startDateArray[2] + startDateArray[1] + startDateArray[0]);
+                                            // var startMonth = Number(startDateArray[1])
+                                            // var endDateArray = PayrollLockDates.cust_EndDate.split('.');
+                                            // var endDate = Number(endDateArray[2] + endDateArray[1] + endDateArray[0]);
+                                            // if (todayDate >= endDate && todayDate <= startDate) {
+                                            //     locked = "X";
+                                            //     if (currentMonthIndex == startMonth - 1) {
+                                            //         nextMonth = "X";
+                                            //     }
+                                            //     var lockedCon = {
+                                            //         locked: locked,
+                                            //         nextMonth: nextMonth
+                                            //     }
+                                            //     oModel.setProperty("/lockedP", lockedCon);
+                                            //     break;
+                                            // }
                                         }
-                                        if (nextMonth == "X") {
-                                            currentMonthIndex += 1;
+                                        var months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+                                        var currentMonth = new Date().getMonth(), currentYear = new Date().getFullYear();
+                                        if (!postingAllowed) {
+                                            currentMonth += 1;
                                         }
                                         for (var i = 0; i < 7; i++) {
-                                            var nextMonthIndex = (currentMonthIndex + i) % 12;
+                                            var nextMonthIndex = (currentMonth + i) % 12;
                                             var nextMonth = months[nextMonthIndex];
 
                                             // Calculate the year for the next month
-                                            var nextYear = currentYear + Math.floor((currentMonthIndex + i) / 12);
+                                            var nextYear = currentYear + Math.floor((currentMonth + i) / 12);
 
                                             // Create a string representing month and year
                                             var monthAndYear = nextMonth + ' ' + nextYear;
@@ -1413,7 +1528,6 @@ sap.ui.define([
                                             }
                                             nextSevenMonths.push(temp);
                                         }
-
                                         oModel.setProperty("/nextSevenMonths", nextSevenMonths);
                                     },
                                     error: function (e) {
@@ -1432,15 +1546,30 @@ sap.ui.define([
                 })
             },
 
+            onDropValid: function (oEvent) {
+                if (oEvent.getSource().getSelectedItem()) {
+                    oEvent.getSource().setValueState(sap.ui.core.ValueState.None);
+                }
+                else {
+                    oEvent.getSource().setValueState(sap.ui.core.ValueState.Error);
+                }
+            },
+
             oMonthSelect: function (oEvent) {
-                var sMonthIndex = oEvent.getSource().getSelectedItem().getKey();
-                var sMonthYear = oEvent.getSource().getSelectedItem().getText();
-                var arraySel = sMonthYear.split(" ");
-                var sYear = arraySel[1];
-                var firstDate = new Date(sYear, sMonthIndex - 1, 1);
-                var firstDateTime = this.dateToUnix(firstDate);
-                var oModel = this.getView().getModel("InitData");
-                oModel.setProperty("/effdateIntP", firstDateTime);
+                if (oEvent.getSource().getSelectedItem()) {
+                    oEvent.getSource().setValueState(sap.ui.core.ValueState.None);
+                    var sMonthIndex = oEvent.getSource().getSelectedItem().getKey();
+                    var sMonthYear = oEvent.getSource().getSelectedItem().getText();
+                    var arraySel = sMonthYear.split(" ");
+                    var sYear = arraySel[1];
+                    var firstDate = new Date(sYear, sMonthIndex - 1, 1);
+                    var firstDateTime = this.dateToUnix(firstDate);
+                    var oModel = this.getView().getModel("InitData");
+                    oModel.setProperty("/effdateIntP", firstDateTime);
+                }
+                else {
+                    oEvent.getSource().setValueState(sap.ui.core.ValueState.Error);
+                }
             },
 
             dateToUnix: function (date) {
@@ -1490,9 +1619,9 @@ sap.ui.define([
 
             },
 
-            fetchSelEmplData: function (selEmpCode) {
+            fetchSelEmplData: function (pernr) {
                 var oModel = this.getView().getModel("InitData");
-                var pernr = this.getView().getModel("InitData").getProperty("/dropdownInfoP").filter((el) => el.userId == selEmpCode)[0].personIdExternal;
+                // var pernr = this.getView().getModel("InitData").getProperty("/dropdownInfoP").filter((el) => el.userId == selEmpCode)[0].personIdExternal;
                 var that = this;
                 // salutation label
                 $.ajax({
@@ -1675,11 +1804,13 @@ sap.ui.define([
                                     if (data.d.externalCode == "P") {
                                         oModel.setProperty("/phoneInfoP", phoneData.d.results[i]);
                                         that.getView().byId("_IDGenInput40").setValue(phoneData.d.results[i].phoneNumber);
+                                        that.getView().byId("_IDGenInput11").setValue(phoneData.d.results[i].phoneNumber);
                                         that.configData.isPhonePrimary = phoneData.d.results[i].isPrimary;
                                     }
-                                    if (data.d.externalCode == "B") {
+                                    if (data.d.externalCode == "L") {
                                         oModel.setProperty("/phoneInfoB", phoneData.d.results[i]);
                                         that.getView().byId("input7").setValue(phoneData.d.results[i].phoneNumber);
+                                        that.getView().byId("_IDGenInput10").setValue(phoneData.d.results[i].phoneNumber);
                                         that.configData.isHomePrimary = phoneData.d.results[i].isPrimary;
                                     }
                                 }.bind(this),
@@ -1712,9 +1843,11 @@ sap.ui.define([
                                 type: 'GET',
                                 contentType: "application/json",
                                 success: function (data) {
-                                    if (data.d.externalCode == "P") {
+                                    if (data.d.externalCode == "B") {
                                         oModel.setProperty("/emailInfoP", emailData.d.results[i]);
                                         that.getView().byId("_IDGenInput41").setValue(emailData.d.results[i].emailAddress);
+                                        that.getView().byId("_IDGenInput12").setValue(emailData.d.results[i].emailAddress);
+                                        that.getView().byId("_IDGenInput13").setValue(emailData.d.results[i].emailAddress);
                                         if (emailData.d.results[i].isPrimary)
                                             that.configData.isEmailPrimary = true;
                                     }
@@ -1779,6 +1912,7 @@ sap.ui.define([
                                         that.getView().byId("_IDGenInputSur").setValue(emergencyData.d.results[i].customString1);
                                         that.getView().byId("_IDGenInput49").setValue(emergencyData.d.results[i].phone);
                                         oModel.setProperty("/firstEmergencyAddP", emergencyAddData);
+                                        // this.configData.is
                                         that.getView().byId("_IDGenInput42").setValue(emergencyAddData.d.address1);
                                         that.getView().byId("_IDGenInput43").setValue(emergencyAddData.d.address2);
                                         that.getView().byId("_IDGenInput45").setValue(emergencyAddData.d.city);
@@ -1834,101 +1968,77 @@ sap.ui.define([
 
             onPostChange: function (oEvent) {
                 var postCode = oEvent.getParameter("newValue");
-                if (postCode.length > 8 || postCode.length < 6) {
-                    MessageBox.error("Postal code should be of 6-8 letters");
+                if (postCode.includes(" ")) {
+                    var postalCodeRegex = /^([Gg][Ii][Rr] 0[Aa]{2})|((([A-Za-z][0-9]{1,2})|(([A-Za-z][A-Ha-hJ-Yj-y][0-9]{1,2})|(([AZa-z][0-9][A-Za-z])|([A-Za-z][A-Ha-hJ-Yj-y][0-9]?[A-Za-z])))) [0-9][A-Za-z]{2})$/
+                    // /^[A-Z]{1,2}[0-9R][0-9A-Z]? [0-9][ABD-HJLNP-UW-Z]{2}$/
+                    if (postalCodeRegex.test(postCode.toUpperCase())) {
+                        this.getView().byId(oEvent.getSource().sId).setValueState(sap.ui.core.ValueState.None);
+                    }
+                    else {
+                        MessageBox.error("Please enter a valid Postal Code");
+                        this.getView().byId(oEvent.getSource().sId).setValueState(sap.ui.core.ValueState.Error);
+                        this.getView().byId(oEvent.getSource().sId).setValue("");
+                    }
+                }
+                else {
+                    MessageBox.error("Please enter the postcode in a valid format. This should include a space in the middle");
+                    this.getView().byId(oEvent.getSource().sId).setValueStateText("Please enter the postcode in a valid format. This should include a space in the middle");
                     this.getView().byId(oEvent.getSource().sId).setValueState(sap.ui.core.ValueState.Error);
                     this.getView().byId(oEvent.getSource().sId).setValue("");
                 }
-                else {
-                    this.getView().byId(oEvent.getSource().sId).setValueState(sap.ui.core.ValueState.None);
-                }
             },
 
-            onLiveTeleChange: function (oEvent) {
+            onLiveTeleChange: function (oEvent, isRequired) {
                 var phone = oEvent.getParameter("newValue");
-                if (phone.substring(0, 1) != "0") {
-                    phone = "0" + phone;
-                    this.getView().byId(oEvent.getSource().sId).setValue(phone)
-                }
-                if (phone.length > 11) {
-                    phone = phone.slice(0, phone.length - 1);
-                    this.getView().byId(oEvent.getSource().sId).setValue(phone);
+                if (phone) {
+                    if (phone.substring(0, 1) != "0") {
+                        phone = "0" + phone;
+                        this.getView().byId(oEvent.getSource().sId).setValue(phone)
+                    }
+                    if (phone.length > 11) {
+                        phone = phone.slice(0, phone.length - 1);
+                        this.getView().byId(oEvent.getSource().sId).setValue(phone);
+                    }
+                    if (phone.length == 11) {
+                        this.onTeleChange(oEvent, isRequired);
+                    }
                 }
             },
 
-            onTeleChange: function (oEvent) {
+            onTeleChange: function (oEvent, isRequired) {
                 var elementId = oEvent.getSource().getValue();
-                if (elementId.length < 11) {
-                    // MessageBox.alert("Please re-enter the telephone number in a valid format and contact your Pay and Conditions Administrator if you have any further difficulties.", {
-                    //     title: "Alert",
-                    //     actions: MessageBox.Action.OK,
-                    //     emphasizedAction: MessageBox.Action.OK,
-                    //     onClose: oEvent.getSource().focus()
-                    // });
-                    //oModel.setProperty("/", data);
-                    //that.getView().setModel(oModel, "InitData");
-                    //errText.push("- Please re-enter the telephone number in a valid format and contact your Pay and Conditions Administrator if you have any further difficulties");
-                    //phoneFlag = true;
+                if (elementId) {
+                    var pRegex = new RegExp('^[0-9]{11}$')
+                    if (!pRegex.test(elementId)) {
+                        oEvent.getSource().setValueState(sap.ui.core.ValueState.Error);
+                        oEvent.getSource().setValueStateText("Please re-enter the telephone number in a valid format and contact your Pay and Conditions Administrator if you have any further difficulties");
+                    }
+                    else {
+                        oEvent.getSource().setValueState(sap.ui.core.ValueState.None);
+                    };
+                } else {
+                    if (isRequired) {
+                        oEvent.getSource().setValueState(sap.ui.core.ValueState.Error);
+                        oEvent.getSource().setValueStateText("Telephone number is a required field");
+                    }
+                    else
+                        oEvent.getSource().setValueState(sap.ui.core.ValueState.None);
+                }
+            },
+
+            onEmailChangePermanent: function (oEvent) {
+                if (this.getView().byId("_IDGenInput13").getValue() != this.getView().byId("_IDGenInput12").getValue()) {
+                    oEvent.getSource().setValueState(sap.ui.core.ValueState.Error);
+                    oEvent.getSource().setValueStateText("Please note that the email addresses must match. Re-enter the email addresses");
                 }
                 else {
-                    phoneFlag = false;
-                    $.ajax({
-                        url: prefix + "odata/v2/PickListValueV2?$filter=PickListV2_id eq 'ecPhoneType' and status eq 'A' &$format=json",
-                        type: 'GET',
-                        contentType: "application/json",
-                        success: function (data) {
-                            for (let i = 0; i < data.d.results.length; i++) {
-                                if (data.d.results[i].externalCode == "B") {
-                                    var temp = {
-                                        key: data.d.results[i].externalCode,
-                                        id: data.d.results[i].optionId
-                                    }
-                                    this.getView().getModel("InitData").setProperty("/phoneTypeB", temp);
-                                }
-                                else if (data.d.results[i].externalCode == "P") {
-                                    var temp = {
-                                        key: data.d.results[i].externalCode,
-                                        id: data.d.results[i].optionId
-                                    }
-                                    this.getView().getModel("InitData").setProperty("/phoneTypeP", temp);
-                                }
-                            }
-                        }.bind(this),
-                        error: function (e) {
-                            console.log("error: " + e);
-                        }
-                    });
+                    oEvent.getSource().setValueState(sap.ui.core.ValueState.None);
                 };
             },
 
-            // onEmailChangePermanent: function (oEvent) {
-            //     var elementId = oEvent.getSource().getId();
-            //     if (this.getView().byId("_IDGenInput13").getValue() != this.getView().byId("_IDGenInput12").getValue()) {
-            //         // MessageBox.alert("Please re-enter the telephone number in a valid format and contact your Pay and Conditions Administrator if you have any further difficulties.", {
-            //         //     title: "Alert",
-            //         //     actions: MessageBox.Action.OK,
-            //         //     emphasizedAction: MessageBox.Action.OK,
-            //         //     onClose: this.getView().byId(elementId).focus()
-            //         // });
-            //         var alertText = [];
-            //         errText.push("- Please note that the email addresses must match. Re-enter the email addresses");
-            //         var temp = {
-            //             errText: errText,
-            //             emailFlag: true
-            //         }
-            //     }
-            //     else {
-            //         var temp = {
-            //             errText: "",
-            //             emailFlag: false
-            //         }
-            //     };
-            //     this.getView().getModel("InitData").setProperty("/log", temp);
-            // },
-
             onSortCodeChange: function (oEvent) {
                 var sortCode = oEvent.getSource().getValue();
-                if ((/^[1-9]{6}$/).test(sortCode)) {
+                if ((/^[0-9]{6}$/).test(sortCode)) {
                     $.ajax({
                         url: prefix + "odata/v2/Bank('" + sortCode + "')?$format=json",
                         type: 'GET',
@@ -1948,6 +2058,15 @@ sap.ui.define([
                     oEvent.getSource().setValueState(sap.ui.core.ValueState.Error);
                     this.getView().byId("_IDGenInputA1").setValue("");
                 }
+            },
+
+            onBankAccChange: function (oEvent) {
+                var value = oEvent.getParameter("newValue");
+                if (value.length != 8) {
+                    oEvent.getSource().setValueState(sap.ui.core.ValueState.Error);
+                    MessageBox.error("Please enter a valid Bank Account number")
+                }
+                else oEvent.getSource().setValueState(sap.ui.core.ValueState.None);
             },
 
             onAddCommentPress: function () {
@@ -1989,14 +2108,10 @@ sap.ui.define([
                     actions: [sap.m.MessageBox.Action.YES, sap.m.MessageBox.Action.CANCEL],
                     onClose: function (oAction) {
                         if (oAction == sap.m.MessageBox.Action.YES) {
-                            // var oHistory, sPreviousHash;
-                            // oHistory = History.getInstance();
-                            // sPreviousHash = oHistory.getPreviousHash();
-                            // if (sPreviousHash == undefined) {
-                            // }
-                            window.history.go(-1)
+                            if (this.query) window.parent.close();
+                            else window.history.go(-1);
                         }
-                    }
+                    }.bind(this)
                 })
             },
 
@@ -2009,10 +2124,14 @@ sap.ui.define([
                 else {
                     oEvent.oSource.setValueState(sap.ui.core.ValueState.None);
                     var orgCode = this.getView().byId("orgInput").getSelectedKey();
-                    var effDate = new Date(oEvent.getParameter("newValue"))
+                    var dateFormat = sap.ui.core.format.DateFormat.getDateInstance({ pattern: "yyyy-MM-dd" });
+                    var effDate = new Date(oEvent.getParameter("newValue"));
+                    var actualDate = dateFormat.format(effDate);
+                    effDate.setMonth(effDate.getMonth() + 1);
+                    effDate.setDate(0);
                     var dateFormat = sap.ui.core.format.DateFormat.getDateInstance({ pattern: "yyyy-dd-MM" });
                     var effDateISO = dateFormat.format(effDate);
-                    this._getEmplData(orgCode, effDateISO)
+                    this._getEmplData(orgCode, effDateISO, actualDate)
                 }
             },
 
@@ -2020,40 +2139,77 @@ sap.ui.define([
 
                 if (oEvent.getSource().getSelectedItem() != null) {
                     oEvent.getSource().setValueState(sap.ui.core.ValueState.None);
-                    var LastDate = this.getView().byId("datepicker01").getValue() ? this.getView().byId("datepicker01").getValue() : "";
-                    var dateFormat = sap.ui.core.format.DateFormat.getDateInstance({ pattern: "yyyy-dd-MM" });
-                    var LastDateISO = LastDate ? dateFormat.format(LastDate) : "";
                     var orgCode = oEvent.getSource().getSelectedItem().getKey();
-                    this._getEmplData(orgCode, LastDateISO);
+                    var oModel = this.getView().getModel("InitData");
+                    if (oModel.getProperty("/lastSelectedOrg") && oModel.getProperty("/lastSelectedOrg") != oEvent.getSource().getSelectedItem().getKey()) {
+                        MessageBox.warning(`Changing the organization will erase all form data.
+                            Do you want to proceed?`, {
+                            actions: [sap.m.MessageBox.Action.YES, sap.m.MessageBox.Action.NO],
+                            emphasizedAction: sap.m.MessageBox.Action.NO,
+                            onClose: function (oAction) {
+                                oEvent.getSource().setValueState(sap.ui.core.ValueState.None);
+                                if (oAction === sap.m.MessageBox.Action.YES) {
+                                    oModel.setProperty("/lastSelectedOrg", orgCode);
+                                    if (this.getView().byId("datepicker01").getValue()) {
+                                        var dateFormat = sap.ui.core.format.DateFormat.getDateInstance({ pattern: "yyyy-MM-dd" });
+                                        var LastDate = new Date(this.getView().byId("datepicker01").getValue());
+                                        var actualDate = dateFormat.format(LastDate)
+                                        LastDate.setMonth(LastDate.getMonth() + 1);
+                                        LastDate.setDate(0);
+                                        var dateFormat = sap.ui.core.format.DateFormat.getDateInstance({ pattern: "yyyy-dd-MM" });
+                                    }
+                                    var LastDateISO = LastDate ? dateFormat.format(LastDate) : "";
+                                    this._getEmplData(orgCode, LastDateISO, actualDate);
+
+                                    // clearing out the form
+                                }
+                                else {
+                                    this.getView().byId("orgInput").setSelectedKey(oModel.getProperty("/lastSelectedOrg"))
+                                }
+                            }.bind(this)
+                        });
+                    }
+                    else {
+                        oEvent.getSource().setValueState(sap.ui.core.ValueState.None);
+                        oModel.setProperty("/lastSelectedOrg", orgCode);
+                        if (this.getView().byId("datepicker01").getValue()) {
+                            var dateFormat = sap.ui.core.format.DateFormat.getDateInstance({ pattern: "yyyy-MM-dd" });
+                            var LastDate = new Date(this.getView().byId("datepicker01").getValue());
+                            var actualDate = dateFormat.format(LastDate)
+                            LastDate.setMonth(LastDate.getMonth() + 1);
+                            LastDate.setDate(0);
+                            var dateFormat = sap.ui.core.format.DateFormat.getDateInstance({ pattern: "yyyy-dd-MM" });
+                        }
+                        var LastDateISO = LastDate ? dateFormat.format(LastDate) : "";
+                        this._getEmplData(orgCode, LastDateISO, actualDate);
+                    }
                 }
                 else {
                     oEvent.getSource().setValueState(sap.ui.core.ValueState.Error);
+                    MessageBox.error("Please select a valid Organization");
                 }
+            },
+
+            emailCheck: function (mail) {
+                var mailregex = /^\w+[\w-+\.]*\@\w+([-\.]\w+)*\.[a-zA-Z]{2,}$/;
+                if (!mailregex.test(mail)) {
+                    return false;
+                } else return true;
             },
 
             onEmailChange: function (oEvent) {
                 var email = oEvent.getParameter("newValue");
-                var mailregex = /^\w+[\w-+\.]*\@\w+([-\.]\w+)*\.[a-zA-Z]{2,}$/;
-                if (!mailregex.test(email)) {
-                    oEvent.oSource.setValueState(sap.ui.core.ValueState.Error);
-                    oEvent.oSource.setValueStateText("Enter a valid email address");
-                    emailFlag = "x";
-                } else {
-                    oEvent.oSource.setValueState(sap.ui.core.ValueState.none);
-                    oEvent.oSource.setValueStateText("");
-                    emailFlag = "0";
-                    $.ajax({
-                        url: prefix + "odata/v2/PickListValueV2?$filter=PickListV2_id eq 'ecEmailType' and status eq 'A'  and externalCode eq 'P' &$format=json",
-                        type: 'GET',
-                        contentType: "application/json",
-                        success: function (data) {
-                            emailType = data.d.results[0].optionId;
-                        }.bind(this),
-                        error: function (e) {
-                            console.log("error: " + e);
-                        }
-                    });
+                oEvent.oSource.setValueStateText("Email is a required field");
+                if (email) {
+                    var check = this.emailCheck(email);
+                    if (!check) {
+                        oEvent.oSource.setValueState(sap.ui.core.ValueState.Error);
+                        oEvent.oSource.setValueStateText("Please note that the email address should be in a correct format");
+                    } else {
+                        oEvent.oSource.setValueState(sap.ui.core.ValueState.None);
+                    }
                 }
+                else { oEvent.oSource.setValueState(sap.ui.core.ValueState.Error); }
             },
 
             addMessage: function (section, message, messArr) {
@@ -2069,155 +2225,159 @@ sap.ui.define([
 
             },
 
+            onInputField: function (oEvent) {
+                var value = oEvent.getSource().getValue();
+                if (value) {
+                    oEvent.getSource().setValueState(sap.ui.core.ValueState.None);
+                }
+                else
+                    oEvent.getSource().setValueState(sap.ui.core.ValueState.Error);
+            },
+
+            _messLog: function (message) {
+                var obj = {
+                    "Icon": "sap-icon://status-error",
+                    "Message": message,
+                }
+                let logMessage = this.getView().getModel("InitData").getProperty("/MessageLog");
+                logMessage.push(obj);
+                this.getView().getModel("InitData").setProperty("/MessageLog", logMessage);
+            },
+
             ValidationCheck: function () {
-                // Address validations
+                this.getView().getModel("InitData").setProperty("/MessageLog", []);
+                var errorFlag = false;
                 var pRegex = new RegExp('^[0-9]{11}$');
+                // Address validations
                 if (this.getView().byId("ChangeOfAddCheckbox").getSelected() == true) {
                     if (this.getView().byId("_IDGenCheckBox4").getSelected() == true || this.getView().byId("_IDGenCheckBox5").getSelected() == true || this.getView().byId("_IDGenCheckBox6").getSelected() == true) {
                         // permanent address validation
                         if (this.getView().byId("_IDGenCheckBox4").getSelected() == true) {
-                            if (emailFlag == "x") {
-                                sap.m.MessageBox.error(`Please note that the email address should
-                                                            be in a correct format. `)
-                                flag = "2";
+                            var aControls = this.getView().getControlsByFieldGroupId("permAddress");
+                            aControls.forEach(function (oControl) {
+                                if (oControl.getId != undefined && oControl.getId()) {
+                                    if ((oControl.getValue != undefined && oControl.getValue() == "" && oControl.getRequired != undefined && oControl.getRequired()) || (oControl.getValueState != undefined && oControl.getValueState() === sap.ui.core.ValueState.Error)) {
+                                        oControl.setValueState(sap.ui.core.ValueState.Error);
+                                        errorFlag = true;
+                                        if (oControl.getValueStateText)
+                                            this._messLog(oControl.getValueStateText());
+                                    }
+                                    else if (oControl.getValue != undefined && oControl.getValue() != "") {
+                                        oControl.setValueState(sap.ui.core.ValueState.None);
+                                    }
+                                }
+                            }.bind(this));
+                            var email = this.getView().byId("_IDGenInput12").getValue();
+                            var emailVal = this.emailCheck(email);
+                            if (email && !emailVal && this.getView().byId("_IDGenInput12").getValueState() == "None") {
+                                this._messLog("Please note that the email address should be in a correct format");
+                                this.getView().byId("_IDGenInput12").setValueState(sap.ui.core.ValueState.Error);
                             } else {
                                 if (this.getView().byId("_IDGenInput12").getValue() != this.getView().byId("_IDGenInput13").getValue()) {
-                                    sap.m.MessageBox.error(`Please note that the email addresses must match.
-                                                            Re-enter the email addresses. `)
-                                    flag = "2";
+                                    this._messLog("Please note that the email addresses must match. Re-enter the email addresses");
+                                    this.getView().byId("_IDGenInput13").setValueState(sap.ui.core.ValueState.Error);
                                 }
                             }
-
-                            if (this.getView().byId("_IDGenInput11").getValue() != "" && !(pRegex.test(this.getView().byId("_IDGenInput11").getValue()))) {
-                                sap.m.MessageBox.error(`Please re-enter the telephone number in a valid format and contact your Pay and Conditions 
-                                                        Administrator if you have any further difficulties`)
-                                flag = "2";
+                            var mobTeleNumber = this.getView().byId("_IDGenInput11").getValue();
+                            if (mobTeleNumber && !(pRegex.test(mobTeleNumber)) && this.getView().byId("_IDGenInput11").getValueState() == "None") {
+                                this._messLog("Please re-enter the telephone number in a valid format and contact your Pay and Conditions Administrator if you have any further difficulties");
+                                this.getView().byId("_IDGenInput11").setValueState(sap.ui.core.ValueState.Error);
                             }
-                            if (this.getView().byId("_IDGenInput10").getValue() != "" && !(pRegex.test(this.getView().byId("_IDGenInput10").getValue()))) {
-                                sap.m.MessageBox.error(`Please re-enter the telephone number in a valid format and contact your Pay and Conditions 
-                                                        Administrator if you have any further difficulties`)
-                                flag = "2";
+                            var homeTeleNumber = this.getView().byId("_IDGenInput10").getValue();
+                            var pRegex = new RegExp('^[0-9]{11}$');
+                            if (homeTeleNumber && !(pRegex.test(homeTeleNumber)) && this.getView().byId("_IDGenInput10").getValueState() == "None") {
+                                this._messLog("Please re-enter the telephone number in a valid format and contact your Pay and Conditions Administrator if you have any further difficulties");
+                                this.getView().byId("_IDGenInput10").setValueState(sap.ui.core.ValueState.Error);
                             }
-                            if (this.getView().byId("_IDGenInput11").getValue() == "") {
-                                flag = "1";
-                            }
-                            if (this.getView().byId("_IDGenInput9").getValue() == "") {
-                                flag = "1";
-                            }
-                            if (this.getView().byId("_IDGenInput5").getValue() == "") {
-                                flag = "1";
-                            }
-                            if (flag == "1") {
-                                sap.m.MessageBox.error(`Please enter all the required fields in the
-                                                        Permanent Address Section.`);
-                            }
-
-
                         }
                         // First Emergency Add Validation
                         if (this.getView().byId("_IDGenCheckBox5").getSelected() == true) {
-                            if (this.getView().byId("_IDGenInput19").getValue() != "" && !(pRegex.test(this.getView().byId("_IDGenInput19").getValue()))) {
-                                sap.m.MessageBox.error(`Please re-enter the telephone number in a valid format and contact your Pay and Conditions 
-                                                        Administrator if you have any further difficulties`)
-                                flag = "2";
-                            }
-                            if (this.getView().byId("_IDGenInput14").getValue() == "") {
-                                flag = "3";
-                            }
-                            if (this.getView().byId("_IDGenInput18").getValue() == "") {
-                                flag = "3";
-                            }
-                            if (this.getView().byId("_IDGenInput21").getValue() == "") {
-                                flag = "3";
-                            }
-                            if (this.getView().byId("_IDGenInputSurne").getValue() == "") {
-                                flag = "3";
-                            }
-                            if (this.getView().byId("_IDGenComboBox1").getSelectedItem() == null) {
-                                flag = "3";
-                            }
-                            if (this.getView().byId("_IDGenInput19").getValue() == "") {
-                                flag = "3";
-                            }
-                            if (flag == "3") {
-                                sap.m.MessageBox.error(`Please enter all the required fields in the
-                                                        First Emergency Address Section.`);
+                            var aControls = this.getView().getControlsByFieldGroupId("firstEmerAddress");
+                            aControls.forEach(function (oControl) {
+                                if (oControl.getId != undefined && oControl.getId()) {
+                                    if ((oControl.getValue != undefined && oControl.getValue() == "" && oControl.getRequired != undefined && oControl.getRequired()) || (oControl.getValueState != undefined && oControl.getValueState() === sap.ui.core.ValueState.Error)) {
+                                        oControl.setValueState(sap.ui.core.ValueState.Error);
+                                        errorFlag = true;
+                                        if (oControl.getValueStateText)
+                                            this._messLog(oControl.getValueStateText());
+                                    }
+                                    else if (oControl.getValue != undefined && oControl.getValue() != "") {
+                                        oControl.setValueState(sap.ui.core.ValueState.None);
+                                    }
+                                }
+                            }.bind(this));
+
+                            var mobTeleNumber = this.getView().byId("_IDGenInput19").getValue();
+                            if (mobTeleNumber && !(pRegex.test(mobTeleNumber)) && this.getView().byId("_IDGenInput19").getValueState() == "None") {
+                                this._messLog("Please re-enter the telephone number in a valid format and contact your Pay and Conditions Administrator if you have any further difficulties");
+                                this.getView().byId("_IDGenInput19").setValueState(sap.ui.core.ValueState.Error);
                             }
                         }
                         // Second Emergency Add Validation
                         if (this.getView().byId("_IDGenCheckBox6").getSelected() == true) {
-                            if (this.getView().byId("_IDGenInput30").getValue() != "" && !(pRegex.test(this.getView().byId("_IDGenInput30").getValue()))) {
-                                sap.m.MessageBox.error(`Please re-enter the telephone number in a valid format and contact your Pay and Conditions 
-                                                        Administrator if you have any further difficulties`)
-                                flag = "2";
-                            }
-                            if (this.getView().byId("_IDGenInput23").getValue() == "") {
-                                flag = "4";
-                            }
-                            if (this.getView().byId("_IDGenInput27").getValue() == "") {
-                                flag = "4";
-                            }
-                            if (this.getView().byId("_IDGenInput28").getValue() == "") {
-                                flag = "4";
-                            }
-                            if (this.getView().byId("_IDGenInputSurSne").getValue() == "") {
-                                flag = "4";
-                            }
-                            if (this.getView().byId("_IDGenComboBox2").getSelectedItem() == null) {
-                                flag = "4";
-                            }
-                            if (this.getView().byId("_IDGenInput30").getValue() == "") {
-                                flag = "4";
-                            }
-                            if (flag == "4") {
-                                sap.m.MessageBox.error(`Please enter all the required fields in the
-                                                        Second Emergency Address Section.`);
+                            var aControls = this.getView().getControlsByFieldGroupId("secEmerAddress");
+                            aControls.forEach(function (oControl) {
+                                if (oControl.getId != undefined && oControl.getId()) {
+                                    if ((oControl.getValue != undefined && oControl.getValue() == "" && oControl.getRequired != undefined && oControl.getRequired()) || (oControl.getValueState != undefined && oControl.getValueState() === sap.ui.core.ValueState.Error)) {
+                                        oControl.setValueState(sap.ui.core.ValueState.Error);
+                                        errorFlag = true;
+                                        if (oControl.getValueStateText)
+                                            this._messLog(oControl.getValueStateText());
+                                    }
+                                    else if (oControl.getValue != undefined && oControl.getValue() != "") {
+                                        oControl.setValueState(sap.ui.core.ValueState.None);
+                                    }
+                                }
+                            }.bind(this));
+
+                            var mobTeleNumber = this.getView().byId("_IDGenInput30").getValue();
+                            if (mobTeleNumber && !(pRegex.test(mobTeleNumber)) && this.getView().byId("_IDGenInput30").getValueState() == "None") {
+                                this._messLog("Please re-enter the telephone number in a valid format and contact your Pay and Conditions Administrator if you have any further difficulties");
+                                this.getView().byId("_IDGenInput30").setValueState(sap.ui.core.ValueState.Error);
                             }
                         }
                     } else {
                         sap.m.MessageBox.error("Please select atleast one Address Type!");
-                        flag = "1";
                     }
                 }
                 // Bank Validations
                 if (this.getView().byId("ChangeOfBankCheckbox").getSelected() == true) {
-                    if (this.getView().byId("_IDGenInput34").getValue() != "") {
-                        if (this.getView().byId("_IDGenInput34").getValue().length < 8) {
-                            sap.m.MessageBox.error("The account number must be an 8 digit number");
-                            flag = "2";
+                    var bankAccNumber = this.getView().byId("_IDGenInput34").getValue();
+                    if (bankAccNumber && bankAccNumber.length != 8 && this.getView().byId("_IDGenInput34").getValueState() == "None") {
+                        this._messLog("The account number must be an 8 digit number");
+                        this.getView().byId("_IDGenInput34").setValueState(sap.ui.core.ValueState.Error);
+                    }
+                    var aControls = this.getView().getControlsByFieldGroupId("bankDetails");
+                    aControls.forEach(function (oControl) {
+                        if (oControl.getId != undefined && oControl.getId()) {
+                            if ((oControl.getValue != undefined && oControl.getValue() == "" && oControl.getRequired != undefined && oControl.getRequired()) || (oControl.getValueState != undefined && oControl.getValueState() === sap.ui.core.ValueState.Error)) {
+                                oControl.setValueState(sap.ui.core.ValueState.Error);
+                                errorFlag = true;
+                                if (oControl.getValueStateText)
+                                    this._messLog(oControl.getValueStateText());
+                            }
+                            else if (oControl.getValue != undefined && oControl.getValue() != "") {
+                                oControl.setValueState(sap.ui.core.ValueState.None);
+                            }
                         }
-                    } else {
-                        flag = "5";
-                    }
-                    if (this.getView().byId("_IDGenInput33").getValue() == "") {
-                        flag = "5";
-                    }
-                    if (this.getView().byId("_IDGenInputA1").getValue() == "") {
-                        flag = "5";
-                    }
-                    if (this.getView().byId("_nextMonthsDrop").getSelectedItem() == null) {
-                        flag = "5";
-                    }
-                    if (flag == "5") {
-                        sap.m.MessageBox.error(`Please enter all the required fields in the
-                                                Bank Details change Section.`);
-                    }
+                    }.bind(this));
                 }
                 // Name Changes
                 if (this.getView().byId("ChangeOfNameCheckbox").getSelected() == true) {
-                    if (this.getView().byId("_IDGenSelect6").getSelectedItem() == null) {
-                        flag = "6";
-                    }
-                    if (this.getView().byId("_IDGenInput37").getValue() == "") {
-                        flag = "6";
-                    }
-                    if (this.getView().byId("_IDGenInput38").getValue() == "") {
-                        flag = "6";
-                    }
-                    if (flag == "6") {
-                        sap.m.MessageBox.error(`Please enter all the required fields in the
-                                                Name Details change Section.`);
-                    }
+                    var aControls = this.getView().getControlsByFieldGroupId("nameChange");
+                    aControls.forEach(function (oControl) {
+                        if (oControl.getId != undefined && oControl.getId()) {
+                            if ((oControl.getValue != undefined && oControl.getValue() == "" && oControl.getRequired != undefined && oControl.getRequired()) || (oControl.getValueState != undefined && oControl.getValueState() === sap.ui.core.ValueState.Error)) {
+                                oControl.setValueState(sap.ui.core.ValueState.Error);
+                                errorFlag = true;
+                                if (oControl.getValueStateText)
+                                    this._messLog(oControl.getValueStateText());
+                            }
+                            else if (oControl.getValue != undefined && oControl.getValue() != "") {
+                                oControl.setValueState(sap.ui.core.ValueState.None);
+                            }
+                        }
+                    }.bind(this));
                 }
             },
 
@@ -2228,57 +2388,53 @@ sap.ui.define([
                     onClose: function (oAction) {
                         if (oAction == sap.m.MessageBox.Action.YES) {
 
-                            var Request_Payload = this.payload("", "X");
-
-                            this.getOwnerComponent().getModel("ZSFGTGT_PD01_SRV").create("/zsf_pd01_hSet", Request_Payload,
-                                {
-                                    success: function (oData) {
-                                        console.log(oData.Formid);
-                                        sap.m.MessageBox.success(`Form: ` + oData.Formid + `is deleted successfully`, {
-                                            title: "Success Message",
-                                            actions: [sap.m.MessageBox.Action.OK],
-                                            onClose: function (oAction) {
-                                                if (oAction) {
-                                                    // var oHistory, sPreviousHash;
-                                                    // oHistory = History.getInstance();
-                                                    // sPreviousHash = oHistory.getPreviousHash();
-                                                    // if (sPreviousHash == undefined) {
-                                                    // }
+                            this.getOwnerComponent().getModel("ZSFGTGT_PD01_SRV").remove(`/zsf_pd01_hSet('${this.getView().byId("_IDGenInput2").getValue()}')`, {
+                                success: function (oData) {
+                                    this._logCreation("D");
+                                    MessageBox.success("Form Deleted Successfully!", {
+                                        title: "Success Message",
+                                        actions: [MessageBox.Action.OK],
+                                        emphasizedAction: MessageBox.Action.OK,
+                                        onClose: function (sAction) {
+                                            if (sAction == MessageBox.Action.OK) {
+                                                if (this.query)
+                                                    window.parent.close();
+                                                else
                                                     window.history.go(-1);
-                                                }
                                             }
-                                        });
+                                        }.bind(this)
+                                    });
 
-                                    },
-                                    error: function (oData) {
-                                        console.log("Error", oData);
-                                    }
-                                });
+                                }.bind(this),
+                                error: function (oData) {
+                                    console.log("Error", oData);
+                                }
+                            });
 
-                            var Status = 'D';
-                            var log_payload = {
-                                "Formid": that.getView().byId("_IDGenInput2").getValue(),
-                                "StartedOn": that.getView().byId("_IDGenInput4").getValue(),
-                                "Status": Status,
-                                "Type": "PD01",
-                                "OrganizationName": that.getView().byId("orgInput").getValue(),
-                                "InitCode": initiatorCode,
-                                "Initiator": that.getView().byId("_IDGenInput1").getValue(),
-                                "Description": "Personal Details Form",
-                                "FormOwner": that.getView().byId("_IDGenInput1").getValue(),
-                                "FormOwnerCode": initiatorCode,
-                                "AvailableFrom": new Date(),
-                            }
-                            this.getOwnerComponent().getModel("ZSFGTGW_LOG_SRV").create("/zsf_logSet", log_payload,
-                                {
-                                    success: function (oData) {
-                                        console.log(`${oData.Formid} log created`);
+                            // var Status = 'D';
+                            // var log_payload = {
+                            //     "Formid": that.getView().byId("_IDGenInput2").getValue(),
+                            //     "StartedOn": that.getView().byId("_IDGenInput4").getValue(),
+                            //     "Status": Status,
+                            //     "Type": "PD01",
+                            //     "OrganizationName": that.getView().byId("orgInput").getValue(),
+                            //     "InitCode": initiatorCode,
+                            //     "Initiator": that.getView().byId("_IDGenInput1").getValue(),
+                            //     "Description": "Personal Details Form",
+                            //     "FormOwner": that.getView().byId("_IDGenInput1").getValue(),
+                            //     "FormOwnerCode": initiatorCode,
+                            //     "AvailableFrom": new Date(),
+                            // }
+                            // this.getOwnerComponent().getModel("ZSFGTGW_LOG_SRV").create("/zsf_logSet", log_payload,
+                            //     {
+                            //         success: function (oData) {
+                            //             console.log(`${oData.Formid} log created`);
 
-                                    }.bind(this),
-                                    error: function (oData) {
-                                        console.log("Error", oData);
-                                    }
-                                });
+                            //         }.bind(this),
+                            //         error: function (oData) {
+                            //             console.log("Error", oData);
+                            //         }
+                            //     });
 
                         }
                     }.bind(this)
@@ -2301,49 +2457,48 @@ sap.ui.define([
                     this.getOwnerComponent().getModel("ZSFGTGT_PD01_SRV").create("/zsf_pd01_hSet", Request_Payload,
                         {
                             success: function (oData) {
-                                console.log(oData.Formid);
+                                this._logCreation("E")
                                 sap.m.MessageBox.success(`Form: ` + oData.Formid + ` is saved successfully`, {
                                     title: "Success Message",
                                     actions: [sap.m.MessageBox.Action.OK],
                                     onClose: function (oAction) {
                                         if (oAction) {
-                                            if (this.query) window.close();
-                                            window.history.go(-1);
+                                            if (this.query) window.parent.close();
                                         }
                                     }.bind(this)
                                 });
-
-                            },
-                            error: function (oData) {
-                                console.log("Error", oData);
-                            }
-                        });
-
-
-                    var Status = 'E';
-                    var log_payload = {
-                        "Formid": this.getView().byId("_IDGenInput2").getValue(),
-                        "StartedOn": this.getView().byId("_IDGenInput4").getValue(),
-                        "Status": Status,
-                        "Type": "PD01",
-                        "OrganizationName": this.getView().byId("orgInput").getValue(),
-                        "InitCode": initiatorCode,
-                        "Initiator": this.getView().byId("_IDGenInput1").getValue(),
-                        "Description": "Personal Details Form",
-                        "FormOwner": this.getView().byId("_IDGenInput1").getValue(),
-                        "FormOwnerCode": initiatorCode,
-                        "AvailableFrom": new Date(),
-                    }
-                    this.getOwnerComponent().getModel("ZSFGTGW_LOG_SRV").create("/zsf_logSet", log_payload,
-                        {
-                            success: function (oData) {
-                                console.log(`${oData.Formid} log created`);
 
                             }.bind(this),
                             error: function (oData) {
                                 console.log("Error", oData);
                             }
                         });
+
+
+                    // var Status = 'E';
+                    // var log_payload = {
+                    //     "Formid": this.getView().byId("_IDGenInput2").getValue(),
+                    //     "StartedOn": this.getView().byId("_IDGenInput4").getValue(),
+                    //     "Status": Status,
+                    //     "Type": "PD01",
+                    //     "OrganizationName": this.getView().byId("orgInput").getValue(),
+                    //     "InitCode": initiatorCode,
+                    //     "Initiator": this.getView().byId("_IDGenInput1").getValue(),
+                    //     "Description": "Personal Details Form",
+                    //     "FormOwner": this.getView().byId("_IDGenInput1").getValue(),
+                    //     "FormOwnerCode": initiatorCode,
+                    //     "AvailableFrom": new Date(),
+                    // }
+                    // this.getOwnerComponent().getModel("ZSFGTGW_LOG_SRV").create("/zsf_logSet", log_payload,
+                    //     {
+                    //         success: function (oData) {
+                    //             console.log(`${oData.Formid} log created`);
+
+                    //         }.bind(this),
+                    //         error: function (oData) {
+                    //             console.log("Error", oData);
+                    //         }
+                    //     });
                 }
             },
 
@@ -2384,8 +2539,8 @@ sap.ui.define([
                     "Formid": this.getView().byId("_IDGenInput2").getValue() != "" ? this.getView().byId("_IDGenInput2").getValue() : "",
                     "Initiator": this.getView().byId("_IDGenInput1").getValue() != "" ? this.getView().byId("_IDGenInput1").getValue() : "",
                     "OrgName": this.getView().byId("orgInput").getValue() != "" ? this.getView().byId("orgInput").getValue() : "",
-                    "Zdate": this.getView().byId("_IDGenInput4").getValue() != "" ? this.getView().byId("_IDGenInput4").getValue() : "",
-                    "EffDate": this.getView().byId("datepicker01").getValue() != "" ? this.getView().byId("datepicker01").getValue() : "",
+                    "Zdate": this.getView().byId("_IDGenInput4").getValue() != "" ? new Date(this.getView().byId("_IDGenInput4").getValue()).toLocaleDateString('en-GB') : "",
+                    "EffDate": this.getView().byId("datepicker01").getValue() != "" ? new Date(this.getView().byId("datepicker01").getValue()).toLocaleDateString('en-GB') : "",
                     "EffDateInt": effDateIntHead,
                     "SelEmpCode": this.byId("_IDGenSelect2").getSelectedItem() != null ? this.getView().byId("_IDGenSelect2").getSelectedItem().getKey() : this.getView().byId("_IDGenSelect2").getSelectedKey(),
                     "SelectEmployee": this.byId("_IDGenSelect2").getSelectedItem() != null ? this.getView().byId("_IDGenSelect2").getSelectedItem().getText() : this.getView().byId("_IDGenSelect2").getValue(),
@@ -2411,15 +2566,15 @@ sap.ui.define([
                             "Citypar": this.getView().byId("input4").getValue() != "" ? this.getView().byId("input4").getValue() : "",
                             "CountyCodepar": this.getView().byId("input5").getSelectedItem() != null ? this.getView().byId("input5").getSelectedItem().getKey() : this.getView().byId("input5").getSelectedKey(),
                             "Countypar": this.getView().byId("input5").getSelectedItem() != null ? this.getView().byId("input5").getSelectedItem().getText() : this.getView().byId("input5").getValue(),
-                            "PostCodepar": this.getView().byId("input6").getValue() != "" ? this.getView().byId("input6").getValue() : "",
+                            "PostCodepar": this.getView().byId("input6").getValue() != "" ? (this.getView().byId("input6").getValue()).toUpperCase() : "",
                             "HomePhonepar": this.getView().byId("input7").getValue() != "" ? this.getView().byId("input7").getValue() : "",
-                            "ParPhnType": this.configData.phoneTypeB,
+                            "ParPhnType": this.configData.phoneTypeL,
                             "PhnFlag": this.configData.isHomePrimary ? "X" : "",
                             "Mobilepar": this.getView().byId("_IDGenInput40").getValue() != "" ? this.getView().byId("_IDGenInput40").getValue() : "",
                             "ParMobType": this.configData.phoneTypeP,
                             "MobFlag": !(this.configData.isPhonePrimary || this.configData.isHomePrimary) ? "X" : this.configData.isPhonePrimary ? "X" : "",
                             "ParEmail": this.getView().byId("_IDGenInput41").getValue() != "" ? this.getView().byId("_IDGenInput41").getValue() : "",
-                            "ParEmailType": this.configData.emailTypeP,
+                            "ParEmailType": this.configData.emailTypeB,
                             "EmailPrimary": this.configData.isEmailPrimary ? "X" : "",
                             // End Of Current
 
@@ -2429,7 +2584,7 @@ sap.ui.define([
                             "Citypne": this.getView().byId("_IDGenInput8").getValue() != "" ? this.getView().byId("_IDGenInput8").getValue() : "",
                             "CountyCodepne": this.byId("_IDGenSelect3").getSelectedItem() != null ? this.getView().byId("_IDGenSelect3").getSelectedItem().getKey() : this.getView().byId("_IDGenSelect3").getSelectedKey(),
                             "Countypne": this.byId("_IDGenSelect3").getSelectedItem() != null ? this.getView().byId("_IDGenSelect3").getSelectedItem().getText() : this.getView().byId("_IDGenSelect3").getValue(),
-                            "PostCodepne": this.getView().byId("_IDGenInput9").getValue() != "" ? this.getView().byId("_IDGenInput9").getValue() : "",
+                            "PostCodepne": this.getView().byId("_IDGenInput9").getValue() != "" ? (this.getView().byId("_IDGenInput9").getValue()).toUpperCase() : "",
                             "HomePhonepne": this.getView().byId("_IDGenInput10").getValue() != "" ? this.getView().byId("_IDGenInput10").getValue() : "",
                             "Mobilepne": this.getView().byId("_IDGenInput11").getValue() != "" ? this.getView().byId("_IDGenInput11").getValue() : "",
                             "ParNewEmail": this.getView().byId("_IDGenInput12").getValue() != "" ? this.getView().byId("_IDGenInput12").getValue() : "",
@@ -2444,7 +2599,7 @@ sap.ui.define([
                             "Cityfir": this.getView().byId("_IDGenInput45").getValue() != "" ? this.getView().byId("_IDGenInput45").getValue() : "",
                             "CountyCodefir": this.getView().byId("_IDGenInput46").getSelectedItem() != null ? this.getView().byId("_IDGenInput46").getSelectedItem().getKey() : this.getView().byId("_IDGenInput46").getSelectedKey(),
                             "Countyfir": this.getView().byId("_IDGenInput46").getSelectedItem() != null ? this.getView().byId("_IDGenInput46").getSelectedItem().getText() : this.getView().byId("_IDGenInput46").getValue(),
-                            "PostCodefir": this.getView().byId("_IDGenInput47").getValue() != "" ? this.getView().byId("_IDGenInput47").getValue() : "",
+                            "PostCodefir": this.getView().byId("_IDGenInput47").getValue() != "" ? (this.getView().byId("_IDGenInput47").getValue()).toUpperCase() : "",
                             "FirstKinName": this.getView().byId("_IDGenInput48").getValue() != "" ? this.getView().byId("_IDGenInput48").getValue() : "",
                             "FirstKinSurName": this.getView().byId("_IDGenInputSur").getValue() != "" ? this.getView().byId("_IDGenInputSur").getValue() : "",
                             "CurrFirstRelCode": this.getView().byId("_IDGenInputRel").getValue() != "" ? this.getView().byId("_IDGenInputRel").getValue() : "",
@@ -2458,7 +2613,7 @@ sap.ui.define([
                             "Cityfne": this.getView().byId("_IDGenInput17").getValue() != "" ? this.getView().byId("_IDGenInput17").getValue() : "",
                             "CountyCodefne": this.byId("_IDGenSelect4").getSelectedItem() != null ? this.getView().byId("_IDGenSelect4").getSelectedItem().getKey() : this.getView().byId("_IDGenSelect4").getSelectedKey(),
                             "Countyfne": this.byId("_IDGenSelect4").getSelectedItem() != null ? this.getView().byId("_IDGenSelect4").getSelectedItem().getText() : this.getView().byId("_IDGenSelect4").getValue(),
-                            "PostCodefne": this.getView().byId("_IDGenInput18").getValue() != "" ? this.getView().byId("_IDGenInput18").getValue() : "",
+                            "PostCodefne": this.getView().byId("_IDGenInput18").getValue() != "" ? (this.getView().byId("_IDGenInput18").getValue()).toUpperCase() : "",
                             "HomePhonefne": this.getView().byId("_IDGenInput19").getValue() != "" ? this.getView().byId("_IDGenInput19").getValue() : "",
                             // "Mobilefne": this.getView().byId("_IDGenInput20").getValue() != "" ? this.getView().byId("_IDGenInput20").getValue() : "",
                             "FirstNewKinName": this.getView().byId("_IDGenInput21").getValue() != "" ? this.getView().byId("_IDGenInput21").getValue() : "",
@@ -2478,7 +2633,7 @@ sap.ui.define([
                             "SecKinName": this.getView().byId("_IDGenInput57").getValue() != "" ? this.getView().byId("_IDGenInput57").getValue() : "",
                             "SecKinSurName": this.getView().byId("_IDGenInputSurSec").getValue() != "" ? this.getView().byId("_IDGenInputSurSec").getValue() : "",
                             "CurrSecRelCode": this.getView().byId("_IDGenInputRelSec").getValue() != "" ? this.getView().byId("_IDGenInputRelSec").getValue() : "",
-                            "PostCodesec": this.getView().byId("_IDGenInput56").getValue() != "" ? this.getView().byId("_IDGenInput56").getValue() : "",
+                            "PostCodesec": this.getView().byId("_IDGenInput56").getValue() != "" ? (this.getView().byId("_IDGenInput56").getValue()).toUpperCase() : "",
                             "HomePhonesec": this.getView().byId("_IDGenInput58").getValue() != "" ? this.getView().byId("_IDGenInput58").getValue() : "",
                             // "Mobilesec": this.getView().byId("_IDGenInput59").getValue() != "" ? this.getView().byId("_IDGenInput59").getValue() : "",
                             // End OF current
@@ -2489,7 +2644,7 @@ sap.ui.define([
                             "Citysne": this.getView().byId("_IDGenInput26").getValue() != "" ? this.getView().byId("_IDGenInput26").getValue() : "",
                             "CountyCodesne": this.byId("_IDGenSelect5").getSelectedItem() != null ? this.getView().byId("_IDGenSelect5").getSelectedItem().getKey() : this.getView().byId("_IDGenSelect5").getSelectedKey(),
                             "Countysne": this.byId("_IDGenSelect5").getSelectedItem() != null ? this.getView().byId("_IDGenSelect5").getSelectedItem().getText() : this.getView().byId("_IDGenSelect5").getValue(),
-                            "PostCodesne": this.getView().byId("_IDGenInput27").getValue() != "" ? this.getView().byId("_IDGenInput27").getValue() : "",
+                            "PostCodesne": this.getView().byId("_IDGenInput27").getValue() != "" ? (this.getView().byId("_IDGenInput27").getValue()).toUpperCase() : "",
                             "HomePhonesne": this.getView().byId("_IDGenInput30").getValue() != "" ? this.getView().byId("_IDGenInput30").getValue() : "",
                             // "Mobilesne": this.getView().byId("_IDGenInput31").getValue() != "" ? this.getView().byId("_IDGenInput31").getValue() : "",
                             "SecNewKinName": this.getView().byId("_IDGenInput28").getValue() != "" ? this.getView().byId("_IDGenInput28").getValue() : "",
@@ -2551,11 +2706,11 @@ sap.ui.define([
                     onClose: function (oAction) {
                         if (oAction == sap.m.MessageBox.Action.YES) {
                             flag = "0";
-                            if (this.getView().byId("_IDGenSelect2").getSelectedItem() == null || this.getView().byId("_IDGenSelect2").getValue() == "") {
+                            if (this.getView().byId("_IDGenSelect2").getSelectedItem() == null && this.getView().byId("_IDGenSelect2").getValue() == "") {
                                 sap.m.MessageBox.error("Please select an Employee first!");
                                 flag = "1";
                             }
-                            if (this.getView().byId("datepicker01").getDateValue() == null) {
+                            if (this.getView().byId("datepicker01").getDateValue() == null && this.getView().byId("datepicker01").getValue() == "") {
                                 sap.m.MessageBox.error("Please select an Effective Date of Change!");
                                 flag = "1";
                             }
@@ -2570,171 +2725,88 @@ sap.ui.define([
                                 }
                             }
 
-                            if (flag == "0") {
+                            var errorLog = this.getView().getModel("InitData").getProperty("/MessageLog");
+                            if (errorLog.length != 0) {
+                                sap.ui.core.BusyIndicator.hide();
+                                // deleting duplicates
+                                let tempData = errorLog.filter((e, i) => {
+                                    return errorLog.findIndex((x) => {
+                                        return x.Message == e.Message;
+                                    }) == i;
+                                });
+                                this.getView().getModel("InitData").setProperty("/MessageLog", tempData);
+                                this.oMessage = sap.ui.xmlfragment("pd01qa.fragment.logMessage", this);
+                                this.getView().addDependent(this.oMessage);
+                                this.oMessage.open();
+                            }
+                            else {
+                                if (flag == "0") {
 
-                                var Request_Payload = this.payload("I", "");
+                                    var Request_Payload = this.payload("I", "");
 
-                                this.getOwnerComponent().getModel("ZSFGTGT_PD01_SRV").create("/zsf_pd01_hSet", Request_Payload,
-                                    {
-                                        success: function (oData) {
-                                            console.log(oData.Formid);
-                                            that.getView().byId("_IDGenInput2").setValue(oData.Formid)
+                                    this.getOwnerComponent().getModel("ZSFGTGT_PD01_SRV").create("/zsf_pd01_hSet", Request_Payload,
+                                        {
+                                            success: function (oData) {
+                                                console.log(oData.Formid);
+                                                that.getView().byId("_IDGenInput2").setValue(oData.Formid)
 
-                                            var details = that.getView().getModel("InitData").getProperty("/user");
-                                            var appUrl = window.location.origin + "/site" + window.location.search.split("&")[0] + window.location.hash.split("?")[0];
-                                            var reqUrl = appUrl.includes("GCC_SemObj") ? appUrl + "&/?formId=" : appUrl + "#?formId=";
-                                            var wrkFlow =
-                                            {
-                                                "definitionId": "eu10.gccdev.eforms.pD01",
-                                                "context": {
-                                                    "FormID": oData.Formid,
-                                                    "formlinkinitiator": reqUrl + oData.Formid + "&mode=initiator",
-                                                    "formlinkbsc": reqUrl + oData.Formid + "&mode=display",
-                                                    "initiator": details.email
+                                                var details = that.getView().getModel("InitData").getProperty("/user");
+                                                var appUrl = window.location.origin + "/site?siteId=" + window.location.search.split("siteId=")[1].split("&")[0] + window.location.hash.split("Display")[0] + "Display";
+                                                var reqUrl = appUrl.includes("GCC_SemObj") ? appUrl + "&/?formId=" : appUrl + "#?formId=";
+                                                var wrkFlow =
+                                                {
+                                                    "definitionId": "eu10.gccdev.eforms.pD01",
+                                                    "context": {
+                                                        "FormID": oData.Formid,
+                                                        "formlinkinitiator": reqUrl + oData.Formid + "&mode=initiator",
+                                                        "formlinkbsc": reqUrl + oData.Formid + "&mode=display",
+                                                        "initiator": details.email
+                                                    }
                                                 }
-                                            }
 
-                                            var prefix = sap.ui.require.toUrl(that.getOwnerComponent().getManifestEntry('/sap.app/id').replaceAll('.', '/')) + "/";
-                                            var sURL = prefix + "workflow/rest/v1/workflow-instances";
-                                            var sURL1 = prefix + "workflow/rest/v1/task-instances";
+                                                var prefix = sap.ui.require.toUrl(that.getOwnerComponent().getManifestEntry('/sap.app/id').replaceAll('.', '/')) + "/";
+                                                var sURL = prefix + "workflow/rest/v1/workflow-instances";
+                                                var sURL1 = prefix + "workflow/rest/v1/task-instances";
 
-                                            $.support.cors = true;
-                                            $.ajax(sURL, {
-                                                method: "POST",
-                                                data: JSON.stringify(wrkFlow),
-                                                crossDomain: true,
-                                                contentType: "application/json"
-                                            }).done(function (data, textStatus, jqXHR) {
-                                                console.log("---workflow Data---");
                                                 $.support.cors = true;
-                                                if (data) {
-                                                    var url = sURL1 + "?workflowInstanceId=" + data.id
-                                                    $.ajax(url, {
-                                                        method: "GET",
-                                                        crossDomain: true,
-                                                        contentType: "application/json"
-                                                    }).done(function (taskdata, textStatus, jqXHR) {
-                                                        console.log("---task Data---");
-                                                        console.log(taskdata);
-                                                        console.log("Workflow has been triggered and Form has been Submitted");
-                                                        var initiator_prop = that.getView().getModel("InitData").getProperty("/user");
-                                                        var initiator = initiator_prop.personIdExternal;
-                                                        var userId = initiator_prop.userId;
-                                                        var Status = 'S';
-                                                        $.ajax({
-                                                            url: prefix + "odata/v2/EmpEmployment(personIdExternal='" + initiator + "',userId='" + userId + "')/jobInfoNav?$format=json",
-                                                            type: 'GET',
-                                                            contentType: "application/json",
-                                                            success: function (data) {
-                                                                console.log("success" + data);
-                                                                if (data.d.results[0].managerId == "NO_MANAGER") {
-                                                                    var log_payload = {
-                                                                        "Formid": that.getView().byId("_IDGenInput2").getValue(),
-                                                                        "StartedOn": that.getView().byId("_IDGenInput4").getValue(),
-                                                                        "Status": Status,
-                                                                        "Type": "PD01",
-                                                                        "OrganizationName": that.getView().byId("orgInput").getValue(),
-                                                                        "InitCode": initiatorCode,
-                                                                        "Initiator": that.getView().byId("_IDGenInput1").getValue(),
-                                                                        "Description": "Personal Details Form",
-                                                                        "FormOwner": data.d.results[0].managerId,
-                                                                        "FormOwnerCode": data.d.results[0].managerId,
-                                                                        "AvailableFrom": new Date(),
-                                                                    }
-                                                                    that.getOwnerComponent().getModel("ZSFGTGW_LOG_SRV").create("/zsf_logSet", log_payload,
-                                                                        {
-                                                                            success: function (oData) {
-                                                                                console.log(`${oData.Formid} log created`);
-
-                                                                            }.bind(this),
-                                                                            error: function (oData) {
-                                                                                console.log("Error in log creation", oData);
-                                                                            }
-                                                                        });
-
-                                                                } else {
-                                                                    $.ajax({
-                                                                        url: prefix + "odata/v2/PerPerson('" + data.d.results[0].managerId + "')/personalInfoNav?$format=json",
-                                                                        type: 'GET',
-                                                                        contentType: "application/json",
-                                                                        success: function (data) {
-                                                                            console.log("success" + data);
-                                                                            var FormOwner = data.d.results[0].firstName + " " + data.d.results[0].lastName;
-                                                                            var log_payload = {
-                                                                                "Formid": that.getView().byId("_IDGenInput2").getValue(),
-                                                                                "StartedOn": that.getView().byId("_IDGenInput4").getValue(),
-                                                                                "Status": Status,
-                                                                                "Type": "PD01",
-                                                                                "OrganizationName": that.getView().byId("orgInput").getValue(),
-                                                                                "InitCode": initiatorCode,
-                                                                                "Initiator": that.getView().byId("_IDGenInput1").getValue(),
-                                                                                "Description": "Personal Details Form",
-                                                                                "FormOwner": FormOwner,
-                                                                                "FormOwnerCode": initiatorCode,
-                                                                                "AvailableFrom": new Date(),
-                                                                            }
-                                                                            that.getOwnerComponent().getModel("ZSFGTGW_LOG_SRV").create("/zsf_logSet", log_payload,
-                                                                                {
-                                                                                    success: function (oData) {
-                                                                                        console.log(`${oData.Formid} log created`);
-
-                                                                                    }.bind(this),
-                                                                                    error: function (oData) {
-                                                                                        console.log("Error in log creation", oData);
-                                                                                    }
-                                                                                });
-                                                                        },
-                                                                        error: function (e) {
-                                                                            console.log("error: " + e);
-                                                                        }
-                                                                    });
-                                                                }
-                                                            },
-                                                            error: function (e) {
-                                                                console.log("error: " + e);
-                                                            }
-                                                        });
-                                                        var formIdMess = that.getView().byId("_IDGenInput2").getValue();
-                                                        sap.m.MessageBox.success(`Form: ${formIdMess} is submitted successfully
+                                                $.ajax(sURL, {
+                                                    method: "POST",
+                                                    data: JSON.stringify(wrkFlow),
+                                                    crossDomain: true,
+                                                    contentType: "application/json"
+                                                }).done(function (data, textStatus, jqXHR) {
+                                                    console.log("Workflow has been triggered and Form has been Submitted");
+                                                    if (data) {
+                                                        this._logCreation("S")
+                                                        sap.m.MessageBox.success(`Form: ${this.getView().byId("_IDGenInput2").getValue()} is submitted successfully
                                                         
                                                         Please call ContactUs on 01452 425888 should you have any queries regarding this e-Form.`, {
                                                             onClose: function (oAction) {
                                                                 if (oAction) {
-                                                                    // var oHistory, sPreviousHash;
-                                                                    // oHistory = History.getInstance();
-                                                                    // sPreviousHash = oHistory.getPreviousHash();
-                                                                    // if (sPreviousHash == undefined) {
-                                                                    // }
-                                                                    window.history.go(-1);
+                                                                    if (this.query) window.parent.close()
+                                                                    else window.history.go(-1);
                                                                 }
-                                                            }
+                                                            }.bind(this)
                                                         }
                                                         );
-                                                        // var oHistory, sPreviousHash;
-                                                        // oHistory = History.getInstance();
-                                                        // sPreviousHash = oHistory.getPreviousHash();
-                                                        // if (sPreviousHash == undefined) {
-                                                        //     window.history.go(-1);
-                                                        // }
-                                                    }).fail(function (XMLHttpRequest, textStatus) {
+                                                    }
 
-                                                    });
-                                                }
+                                                }.bind(this)).fail(function (XMLHttpRequest, textStatus) {
+                                                    alert("error");
+                                                });
+                                            }.bind(this),
+                                            error: function (oData) {
+                                                console.log("Error", oData);
+                                            }
+                                        });
+                                    // this end
 
-                                            }).fail(function (XMLHttpRequest, textStatus) {
-                                                alert("error");
-                                            });
-                                        },
-                                        error: function (oData) {
-                                            console.log("Error", oData);
-                                        }
-                                    });
-                                // this end
-
+                                }
                             }
                         }
                     }.bind(this)
                 })
+
             },
 
             onPrint: function () {

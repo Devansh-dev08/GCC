@@ -1,3 +1,4 @@
+
 <mvc:View
 	xmlns:mvc="sap.ui.core.mvc"
 	xmlns="sap.m"
@@ -21,7 +22,7 @@
 									<Input id="idInitiator" value="" editable="false" type="Text"/>
 									<Label id="_IDGenLabel4" text="{i18n>Org}" showColon="true"/>
 									<!-- <Input id="_IDGenInput4" value="{oneModel>/jobInfoOrganisation/customString3}" editable="false"/> -->
-									<ComboBox id="_IDGenInput4" selectedKey="{oneModel>/selectedOrg}" items="{path: 'oneModel>/OrgValues', templateShareable:false}" change="onOrgChange" enabled="{= ${oneModel>/disable/mode} !== 'display' || ${oneModel>/disable/mode} !== 'bsc' }" editable="{oneModel>/multiOrgFound}" >
+									<ComboBox id="_IDGenInput4" selectedKey="{oneModel>/selectedOrg}" items="{path: 'oneModel>/OrgValues', templateShareable:false}" change="onOrgChange" enabled="{= ${oneModel>/disable/mode} !== 'display' || ${oneModel>/disable/mode} !== 'bsc' }" editable="{oneModel>/multiOrgFound}" valueStateText="Organization is a required field" >
 										<items>
 											<core:Item key="{oneModel>key}" text="{oneModel>value} ({oneModel>key})" />
 										</items>
@@ -42,31 +43,36 @@
 								<f:SimpleForm id="SimpleFormChange354wide" editable="true" layout="ResponsiveGridLayout" labelSpanXL="4" labelSpanL="3" labelSpanM="4" labelSpanS="12" emptySpanXL="0" emptySpanL="4" emptySpanM="0" emptySpanS="0" columnsXL="2" columnsL="1" columnsM="1" width="auto" fieldGroupIds="secAFields" >
 									<f:content>
 										<Label id="_IDGenLabel6" text="{i18n>inYourOrg}" required="true"/>
-										<ComboBox id="_IDGenComboBox1" change="onChangeCurrentlyEmployed" required="true" tooltip="{i18n>wherehasyouremployee}">
+										<ComboBox id="_IDGenComboBox1" change="onChangeCurrentlyEmployed" required="true" tooltip="{i18n>wherehasyouremployee}" valueStateText="Please select a valid entry">
 											<core:Item id="_IDGenItem" key="X" text="Yes"/>
 											<core:Item id="_IDGenItem1" key="N" text="No"/>
 										</ComboBox>
 										<Label visible="{= ${oneModel>/disable/mode} === 'display'}" id="_IDGenLabel64" text="{i18n>employee}"/>
 										<!--  <ComboBox visible="false" id="_IDGenComboBox41" items="{oneModel>/PerPersonal/d/results/}" change="oEmployeeSelect" class="sapUiTinyMarginBeginEnd" width="80%" required="true"><core:Item id="_IDGenItem4" key="salutation" text="{oneModel>salutation} {oneModel>firstName} {oneModel>lastName} {oneModel>personIdExternal}"  /></ComboBox>  -->
-										<ComboBox id="_IDGenComboBox41" visible="{= ${oneModel>/disable/mode} === 'display'}" change="oEmployeeSelect" items="{path: 'oneModel>/employeeList', length: 10000}" tooltip="{i18n>SelEmployee}">
+										<ComboBox id="_IDGenComboBox41" visible="{= ${oneModel>/disable/mode} === 'display'}" change="oEmployeeSelect" items="{path: 'oneModel>/employeeList', length: 10000}" tooltip="{i18n>SelEmployee}" valueStateText="Please select a valid entry" >
 											<core:Item id="_IDGenItem4" key="{oneModel>personIdExternal}" text="{oneModel>lastName} {oneModel>firstName} {oneModel>userId} {oneModel>jobInfo}"/>
 										</ComboBox>
 										<Label visible="{= ${oneModel>/disable/mode} === 'display'}" id="empCame" text="Where has your new employee come from" />
-										<Input id="idempCame1" visible="false" value="Multiple Employment (same department)" editable="false" tooltip="{i18n>comeFrom}"/>
+										<Input id="idempCame1" visible="false" value="Multiple Employment (same department)" editable="false" fieldGroupIds="hardEdit" tooltip="{i18n>comeFrom}"/>
 										<Label visible="false" id="empCame3" text="Where has your new employee come from" />
-										<ComboBox visible="false" items="{oneModel>/empCameFrom}" id="idempCame" change="generalDropdownCheck" tooltip="{i18n>comeFrom}">
+										<ComboBox visible="false" items="{oneModel>/empCameFrom}" id="idempCame" change="generalDropdownCheck($event, 'X')" tooltip="{i18n>comeFrom}" valueStateText="Please select a valid entry" >
 											<core:Item id="_IDGenItem9" key="{oneModel>event}" text="{oneModel>name}"/>
 										</ComboBox>
 										<Label visible="{= ${oneModel>/disable/mode} === 'display'}" id="_IDGenLabel621" text="{i18n>PreviousEmployer}"/>
-										<Input visible="{= ${oneModel>/disable/mode} === 'display'}" id="_IDGenInput10" value="" tooltip="{i18n>pervEmployer}"/>
+										<Input visible="{= ${oneModel>/disable/mode} === 'display'}" id="_IDGenInput10" tooltip="{i18n>pervEmployer}" change="generalInputCheck($event,'')" maxLength="256" />
 										<Label visible="{= ${oneModel>/disable/mode} === 'display'}" id="_IDGenLabel6421" text="{i18n>contracttype}" required="true" />
-										<ComboBox visible="{= ${oneModel>/disable/mode} === 'display'}" id="_IDGenComboBox411" items="{path: 'oneModel>/oContractType/d/results/', length: 1000}" change="onChangeContractType" required="true" tooltip="{i18n>contractType}">
+										<ComboBox visible="{= ${oneModel>/disable/mode} === 'display'}" id="_IDGenComboBox411" items="{path: 'oneModel>/oContractType/d/results/', length: 1000}" change="onChangeContractType" required="true" tooltip="{i18n>contractType}" valueStateText="Contract type is a required field" >
 											<core:Item id="_IDGenItem41" key="{oneModel>cust_WorkContract}" text="{oneModel>cust_Text}"/>
 										</ComboBox>
 										<Label visible="{= ${oneModel>/disable/mode} === 'display'}" id="_IDGenLabel6411" text="{i18n>Postitle}" required="true" />
-										<Input visible="{= ${oneModel>/disable/mode} === 'display'}" id="_IDGenInput11" required="true" value="" tooltip="{i18n>positionTitle}" change="generalInputCheck" />
+										<Input visible="{= ${oneModel>/disable/mode} === 'display'}" id="_IDGenInput11" required="true" value="" tooltip="{i18n>positionTitle}" change="generalInputCheck($event,'X')" valueStateText="Position is a required field" maxLength="256" />
 										<Label visible="{= ${oneModel>/disable/mode} === 'display'}" id="_IDGenLabel611" text="{i18n>posCost}"/>
-										<Input visible="{= ${oneModel>/disable/mode} === 'display'}" id="_IDGenInput112" required="true" editable="false"/>
+										<!-- <Input visible="{= ${oneModel>/disable/mode} === 'display'}" id="_IDGenInput112" required="true" editable="false" fieldGroupIds="hardEdit" /> -->
+										<ComboBox visible="{= ${oneModel>/disable/mode} === 'display'}" editable="true" id="_IDGenInput112" items="{path: 'oneModel>/posCostCenterList', length: 1000}" change="generalDropdownCheck($event,'X')" required="true" valueStateText="Position Cost Centre is a required field">
+											<core:Item key="{oneModel>externalCode}" text="{oneModel>costcenterExternalObjectID} - {oneModel>description}"/>
+										</ComboBox>
+										<Label id="TeachRegNum11" text="{i18n>TeachRegNum}" visible="false" required="true" />
+										<Input id="TeachRegNum12" value="{oneModel>/jobInfo/customString6}" tooltip="{i18n>TeacherTool}" liveChange="numberValidation" required="false" change="generalInputCheck($event,'X')" valueStateText="Enter a valid TRN" visible="false" maxLength="8" />
 									</f:content>
 								</f:SimpleForm>
 								<HBox id="_IDGenHBox3" justifyContent="End">
@@ -82,38 +88,38 @@
 										<!--  <Input id="titleB1" enabled="false" value="{oneModel>/personalInfo/d/results/0/salutation} " class="sapUiTinyMarginBeginEnd " width="80%" required="true"/>
                                  -->
 										<!--  <ComboBox visible="true" id="titleB1"  items="{oneModel>/salutaionP/d/results/}" change="onChangeTitle" class="sapUiTinyMarginBeginEnd " width="80%" required="true"><core:Item  id="title" key="{oneModel>id}" text="{oneModel>externalCode}"  /></ComboBox>  -->
-										<ComboBox visible="true" id="titleB1" items="{oneModel>/title/}" change="generalDropdownCheck" required="true" tooltip="{i18n>title}">
+										<ComboBox visible="true" id="titleB1" items="{oneModel>/title/}" change="generalDropdownCheck($event, 'X')" required="true" tooltip="{i18n>title}" valueStateText="Title is a required field" >
 											<core:Item id="titleSal" key="{oneModel>externalCode}" text="{oneModel>label_en_GB}"/>
 										</ComboBox>
 										<Label id="foreName" text="{i18n>foreName}"/>
-										<Input id="foreName1" editable="{= ${oneModel>/disable/mode} !== 'display'}" value="{oneModel>/personalInfo/firstName}" required="true" tooltip="{i18n>firstName}" change="generalInputCheck" />
+										<Input id="foreName1" editable="{= ${oneModel>/disable/mode} !== 'display'}" value="{oneModel>/personalInfo/firstName}" required="true" tooltip="{i18n>firstName}" change="generalInputCheck($event,'X')" valueStateText="Forename is a required field" />
 										<Label id="middelname" text="{i18n>middlename}"/>
-										<Input id="middelname1" editable="{= ${oneModel>/disable/mode} !== 'display'}" value="{oneModel>/personalInfo/middleName}" tooltip="{i18n>middleName}" change="generalInputCheck"/>
+										<Input id="middelname1" editable="{= ${oneModel>/disable/mode} !== 'display'}" value="{oneModel>/personalInfo/middleName}" tooltip="{i18n>middleName}" />
 										<Label id="surname" text="{i18n>surname}"/>
-										<Input id="surname1" editable="{= ${oneModel>/disable/mode} !== 'display'}" value="{oneModel>/personalInfo/lastName}" required="true" tooltip="{i18n>lastName}" change="generalInputCheck"/>
+										<Input id="surname1" editable="{= ${oneModel>/disable/mode} !== 'display'}" value="{oneModel>/personalInfo/lastName}" required="true" tooltip="{i18n>lastName}" change="generalInputCheck($event,'X')" valueStateText="Surname is a required field" />
 										<Label id="contStartDate" text="{i18n>contStartDate}"/>
-										<DatePicker id="contStartDate1" required="true" editable="{= ${oneModel>/disable/mode} !== 'display'}" placeholder="{i18n>EnterDate}" value="" displayFormat="dd.MM.YYYY" tooltip="{i18n>contServ}"/>
+										<DatePicker id="contStartDate1" required="true" editable="{= ${oneModel>/disable/mode} !== 'display'}" change="generalDateCheck" placeholder="{i18n>EnterDate}" value="" displayFormat="dd.MM.YYYY" tooltip="{i18n>contServ}" valueStateText="Cont. Start Date is a required field" />
 										<!--  <Label id="empAdd" text="{i18n>empAdd}" class="sapUiTinyMarginBegin" />  -->
 										<Label id="AddressTitle" text="Employee Address"/>
 										<!--  <Input id="empAdd1" editable="{= ${oneModel>/disable/mode} !== 'display'}" width="80%" class="sapUiTinyMarginBeginEnd " value="" />  -->
-										<Label id="streetHouseNo" text="{i18n>streetHouseNo}" required="true"/>
-										<Input id="streetHouseNo1" editable="{= ${oneModel>/disable/mode} !== 'display'}" value="{oneModel>/homeAddress/address1}" required="true" tooltip="{i18n>address1}" change="generalInputCheck"/>
-										<Label id="2ndadd" text="{i18n>2ndadd}"/>
-										<Input id="2ndadd1" editable="{= ${oneModel>/disable/mode} !== 'display'}" value="{oneModel>/homeAddress/address2}" tooltip="{i18n>address2}" change="generalInputCheck"/>
-										<Label id="city" text="{i18n>city}"/>
-										<Input id="city1" editable="{= ${oneModel>/disable/mode} !== 'display'}" value="{oneModel>/homeAddress/city}" tooltip="{i18n>cityTool}" change="generalInputCheck"/>
+										<Label id="streetHouseNo" text="{i18n>streetHouseNo}" required="true" labelFor="streetHouseNo1" /> 
+										<Input id="streetHouseNo1" editable="{= ${oneModel>/disable/mode} !== 'display'}" value="{oneModel>/homeAddress/address1}" required="true" tooltip="{i18n>address1}" change="specialCharCheck($event, 'X')" valueStateText="Street &amp; House No. is a required field" />
+										<Label id="2ndadd" text="{i18n>2ndadd}" labelFor="2ndadd1" />
+										<Input id="2ndadd1" editable="{= ${oneModel>/disable/mode} !== 'display'}" value="{oneModel>/homeAddress/address2}" tooltip="{i18n>address2}" change="specialCharCheck($event, '')" />
+										<Label id="city" text="{i18n>city}" required="true" labelFor="city1" />
+										<Input id="city1" editable="{= ${oneModel>/disable/mode} !== 'display'}" value="{oneModel>/homeAddress/city}" tooltip="{i18n>cityTool}" required="true" valueStateText="City is a required field" change="specialCharCheck($event, 'X')" />
 										<Label id="country" text="County"/>
-										<ComboBox editable="{= ${oneModel>/disable/mode} !== 'display'}" visible="true" id="country1" selectedKey="" items="{path: 'oneModel>/county/', length: 1000}" change="generalDropdownCheck" required="true" tooltip="{i18n>countyTool}">
+										<ComboBox editable="{= ${oneModel>/disable/mode} !== 'display'}" visible="true" id="country1" items="{path: 'oneModel>/county/', length: 1000}" change="generalDropdownCheck($event, '')" tooltip="{i18n>countyTool}" valueStateText="Enter a valid County" >
 											<core:Item id="SecBCounty" key="{oneModel>optionId}" text="{oneModel>label_en_GB}"/>
 										</ComboBox>
 										<Label id="postcode" text="{i18n>postcode}"/>
-										<Input id="postcode1" change="validatePostCode" editable="{= ${oneModel>/disable/mode} !== 'display'}" required="true" value="{oneModel>/homeAddress/zipCode}" tooltip="{i18n>postcodeTool}" />
+										<Input id="postcode1" change="validatePostCode" editable="{= ${oneModel>/disable/mode} !== 'display'}" required="true" value="{oneModel>/homeAddress/zipCode}" tooltip="{i18n>postcodeTool}" valueStateText="Postcode is a required field" maxLength="8" class="compulsoryUpper" />
 										<Label id="homeTelephone" text="{i18n>homeTelephone}"/>
-										<Input id="homeTelephone1" type="Number" liveChange="validateTelePhoneLiveChange" maxLength="11" valueStateText="This is not a valid telephone number" change="validateTelePhone" editable="{= ${oneModel>/disable/mode} !== 'display'}" value="{oneModel>/phoneB}" required="true" tooltip="{i18n>homeTelephoneTool}"/>
+										<Input id="homeTelephone1" type="Number" liveChange="validateTelePhoneLiveChange" maxLength="11" change="validateTelePhone" editable="{= ${oneModel>/disable/mode} !== 'display'}" value="{oneModel>/phoneB}" required="false" tooltip="{i18n>homeTelephoneTool}" valueStateText="Please enter the telephone number in a valid format, should you have any further difficulties, please call ContactUs on 01452 425888" />
 										<Label id="mobileTelephone" text="{i18n>mobileTelephone}"/>
-										<Input type="Number" liveChange="validatePhoneLiveChange" maxLength="10" id="mobileTelephone1" valueStateText="This is not a valid mobile number" change="validatePhone" editable="{= ${oneModel>/disable/mode} !== 'display'}" value="{oneModel>/phoneP}" required="true" tooltip="{i18n>mobTelephoneTool}"/>
-										<Label id="emailAdd" text="{i18n>emailAdd}"/>
-										<Input id="emailAdd1" type="Email" editable="{= ${oneModel>/disable/mode} !== 'display'}" change="validateEmail" value="{oneModel>/email}" tooltip="{i18n>emailTool}"/>
+										<Input type="Number" liveChange="validatePhoneLiveChange" maxLength="10" id="mobileTelephone1" change="validatePhone" editable="{= ${oneModel>/disable/mode} !== 'display'}" value="{oneModel>/phoneP}" required="false" tooltip="{i18n>mobTelephoneTool}" valueStateText="Enter a valid Mobile Telephone Number" />
+										<Label id="emailAdd" text="{i18n>emailAdd}" required="true" labelFor="emailAdd1" />
+										<Input id="emailAdd1" type="Email" editable="{= ${oneModel>/disable/mode} !== 'display'}" required="true" change="validateEmail" value="{oneModel>/email}" tooltip="{i18n>emailTool}" valueStateText="Email is a required field" />
 									</f:content>
 								</f:SimpleForm>
 								<HBox id="_IDGenHBox11o" width="100%">
@@ -121,23 +127,23 @@
 										<f:SimpleForm id="_IDGenSimpleForm1" editable="true" layout="ResponsiveGridLayout" labelSpanXL="4" labelSpanL="3" labelSpanM="4" labelSpanS="12" emptySpanXL="0" emptySpanL="4" emptySpanM="0" emptySpanS="0" columnsXL="2" columnsL="1" columnsM="1" width="auto" fieldGroupIds="secBFields">
 											<f:content>
 												<Label id="Dob1" text="{i18n>Dob1}"/>
-												<DatePicker width="15rem" id="Dob11" displayFormat="dd.MM.yyyy" formatError="yyyy" required="true" placeholder="{i18n>EnterDate}" value="" afterValueHelpOpen="DOBRestrict10years" tooltip="{i18n>DobTool}"/>
+												<DatePicker width="15rem" id="Dob11" displayFormat="dd.MM.yyyy" change="generalDateCheck" formatError="yyyy" required="true" placeholder="{i18n>EnterDate}" value="" afterValueHelpOpen="DOBRestrict10years" tooltip="{i18n>DobTool}" valueStateText="Enter a valid Date of Birth" />
 												<Label id="Nationality" text="{i18n>Nationality}"/>
-												<ComboBox id="Nationality1" width="15rem" selectedKey="{oneModel>/defaultNationality}" items="{path: 'oneModel>/nationality/', length: 1000}" change="generalDropdownCheck" required="true" tooltip="{i18n>nationalityTool}">
-													<core:Item id="Nationality1Drop" key="{oneModel>externalCode}" text="{oneModel>label_en_US}"/>
+												<ComboBox id="Nationality1" width="15rem" selectedKey="{oneModel>/defaultNationality}" items="{path: 'oneModel>/nationality/', length: 1000}" change="generalDropdownCheck($event, '')" required="false" tooltip="{i18n>nationalityTool}" valueStateText="Enter a valid Nationality" >
+													<core:Item id="Nationality1Drop" key="{oneModel>externalCode}" text="{oneModel>label_en_GB}"/>
 												</ComboBox>
 												<Label id="Disability" text="{i18n>Disability}"/>
-												<ComboBox id="Disability1" width="15rem" selectedKey="" items="{oneModel>/Disability/}" change="generalDropdownCheck" required="true" value="{oneModel>/globalInfo/disability}" tooltip="{i18n>disabilityTool}">
+												<ComboBox id="Disability1" width="15rem" items="{oneModel>/Disability/}" change="generalDropdownCheck($event, '')" required="false" value="{oneModel>/globalInfo/disability}" tooltip="{i18n>disabilityTool}" valueStateText="Enter a valid Disability" >
 													<core:Item id="Disability1Drop" key="{oneModel>optionId}" text="{oneModel>label_en_GB}"/>
 												</ComboBox>
 												<Label id="DBS" text="{i18n>DBS}"/>
-												<Input id="DBS1" width="15rem" value="{oneModel>/workPermit/documentNumber}" tooltip="{i18n>DBSTool}" change="generalInputCheck" />
+												<Input id="DBS1" width="15rem" value="{oneModel>/workPermit/documentNumber}" tooltip="{i18n>DBSTool}" change="generalInputCheck($event,'')" valueStateText="Enter a valid DBS number" />
 												<Label id="TeachRegNum" text="{i18n>TeachRegNum}"/>
-												<Input id="TeachRegNum1" width="15rem" value="{oneModel>/jobInfo/customString6}" tooltip="{i18n>TeacherTool}" change="generalInputCheck" />
+												<Input id="TeachRegNum1" width="15rem" value="{oneModel>/jobInfo/customString6}" liveChange="numberValidation" tooltip="{i18n>TeacherTool}" change="generalInputCheck($event,'')" valueStateText="Please enter the DfES ID number in a valid format NN/NNNNN" maxLength="8" />
 												<Label id="BankSort" text="{i18n>BankSort}" required="true"/>
-												<Input id="BankSort1" width="15rem" valueStateText="This is not a valid Bank Sort number" liveChange="onLiveChangeBankSort" change="onSortCodeChange" value="{oneModel>/PaymentInformationDetailV3/routingNumber}" tooltip="{i18n>sortCodeTool}"/>
+												<Input id="BankSort1" width="15rem" maxLength="6" required="true" liveChange="numberValidation" change="onSortCodeChange" value="{oneModel>/PaymentInformationDetailV3/routingNumber}" tooltip="{i18n>sortCodeTool}" valueStateText="Bank Sort is a required field" />
 												<Label id="BankAccNum" text="{i18n>BankAccNum}" required="true"/>
-												<Input id="BankAccNum1" width="15rem" valueStateText="This is not a valid Bank Account number" liveChange="" change="onBankAccChange" value="{oneModel>/PaymentInformationDetailV3/accountNumber}" required="true" tooltip="{i18n>accountNoTool}"/>
+												<Input id="BankAccNum1" width="15rem" liveChange="numberValidation" change="onBankAccChange" value="{oneModel>/PaymentInformationDetailV3/accountNumber}" required="true" tooltip="{i18n>accountNoTool}" valueStateText="Bank Account entered is invalid, this must be 8 numbers" maxLength="8" />
 											</f:content>
 										</f:SimpleForm>
 									</VBox>
@@ -145,26 +151,26 @@
 										<f:SimpleForm id="_IDGenSimpleForm2" editable="true" layout="ResponsiveGridLayout" labelSpanXL="4" labelSpanL="3" labelSpanM="4" labelSpanS="12" emptySpanXL="0" emptySpanL="4" emptySpanM="0" emptySpanS="0" columnsXL="2" columnsL="1" columnsM="1" width="auto" fieldGroupIds="secBFields">
 											<f:content>
 												<Label id="nationalIns" text="{i18n>nationalIns}"/>
-												<Input id="nationalIns1" width="15rem" value="{oneModel>/national/nationalId}" change="onNIChange" tooltip="{i18n>nationalIdTool}"/>
+												<Input id="nationalIns1" width="15rem" value="{oneModel>/national/nationalId}" change="onNIChange" tooltip="{i18n>nationalIdTool}" valueStateText="This NI number is invalid, please re-enter. Please note that the NI number should be in the format AA 99 99 99 A including spaces. Should you have any further difficulties please call Contact Us on 01452 425888" class="compulsoryUpper" />
 												<Label id="Ethicity" text="{i18n>Ethicity}" required="true"/>
-												<ComboBox id="Ethicity1" width="15rem" selectedKey="" items="{oneModel>/Ethnicity/}" change="generalDropdownCheck" required="true" value="{oneModel>/globalInfo/ethnicity}" tooltip="{i18n>ethnicityTool}">
+												<ComboBox id="Ethicity1" width="15rem" items="{oneModel>/Ethnicity/}" change="generalDropdownCheck($event, 'X')" required="true" value="{oneModel>/globalInfo/ethnicity}" tooltip="{i18n>ethnicityTool}" valueStateText="Ethnicity is a required field" >
 													<core:Item id="EthicityDrop" key="{oneModel>optionId}" text="{oneModel>label_en_GB}"/>
 												</ComboBox>
 												<Label id="Gender" text="{i18n>Gender}" required="true"/>
-												<Select id="Gender1" width="15rem" forceSelection="false" required="true" tooltip="{i18n>genderTool}">
+												<ComboBox id="Gender1" width="15rem" required="true" change="generalDropdownCheck($event, 'X')" tooltip="{i18n>genderTool}" valueStateText="Gender is a required field" >
 													<items>
 														<core:Item id="_IDGenItem6df" text="Male" key="M"/>
 														<core:Item id="_IDGenItem7sdfsd" text="Female" key="F"/>
 													</items>
-												</Select>
+												</ComboBox>
 												<Label id="ClearDate" text="{i18n>ClearDate}"/>
-												<DatePicker id="ClearDate1" width="15rem" displayFormat="dd.MM.yyyy" formatError="yyyy" placeholder="{i18n>EnterDate}" value="" editable="{= ${oneModel>/disable/mode} !== 'display'}" tooltip="{i18n>clearanceTool}"/>
+												<DatePicker id="ClearDate1" width="15rem" displayFormat="dd.MM.yyyy" formatError="yyyy" placeholder="{i18n>EnterDate}" value="" editable="{= ${oneModel>/disable/mode} !== 'display'}" tooltip="{i18n>clearanceTool}" valueStateText="Enter a valid Clearance Date" />
 												<Label id="issuDate" text="{i18n>issuDate}"/>
-												<DatePicker id="issuDate1" width="15rem" displayFormat="dd.MM.yyyy" formatError="yyyy" placeholder="{i18n>EnterDate}" value="" editable="{= ${oneModel>/disable/mode} !== 'display'}" tooltip="{i18n>issueTool}"/>
+												<DatePicker id="issuDate1" width="15rem" displayFormat="dd.MM.yyyy" formatError="yyyy" placeholder="{i18n>EnterDate}" value="" editable="{= ${oneModel>/disable/mode} !== 'display'}" tooltip="{i18n>issueTool}" valueStateText="Enter a valid Issue Date" />
 												<Label id="BankName" text="{i18n>BankName}"/>
 												<Input id="BankName1" width="15rem" value="{oneModel>/bankName/bankName}" editable="false" tooltip="{i18n>bankNameTool}" fieldGroupIds="bankName" />
 												<Label id="BuildingSoc" text="{i18n>BuildingSoc}"/>
-												<Input id="BuildingSoc1" width="15rem" value="{oneModel>/PaymentInformationDetailV3/cust_BuildingSocRollNo}" tooltip="{i18n>buildingSocTool}" change="generalInputCheck" />
+												<Input id="BuildingSoc1" width="15rem" value="{oneModel>/PaymentInformationDetailV3/cust_BuildingSocRollNo}" tooltip="{i18n>buildingSocTool}" change="generalInputCheck($event,'')" valueStateText="Enter a valid Building Soc number" />
 											</f:content>
 										</f:SimpleForm>
 									</VBox>
@@ -175,67 +181,66 @@
 									<f:SimpleForm id="_IDGenSimpleForm3" editable="true" layout="ResponsiveGridLayout" labelSpanXL="4" labelSpanL="3" labelSpanM="4" labelSpanS="12" emptySpanXL="0" emptySpanL="4" emptySpanM="0" emptySpanS="0" columnsXL="2" columnsL="1" columnsM="1" width="auto" fieldGroupIds="emerFirstFields">
 										<f:content>
 											<core:Title id="_IDGenTitle" text="First Emergency Address" />
-											<Label id="_IDGenfLabel11" text="Street and House No" required="true"/>
-											<Input id="_IDGefnInput11" width="15rem" editable="{= ${oneModel>/disable/mode} !== 'display'}" value="{oneModel>/PerEmergencyContactsPrimary/address1}" required="true" tooltip="{i18n>addr1Emer}" change="generalInputCheck" />
-											<Label id="_IDGenfLabel12" text="2nd Address line"/>
-											<Input id="_IDGefnInput12" width="15rem" editable="{= ${oneModel>/disable/mode} !== 'display'}" value="{oneModel>/PerEmergencyContactsPrimary/address2}" tooltip="{i18n>addr2Emer}" change="generalInputCheck" />
-											<Label id="_IDGenfLabel14" text="City"/>
-											<Input id="_IDGefnInput14" width="15rem" editable="{= ${oneModel>/disable/mode} !== 'display'}" value="{oneModel>/PerEmergencyContactsPrimary/city}" tooltip="{i18n>cityEmer}" change="generalInputCheck" />
+											<Label id="_IDGenfLabel11" text="Street and House No" required="true" labelFor="_IDGefnInput11"/>
+											<Input id="_IDGefnInput11" width="15rem" editable="{= ${oneModel>/disable/mode} !== 'display'}" value="{oneModel>/PerEmergencyContactsPrimary/address1}" required="true" tooltip="{i18n>addr1Emer}" change="specialCharCheck($event, 'X')" valueStateText="Street &amp; House No. is a required field" />
+											<Label id="_IDGenfLabel12" text="2nd Address line" labelFor="_IDGefnInput12"/>
+											<Input id="_IDGefnInput12" width="15rem" editable="{= ${oneModel>/disable/mode} !== 'display'}" value="{oneModel>/PerEmergencyContactsPrimary/address2}" change="specialCharCheck($event, '')" tooltip="{i18n>addr2Emer}" />
+											<Label id="_IDGenfLabel14" text="City" labelFor="_IDGefnInput14" required="true" />
+											<Input id="_IDGefnInput14" width="15rem" editable="{= ${oneModel>/disable/mode} !== 'display'}" value="{oneModel>/PerEmergencyContactsPrimary/city}" change="specialCharCheck($event, 'X')" tooltip="{i18n>cityEmer}" required="true" valueStateText="City is a required field" />
 											<Label id="_IDGenLabel15" text="County"/>
-											<ComboBox visible="true" id="_IDGenItem6" editable="{= ${oneModel>/disable/mode} !== 'display'}" items="{path: 'oneModel>/county/', length: 1000}" change="generalDropdownCheck" width="15rem" required="true" tooltip="{i18n>countyEmer}">
+											<ComboBox visible="true" id="_IDGenItem6" editable="{= ${oneModel>/disable/mode} !== 'display'}" items="{path: 'oneModel>/county/', length: 1000}" change="generalDropdownCheck($event, 'X')" width="15rem" required="true" tooltip="{i18n>countyEmer}" valueStateText="Enter a valid County" >
 												<core:Item id="emergency1County" key="{oneModel>optionId}" text="{oneModel>label_en_GB}"/>
 											</ComboBox>
 											<Label id="_IDGenLabel16" text="Postcode" required="true"/>
-											<Input id="_IDGenInput15" width="15rem" editable="{= ${oneModel>/disable/mode} !== 'display'}" change="validatePostCode" required="true" class="" value="{oneModel>/PerEmergencyContactsPrimary/zipCode}" tooltip="{i18n>postcodeEmer}" />
+											<Input id="_IDGenInput15" width="15rem" editable="{= ${oneModel>/disable/mode} !== 'display'}" change="validatePostCode" required="true" class="compulsoryUpper" value="{oneModel>/PerEmergencyContactsPrimary/zipCode}" tooltip="{i18n>postcodeEmer}" valueStateText="Postcode is a required field" maxLength="8" />
 											<Label id="_IDGefnLabel17" text="First Name" required="true"/>
-											<Input id="_IDGenInput16" width="15rem" editable="{= ${oneModel>/disable/mode} !== 'display'}" class="" value="{oneModel>/PerEmergencyContacts/name}" required="true" tooltip="{i18n>firstNameEmer}" change="generalInputCheck" />
+											<Input id="_IDGenInput16" width="15rem" editable="{= ${oneModel>/disable/mode} !== 'display'}" class="" value="{oneModel>/PerEmergencyContacts/name}" required="true" tooltip="{i18n>firstNameEmer}" change="generalInputCheck($event,'X')" valueStateText="First name is a required field" />
 											<Label id="_IDGefnLabel17s" text="Surname" required="true"/>
-											<Input id="_IDGenInput16s" width="15rem" editable="{= ${oneModel>/disable/mode} !== 'display'}" class="" value="{oneModel>/PerEmergencyContacts/customString1}" required="true" tooltip="{i18n>firstNameEmer}" change="generalInputCheck" />
+											<Input id="_IDGenInput16s" width="15rem" editable="{= ${oneModel>/disable/mode} !== 'display'}" class="" value="{oneModel>/PerEmergencyContacts/customString1}" required="true" tooltip="{i18n>firstNameEmer}" change="generalInputCheck($event,'X')" valueStateText="Surname is a required field" />
 											<Label id="_IDGefnLabel18" text="Relation" required="true"/>
-											<ComboBox id="_IDGenInput17" width="15rem" editable="{= ${oneModel>/disable/mode} !== 'display'}" value="{oneModel>/EmergencyRelation}" items="{path : 'oneModel>/relationDropdown', length : 250}" required="true" tooltip="{i18n>relationEmer}" change="generalDropdownCheck
-											" >
+											<ComboBox id="_IDGenInput17" width="15rem" editable="{= ${oneModel>/disable/mode} !== 'display'}" value="{oneModel>/EmergencyRelation}" items="{path : 'oneModel>/relationDropdown', length : 250}" required="true" tooltip="{i18n>relationEmer}" change="generalDropdownCheck($event, 'X')" valueStateText="Relation is a required field" >
 												<items>
 													<core:Item id="_IDGenItem35" key="{oneModel>optionId}" text="{oneModel>label_en_GB}"/>
 												</items>
 											</ComboBox>
 											<Label id="_IDGenLabel19" text="Contact Telephone Number" required="true" />
-											<Input id="_IDGenInput18" width="15rem" required="true" editable="{= ${oneModel>/disable/mode} !== 'display'}" type="Number" liveChange="validateTelePhoneLiveChange" maxLength="11" valueStateText="This is not a valid telephone number" change="validateTelePhone" value="{= ${oneModel>/PerEmergencyContacts/phone} !== '' ? ${oneModel>/PerEmergencyContacts/phone} : '' }" tooltip="{i18n>phoneEmer}"/>
+											<Input id="_IDGenInput18" width="15rem" required="true" editable="{= ${oneModel>/disable/mode} !== 'display'}" type="Number" liveChange="validateTelePhoneLiveChange" maxLength="11" change="validateTelePhone" value="{= ${oneModel>/PerEmergencyContacts/phone} !== '' ? ${oneModel>/PerEmergencyContacts/phone} : '' }" tooltip="{i18n>phoneEmer}" valueStateText="Contact Telephone Number is a required field" />
 										</f:content>
 									</f:SimpleForm>
 									<!-- <Title id="_IDGenTfitle1" text="First Emergency Address" class="sapUiTinyMarginTop"/> -->
 									<!-- <HBox id="_IDGenHBox122221"><VBox id="_IDGenfVBox27"></VBox><VBox id="_IDGenVBox28"></VBox></HBox> -->
 									<HBox id="_IDGenHBox191">
-										<Label id="_IDGenLabel21" text=" Add second Emergency Contact Details" class="sapUiTinyMarginTopBottom"/>
+										<Label id="_IDGenLabel21" text="Add second Emergency Contact Details" class="sapUiTinyMarginTopBottom"/>
 										<CheckBox id="_IDGenCheckBox2" editable="{= ${oneModel>/disable/mode} !== 'display'}" class="" select="onChangeEmergencySecond" tooltip="{i18n>secondEmergency}"/>
 									</HBox>
 									<VBox id="idSecondEmergency" visible="{= ${oneModel>/disable/mode} === 'display'}">
 										<f:SimpleForm id="_IDGenSimpleForm4" editable="true" layout="ResponsiveGridLayout" labelSpanXL="4" labelSpanL="3" labelSpanM="4" labelSpanS="12" emptySpanXL="0" emptySpanL="4" emptySpanM="0" emptySpanS="0" columnsXL="2" columnsL="1" columnsM="1" width="auto" fieldGroupIds="emerSecondFields">
 											<f:content>
 												<core:Title id="_IDGenTitle2" text="Second Emergency Address" />
-												<Label id="_IDGenfLabel112" text="Street and House No" required="true" />
-												<Input id="_IDGefnInput112" width="15rem" editable="{= ${oneModel>/disable/mode} !== 'display'}" value="{oneModel>/PerEmergencyContactsSecond/address1}" required="true" tooltip="{i18n>addr1Emer}" change="generalInputCheck" />
-												<Label id="_IDGenfLabel122" text="2nd Address line" />
-												<Input id="_IDGefnInput122" width="15rem" editable="{= ${oneModel>/disable/mode} !== 'display'}" value="{oneModel>/PerEmergencyContactsSecond/address2}" tooltip="{i18n>addr2Emer}" change="generalInputCheck" />
-												<Label id="_IDGenfLabel142" text="City" />
-												<Input id="_IDGefnInput142" width="15rem" editable="{= ${oneModel>/disable/mode} !== 'display'}" value="{oneModel>/PerEmergencyContactsSecond/city}" tooltip="{i18n>cityEmer}" change="generalInputCheck" />
+												<Label id="_IDGenfLabel112" text="Street and House No" required="true" labelFor="_IDGefnInput112" />
+												<Input id="_IDGefnInput112" width="15rem" editable="{= ${oneModel>/disable/mode} !== 'display'}" value="{oneModel>/PerEmergencyContactsSecond/address1}" change="specialCharCheck($event, 'X')" required="true" tooltip="{i18n>addr1Emer}" valueStateText="Street &amp; House No. is a required field"   />
+												<Label id="_IDGenfLabel122" text="2nd Address line" labelFor="_IDGefnInput122" />
+												<Input id="_IDGefnInput122" width="15rem" editable="{= ${oneModel>/disable/mode} !== 'display'}" change="specialCharCheck($event, '')" value="{oneModel>/PerEmergencyContactsSecond/address2}" tooltip="{i18n>addr2Emer}" />
+												<Label id="_IDGenfLabel142" text="City" labelFor="_IDGefnInput142" required="true" />
+												<Input id="_IDGefnInput142" width="15rem" editable="{= ${oneModel>/disable/mode} !== 'display'}" change="specialCharCheck($event, 'X')" value="{oneModel>/PerEmergencyContactsSecond/city}" tooltip="{i18n>cityEmer}" required="true" valueStateText="City is a required field"   />
 												<Label id="_IDGenLabel152" text="County" />
-												<ComboBox visible="true" id="idree4d2" editable="{= ${oneModel>/disable/mode} !== 'display'}" items="{path: 'oneModel>/county/', length: 1000}" change="generalDropdownCheck" width="15rem" required="true" tooltip="{i18n>countyEmer}">
+												<ComboBox visible="true" id="idree4d2" editable="{= ${oneModel>/disable/mode} !== 'display'}" items="{path: 'oneModel>/county/', length: 1000}" change="generalDropdownCheck($event, 'X')" width="15rem" required="true" tooltip="{i18n>countyEmer}" valueStateText="Enter a valid County" >
 													<core:Item id="emergency2County" key="{oneModel>optionId}" text="{oneModel>label_en_GB}"/>
 												</ComboBox>
 												<Label id="_IDGenLabel162" text="Postcode" required="true"/>
-												<Input id="_IDGenInput152" width="15rem" editable="{= ${oneModel>/disable/mode} !== 'display'}" change="validatePostCode" required="true" value="{oneModel>/PerEmergencyContactsSecond/zipCode}" tooltip="{i18n>postcodeEmer}"/>
+												<Input id="_IDGenInput152" width="15rem" editable="{= ${oneModel>/disable/mode} !== 'display'}" change="validatePostCode" required="true" value="{oneModel>/PerEmergencyContactsSecond/zipCode}" class="compulsoryUpper" tooltip="{i18n>postcodeEmer}" valueStateText="Postcode is a required field" maxLength="8" />
 												<Label id="_IDGefnLabel172" text="First Name" required="true"/>
-												<Input id="_IDGenInput162" width="15rem" editable="{= ${oneModel>/disable/mode} !== 'display'}" value="{oneModel>/PerEmergencyContacts1/name}" required="true" tooltip="{i18n>firstNameEmer}" change="generalInputCheck" />
+												<Input id="_IDGenInput162" width="15rem" editable="{= ${oneModel>/disable/mode} !== 'display'}" value="{oneModel>/PerEmergencyContacts1/name}" required="true" tooltip="{i18n>firstNameEmer}" change="generalInputCheck($event,'X')" valueStateText="First name is a required field"   />
 												<Label id="_IDGefnLabel172s" text="Surname" required="true"/>
-												<Input id="_IDGenInput162s" width="15rem" editable="{= ${oneModel>/disable/mode} !== 'display'}" value="{oneModel>/PerEmergencyContacts1/customString1}" required="true" tooltip="{i18n>firstNameEmer}" change="generalInputCheck" />
+												<Input id="_IDGenInput162s" width="15rem" editable="{= ${oneModel>/disable/mode} !== 'display'}" value="{oneModel>/PerEmergencyContacts1/customString1}" required="true" tooltip="{i18n>firstNameEmer}" change="generalInputCheck($event,'X')" valueStateText="Surname is a required field"   />
 												<Label id="_IDGefnLabel182" text="Relation" required="true"/>
-												<ComboBox id="_IDGenInput172" width="15rem" editable="{= ${oneModel>/disable/mode} !== 'display'}" value="{oneModel>/EmergencyRelation1}" items="{path : 'oneModel>/relationDropdown', length : 250}" required="true" tooltip="{i18n>relationEmer}" change="generalDropdownCheck" >
+												<ComboBox id="_IDGenInput172" width="15rem" editable="{= ${oneModel>/disable/mode} !== 'display'}" value="{oneModel>/EmergencyRelation1}" items="{path : 'oneModel>/relationDropdown', length : 250}" required="true" tooltip="{i18n>relationEmer}" change="generalDropdownCheck($event, 'X')" valueStateText="Relation is a required field"  >
 													<items>
 														<core:Item id="_IDGenItem3df5" key="{oneModel>optionId}" text="{oneModel>label_en_GB}"/>
 													</items>
 												</ComboBox>
 												<Label id="_IDGenLabel192" text="Contact Telephone Number" required="true" />
-												<Input id="_IDGenInput182" width="15rem" type="Number" editable="{= ${oneModel>/disable/mode} !== 'display'}" value="{= ${oneModel>/PerEmergencyContacts1/phone} !== '' ? ${oneModel>/PerEmergencyContacts1/phone} : '' }" liveChange="validateTelePhoneLiveChange" maxLength="11" valueStateText="This is not a valid telephone number" change="validateTelePhone" tooltip="{i18n>phoneEmer}"/>
+												<Input id="_IDGenInput182" width="15rem" type="Number" editable="{= ${oneModel>/disable/mode} !== 'display'}" value="{= ${oneModel>/PerEmergencyContacts1/phone} !== '' ? ${oneModel>/PerEmergencyContacts1/phone} : '' }" liveChange="validateTelePhoneLiveChange" maxLength="11" change="validateTelePhone" tooltip="{i18n>phoneEmer}" valueStateText="Contact Telephone Number is a required field"  />
 											</f:content>
 										</f:SimpleForm>
 										<!-- <Title id="_IDGenTfitle12" text="Second Emergency Address" class="sapUiTinyMarginTop"/><HBox id="_IDGenHBox1222212"><VBox id="_IDGenfVBox272"></VBox><VBox id="_IDGenVBox282"></VBox></HBox> -->
@@ -243,53 +248,57 @@
 								</VBox>
 							</content>
 						</Panel>
-						<Panel id="_IDGenPanel45" visible="{= ${oneModel>/disable/mode} === 'bsc' || ${oneModel>/disable/mode} === 'display'}" expandable="true" expanded="true" stickyHeader="true" headerText="{i18n>SectionC}" width="auto" class="sapUiResponsiveMargin">
+						<Panel id="_IDGenPanel45" visible="{= ${oneModel>/disable/mode} === 'bsc' || ${oneModel>/disable/mode} === 'display'}" expandable="true" expanded="true" stickyHeader="true" headerText="{i18n>SectionC}" width="auto" class="sapUiResponsiveMargin" fieldGroupIds="secCFields" >
 							<content>
 								<FlexBox id="_IDGenFlexBox3" alignItems="Center" justifyContent="Start" alignContent="Center">
 									<Label id="_IDGenLabel7" text="Type of Contract" required="true"/>
-									<ComboBox fieldGroupIds="sectionE" visible="true" id="_IDGenComboBox17" selectedKey="" items="{oneModel>/oContractType1/}" change="onContractChange" class="sapUiTinyMarginBeginEnd " width="80%" required="true" tooltip="{i18n>contractTypeTool}">
-										<core:Item id="_IDGenItem412" key="{oneModel>optionId}" text="{oneModel>label_en_GB}"/>
+									<ComboBox visible="true" id="_IDGenComboBox17" change="onContractChange" class="sapUiTinyMarginBeginEnd " width="80%" required="true" tooltip="{i18n>contractTypeTool}" valueStateText="Contract is a required field" >
+										<!-- <core:Item id="_IDGenItem412" key="{oneModel>optionId}" text="{oneModel>label_en_GB}"/> items="{oneModel>/oContractType1/}" -->
+										<core:Item key="654" text="Permanent" />
+										<core:Item key="652" text="Casual" />
+										<core:Item key="658" text="Fixed Term" />
 									</ComboBox>
 									<Label id="_IDGenLabel8" text="Start Date" class="sapUiTinyMarginTop" required="true"/>
-									<DatePicker change="onStartDateChange" fieldGroupIds="sectionE" id="_IDGenDatePicker1" displayFormat="dd.MM.yyyy" formatError="yyyy" class="sapUiTinyMarginBeginEnd" width="200px" placeholder="{i18n>EnterDate}" tooltip="{i18n>startDateTool}"/>
+									<DatePicker change="onStartDateChange" required="true" id="_IDGenDatePicker1" displayFormat="dd.MM.yyyy" formatError="yyyy" class="sapUiTinyMarginBeginEnd" width="200px" placeholder="{i18n>EnterDate}" tooltip="{i18n>startDateTool}" valueStateText="Start Date is a required field" />
 									<Label id="_IDGenLabel81" text="End Date" class="sapUiTinyMarginTop" required="true" visible="false"/>
-									<DatePicker change="onDateGeneralChange" fieldGroupIds="sectionE" id="_IDGenDatePicker2" displayFormat="dd.MM.yyyy" formatError="yyyy" class="sapUiTinyMarginBeginEnd" width="200px" placeholder="{i18n>EndDate}" visible="false" tooltip="{i18n>endDateTool}"/>
+									<DatePicker change="onDateGeneralChange" id="_IDGenDatePicker2" required="false" displayFormat="dd.MM.yyyy" formatError="yyyy" class="sapUiTinyMarginBeginEnd" width="200px" placeholder="{i18n>EndDate}" visible="false" tooltip="{i18n>endDateTool}" valueStateText="End Date is a required field"/>
 								</FlexBox>
 								<FlexBox id="_IDGenFlexBox4" alignItems="Center" justifyContent="Start" alignContent="Center">
 									<Label id="_IDGenLabel9" text="Grade" required="true"/>
-									<ComboBox fieldGroupIds="sectionE" visible="true" id="_IDGenComboBox2" items="{oneModel>/grade/}" change="onSelectPayScaleGroup" class="sapUiTinyMarginBeginEnd " width="80%" required="true" tooltip="{i18n>gradeTool}">
+									<ComboBox visible="true" id="_IDGenComboBox2" items="{oneModel>/grade/}" change="onSelectPayScaleGroup" class="sapUiTinyMarginBeginEnd " width="80%" required="true" tooltip="{i18n>gradeTool}" valueStateText="Grade is a required field" >
 										<core:Item id="_IDGenItem4123" key="{oneModel>code}" text="{oneModel>externalName_en_GB}"/>
 									</ComboBox>
 									<Label id="_IDGenLabel10" text="Starting Scale Point" required="true" class="sapUiLargeMarginBegin"/>
-									<ComboBox change="onChangeGeneral" fieldGroupIds="sectionE" id="_IDGenComboBox3" items="{oneModel>/scalePoint/}" class="sapUiTinyMarginBeginEnd" width="40%" required="true" editable="false" tooltip="{i18n>scaleTool}">
+									<ComboBox change="onChangeGeneral" id="_IDGenComboBox3" items="{oneModel>/scalePoint/}" class="sapUiTinyMarginBeginEnd" width="40%" required="true" editable="false" tooltip="{i18n>scaleTool}" valueStateText="Scale Point is a required field" >
 										<core:Item id="idWorkingWeeksItem" key="{oneModel>code}" text="{oneModel>externalName_en_GB}"/>
 									</ComboBox>
 								</FlexBox>
 								<FlexBox id="_IDGenFlexBox5" alignItems="Center" justifyContent="Start" alignContent="Center">
 									<Label id="_IDGenLabel13" text="Is this a claim only position?" required="true"/>
-									<ComboBox fieldGroupIds="sectionE" id="_IDGenComboBox6" change="onChangeClaimPosition" class="sapUiTinyMarginBegin" width="50%" required="true" tooltip="{i18n>claimPosTool}">
-										<core:Item id="1dfd" key="yes" text="Yes"/>
+									<ComboBox id="_IDGenComboBox6" change="onChangeClaimPosition" class="sapUiTinyMarginBegin" width="50%" required="true" tooltip="{i18n>claimPosTool}" valueStateText="Enter a valid entry" >
+										<core:Item id="1dfd" key="Yes" text="Yes"/>
 										<core:Item id="1dfd1" key="No" text="No"/>
 									</ComboBox>
 								</FlexBox>
 								<FlexBox visible="{= ${oneModel>/disable/mode} === 'bsc' || ${oneModel>/disable/mode} === 'display'}" id="idHoursPerWeek1" alignItems="Center" justifyContent="Start" alignContent="Center">
 									<Label id="idHoursPerWeek" text="Hours per week(In Decimals)" required="true"/>
-									<Input change="onChangeGeneral" id="Hoursperweek" class="sapUiTinyMarginBegin" tooltip="{i18n>hoursTool}"/>
+									<Input change="onHoursPerWeekChange" required="false" id="Hoursperweek" class="sapUiTinyMarginBegin" tooltip="{i18n>hoursTool}" liveChange="floatValidation" valueStateText="Hours per week is a required field" />
 									<Button id="_IDGenButton1" text="Work Schedules" press="onWorkSchedBut" class="WSButton"/>
 								</FlexBox>
 								<FlexBox visible="{= ${oneModel>/disable/mode} === 'bsc' || ${oneModel>/disable/mode} === 'display'}" id="idfte1" alignItems="Center" justifyContent="Start" alignContent="Center">
-									<Label id="idFTElabel" text="FTE" required="true"/>
-									<Input id="idFTE" class="sapUiTinyMarginBegin sapUiMediumMarginEnd" width="80px" change="onFTEChange" maxLength="6"/>
-									<Label id="idFTEperclabel" text="FTE percentage" required="true"/>
-									<Input id="idFTEperc" class="sapUiTinyMarginBegin" editable="false" width="80px"/>
+									<Label id="idFTElabel" text="FTE (teachers in decimal)" required="true"/>
+									<Input id="idFTE" required="false" class="sapUiTinyMarginBegin sapUiMediumMarginEnd" width="80px" change="onFTEChange" maxLength="6" valueStateText="FTE is a required field" />
+									<Label id="idFTEperclabel" required="false" text="FTE (teachers as %)"/>
+									<Input id="idFTEperc" class="sapUiTinyMarginBegin" editable="false" width="80px" />
+									<Button id="_IDGenButton12" text="Work Schedules" press="onWorkSchedBut" class="WSButton"/>
 								</FlexBox>
 								<FlexBox visible="{= ${oneModel>/disable/mode} === 'bsc' || ${oneModel>/disable/mode} === 'display'}" id="idWeekYear1" alignItems="Center" justifyContent="Start" alignContent="Center">
 									<Label id="idWeekYear" text="Weeks Per Year"/>
-									<ComboBox id="idWeekYeardrop" items="{oneModel>/workingWeeks/}" change="onWorkingChange" class="sapUiTinyMarginBeginEnd" width="40%" required="true" tooltip="{i18n>weeksPerTool}">
-										<core:Item id="idWeekYearItem" key="{oneModel>externalCode}" text="{oneModel>cust_TTOWeeks}"/>
+									<ComboBox id="idWeekYeardrop" required="false" items="{oneModel>/workingWeeks/}" change="onWorkingChange" class="sapUiTinyMarginBeginEnd" width="40%" tooltip="{i18n>weeksPerTool}" valueStateText="Enter a valid Weeks per year" >
+										<core:Item id="idWeekYearItem" key="{oneModel>externalCode}" text="{oneModel>cust_WorkingWeeks}"/>
 									</ComboBox>
 									<Label id="idWorkingWeeks" text="Additional Working Weeks"/>
-									<ComboBox class="sapUiTinyMarginBegin" id="idWorkingWeeksdrop" width="50%" required="true" tooltip="{i18n>additionalTool}" change="onAddWorkChange">
+									<ComboBox class="sapUiTinyMarginBegin" required="false" id="idWorkingWeeksdrop" width="50%" tooltip="{i18n>additionalTool}" change="onAddWorkChange" valueStateText="Enter a valid Additional Working Weeks" >
 										<core:Item id="12" key="0" text="0"/>
 										<core:Item id="13" key="1" text="1"/>
 										<core:Item id="14" key="2" text="2"/>
@@ -302,14 +311,14 @@
 								</FlexBox>
 								<FlexBox id="_IDGenFlexBox2" alignItems="Center" justifyContent="Start" alignContent="Center">
 									<Label id="_IDGenLab5el11" text="Is there a Probationary Period" required="true"/>
-									<ComboBox fieldGroupIds="sectionE" class="sapUiTinyMarginBegin" id="_IDGenInput141" change="probationPeriodChange" width="50%" required="true" tooltip="{i18n>ProbationTool}">
+									<ComboBox class="sapUiTinyMarginBegin" id="_IDGenInput141" change="probationPeriodChange" width="50%" required="true" tooltip="{i18n>ProbationTool}" valueStateText="Enter a valid Probation Period" >
 										<core:Item id="propertionaryYes" key="Yes" text="Yes"/>
 										<core:Item id="propertionaryNo" key="No" text="No"/>
 									</ComboBox>
 								</FlexBox>
 								<FlexBox id="_IDGenFlexBox1" alignItems="Center" justifyContent="Start" alignContent="Center">
 									<Label id="probationEndDate" visible="{= ${oneModel>/disable/mode} === 'display'}" required="true" text="Probationary Period End Date"/>
-									<DatePicker class="sapUiTinyMarginBegin" visible="{= ${oneModel>/disable/mode} === 'display'}" id="probationEndDatePic" displayFormat="dd.MM.yyyy" formatError="yyyy" width="200px" placeholder="{i18n>EnterDate}"/>
+									<DatePicker class="sapUiTinyMarginBegin" visible="{= ${oneModel>/disable/mode} === 'display'}" id="probationEndDatePic" tooltip="{i18n>ProbationEndTool}" change="onDateGeneralChange" required="false" displayFormat="dd.MM.yyyy" formatError="yyyy" width="200px" placeholder="{i18n>EnterDate}" valueStateText="Probation End Date is a required field" />
 								</FlexBox>
 								<HBox id="_IDGenHBox15">
 									<HBox id="_IDGenHBox16">
@@ -322,35 +331,35 @@
 								<HBox id="_IDGenHBox8">
 									<Label id="_IDGen9Label11" text="Allowance" class="sapUiTinyMarginEnd"/>
 									<!--  Allowance  -->
-									<ComboBox id="_IDGenComboBox8" items="{oneModel>/Allowance/}" change="onChangeAllowance" class="sapUiTinyMarginBeginEnd " width="80%" required="true" tooltip="{i18n>allowanceTool}">
+									<ComboBox id="_IDGenComboBox8" items="{oneModel>/Allowance/}" change="onChangeAllowance($event, 1)" class="sapUiTinyMarginBeginEnd " width="80%" tooltip="{i18n>allowanceTool}" valueStateText="Enter a valid Allowance" >
 										<core:Item id="allo" key="{oneModel>externalCode}" text="{oneModel>externalCode} - {oneModel>description}"/>
 									</ComboBox>
 									<Label id="_IDGenLabel129" text="Amount" class="sapUiTinyMarginBeginEnd"/>
-									<Input id="_IDGenInput191" enabled="{oneModel>/enableRate}" type="Number" change="onChangeAmount" tooltip="{i18n>amountTool}"/>
+									<Input id="_IDGenInput191" required="{oneModel>/enableRate1}" editable="{oneModel>/enableRate1}" type="Number" change="onChangeAmount($event, 1)" tooltip="{i18n>amountTool}" valueStateText="Please ensure you enter the monthly allowance amount not annual. If your employee is part time please also pro-rata the allowance as necessary" valueState="Warning" />
 									<Label id="_IDGenLabel913" text="Number/Unit" class="sapUiTinyMarginBeginEnd"/>
-									<Input id="_IDGenInput12" enabled="{oneModel>/enableUnit}" type="Number" change="onChangeUnit" tooltip="{i18n>unitTool}"/>
+									<Input id="_IDGenInput12" required="{oneModel>/enableUnit1}" editable="{oneModel>/enableUnit1}" type="Number" change="onChangeUnit($event, 1)" tooltip="{i18n>unitTool}" valueStateText="Unit is a required field" />
 								</HBox>
 								<HBox id="_IDGenHBox82">
 									<Label id="_IDGen9Label112" text="Allowance" class="sapUiTinyMarginEnd"/>
 									<!--  Allowance  -->
-									<ComboBox id="_IDGenComboBox82" items="{oneModel>/Allowance/}" change="onChangeAllowance1" class="sapUiTinyMarginBeginEnd " width="80%" required="true" tooltip="{i18n>allowanceTool}">
+									<ComboBox id="_IDGenComboBox82" items="{oneModel>/Allowance/}" change="onChangeAllowance($event, 2)" class="sapUiTinyMarginBeginEnd " width="80%" tooltip="{i18n>allowanceTool}" valueStateText="Enter a valid Allowance" >
 										<core:Item id="allo2" key="{oneModel>externalCode}" text="{oneModel>externalCode} - {oneModel>description}"/>
 									</ComboBox>
 									<Label id="_IDGenLabel1292" text="Amount" class="sapUiTinyMarginBeginEnd"/>
-									<Input id="_IDGenInput1912" enabled="{oneModel>/enableRate1}" type="Number" change="onChangeAmount" tooltip="{i18n>amountTool}"/>
+									<Input id="_IDGenInput1912" editable="{oneModel>/enableRate2}" type="Number" change="onChangeAmount($event, 2)" tooltip="{i18n>amountTool}" valueStateText="Please ensure you enter the monthly allowance amount not annual. If your employee is part time please also pro-rata the allowance as necessary" valueState="Warning" />
 									<Label id="_IDGenLabel9132" text="Number/Unit" class="sapUiTinyMarginBeginEnd"/>
-									<Input id="_IDGenInput122" enabled="{oneModel>/enableUnit1}" type="Number" change="onChangeUnit" tooltip="{i18n>unitTool}"/>
+									<Input id="_IDGenInput122" editable="{oneModel>/enableUnit2}" type="Number" change="onChangeUnit($event, 2)" tooltip="{i18n>unitTool}" valueStateText="Unit is a required field" />
 								</HBox>
 								<HBox id="_IDGenHBox83">
 									<Label id="_IDGen9Label113" text="Allowance" class="sapUiTinyMarginEnd"/>
 									<!--  Allowance  -->
-									<ComboBox id="_IDGenComboBox83" items="{oneModel>/Allowance/}" change="onChangeAllowance2" class="sapUiTinyMarginBeginEnd " width="80%" required="true" tooltip="{i18n>allowanceTool}">
+									<ComboBox id="_IDGenComboBox83" items="{oneModel>/Allowance/}" change="onChangeAllowance($event, 3)" class="sapUiTinyMarginBeginEnd " width="80%" tooltip="{i18n>allowanceTool}" valueStateText="Enter a valid Allowance" >
 										<core:Item id="allo3" key="{oneModel>externalCode}" text="{oneModel>externalCode} - {oneModel>description}"/>
 									</ComboBox>
 									<Label id="_IDGenLabel1293" text="Amount" class="sapUiTinyMarginBeginEnd"/>
-									<Input id="_IDGenInput1913" enabled="{oneModel>/enableRate2}" type="Number" change="onChangeAmount" tooltip="{i18n>amountTool}"/>
+									<Input id="_IDGenInput1913" editable="{oneModel>/enableRate3}" type="Number" change="onChangeAmount($event, 3)" tooltip="{i18n>amountTool}" valueStateText="Please ensure you enter the monthly allowance amount not annual. If your employee is part time please also pro-rata the allowance as necessary" valueState="Warning"/>
 									<Label id="_IDGenLabel9133" text="Number/Unit" class="sapUiTinyMarginBeginEnd"/>
-									<Input id="_IDGenInput123" enabled="{oneModel>/enableUnit2}" type="Number" change="onChangeUnit" tooltip="{i18n>unitTool}"/>
+									<Input id="_IDGenInput123" editable="{oneModel>/enableUnit3}" type="Number" change="onChangeUnit($event, 3)" tooltip="{i18n>unitTool}" valueStateText="Unit is a required field" />
 								</HBox>
 							</content>
 						</Panel>
@@ -379,8 +388,8 @@
 										<Label id="_IDGeggnLabel14" text="Number of Hours" class="sapUiTinyMargin" showColon="true"/>
 									</VBox>
 									<VBox id="_IDGenVBox6">
-										<Input id="idPosTitleD" width="100%" value="{oneModel>/jobInfo/customString1}" editable="false"/>
-										<Input id="idNumberHoursD" width="30%" value="{oneModel>/jobInfo/standardHours}" class="sapUiTinyMarginTop" editable="false"/>
+										<Input id="idPosTitleD" width="100%" editable="false"/>
+										<Input id="idNumberHoursD" width="30%" class="sapUiTinyMarginTop" editable="false"/>
 									</VBox>
 								</HBox>
 							</HBox>
@@ -396,16 +405,16 @@
 									<Label id="idGrade1" text="Grade" class="sapUiTinyMargin"/>
 								</VBox>
 								<VBox id="selectPositionHBox">
-									<ComboBox fieldGroupIds="sectionBSC" visible="true" id="idSelectTypePos1" items="{oneModel>/positionType/}" change="onPositionTypeChange" class=" " width="400px" required="true" tooltip="{i18n>typePositionTool}">
+									<ComboBox fieldGroupIds="sectionBSC" visible="true" id="idSelectTypePos1" items="{oneModel>/positionType/}" change="onPositionTypeChange" width="400px" required="true" tooltip="{i18n>typePositionTool}">
 										<core:Item id="position" key="{oneModel>code}" text="{oneModel>posType}"/>
 									</ComboBox>
-									<ComboBox fieldGroupIds="sectionBSC" id="selectPositionCombobox" enabled="false" items="{oneModel>/Positions/}" change="onPositionChange" class=" " width="400px" required="true" tooltip="{i18n>PositionTool}">
+									<ComboBox fieldGroupIds="sectionBSC" id="selectPositionCombobox" editable="false" items="{oneModel>/Positions/}" change="onPositionChange" width="400px" required="true" tooltip="{i18n>PositionTool}">
 										<core:Item id="selectPositionComboboxItem" key="{oneModel>code}" text="{oneModel>code} {oneModel>externalName_en_GB} {oneModel>jobTitle}"/>
 									</ComboBox>
-									<Input id="idPositionCostCentre" class="" width="100%" enabled="false" value="{oneModel>/costCenter/costCenter}"/>
-									<Input id="idJobTitle" class="" width="100%" enabled="false" value=""/>
-									<Input id="idEmployeeSubGroup" class="" width="100%" enabled="false"/>
-									<Input id="idGrade" class="" width="100%" enabled="false"/>
+									<Input id="idPositionCostCentre" class="" width="100%" editable="false" value="{oneModel>/costCenter/costCenter}"/>
+									<Input id="idJobTitle" class="" width="100%" editable="false" value=""/>
+									<Input id="idEmployeeSubGroup" class="" width="100%" editable="false"/>
+									<Input id="idGrade" class="" width="100%" editable="false"/>
 								</VBox>
 							</HBox>
 							<HBox id="_IDGednHBox3" justifyContent="End">
@@ -423,7 +432,7 @@
 						</Panel>
 						<Panel id="_IDGenPanel4dhd51" visible="true" expandable="true" expanded="true" stickyHeader="true" headerText="{i18n>SecNotify}" width="auto" class="sapUiResponsiveMargin">
 							<content>
-								<CheckBox id="_IDGenCheckBox1" text="Please tick this box if you require an email to be generated to your approver notifying this form is awaiting approval"/>
+								<CheckBox id="_IDGenCheckBox1" editable="{= ${oneModel>/disable/mode} !== 'display' || ${oneModel>/disable/mode} !== 'bsc'}" text="Please tick this box if you require an email to be generated to your approver notifying this form is awaiting approval"/>
 								<MessageStrip id="_IDGenTexd1" text="{i18n>testData}"/>
 							</content>
 						</Panel>
@@ -431,13 +440,13 @@
 				</IconTabFilter>
 				<IconTabFilter id="_IDGenIconTabFilter2" text="History" key="History">
 					<Panel id="_IDGenPanel7" expandable="false" stickyHeader="true" headerText="New Starter Form History" width="auto" class="sapUiResponsiveMargin">
-						<Table id="_IDGenTable4" width="auto" delete="deleteRow" mode="MultiSelect" items="{oneModel>/historyTable}">
+						<Table id="_IDGenTable4" width="auto" delete="deleteRow" mode="None" items="{oneModel>/historyTable}">
 							<headerToolbar>
 								<Toolbar id="_IDGenToolbar5" width="auto" design="Solid" style="Standard">
-									<Label id="_HIDGenLabel1" labelFor="_HIDGenFormId1" text="Form Id"/>
-									<Input id="_HIDGenFormId1" width="auto" enabled="false"/>
-									<Label id="_HIDGenLabel2" labelFor="_HIDGenType1" text="Type"/>
-									<Input id="_HIDGenType1" width="auto" enabled="false" value="NS01"/>
+									<Label id="_HIDGenLabel1" labelFor="_HIDGenFormId1" text="Form Id" showColon="true" />
+									<Input id="_HIDGenFormId1" width="auto" editable="false"/>
+									<Label id="_HIDGenLabel2" labelFor="_HIDGenType1" text="Type" showColon="true" />
+									<Input id="_HIDGenType1" width="auto" editable="false" value="NS01"/>
 								</Toolbar>
 							</headerToolbar>
 							<columns>
@@ -496,4 +505,4 @@
 			</Toolbar>
 		</footer>
 	</Page>
-</mvc:View>
+</mvc:View>	

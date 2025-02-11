@@ -17,7 +17,7 @@ server:
           url: https://ui5.sap.com
         backend:
           - path: /odata
-            url: https://api55.sapsf.eu/api-ext/
+            url: https://api55.sapsf.eu
             destination: SFSF_new_QA
           - path: /sap
             url: http://s4devwz1.sap.gloscc.gov.uk:44300

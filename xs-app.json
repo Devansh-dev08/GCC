@@ -10,6 +10,13 @@
       "csrfProtection": false
     },
     {
+      "source": "^/admin/odata/(.*)$",
+      "target": "/odata/$1",
+      "destination": "SFSF_new_QA",
+      "authenticationType": "none",
+      "csrfProtection": false
+    },
+    {
       "source": "^/sap/(.*)$",
       "target": "/sap/$1",
       "destination": "s4hanartdev_CLONING",

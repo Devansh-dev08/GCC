@@ -10,6 +10,10 @@ sap.ui.define([
         return Controller.extend("com.gcc.newstarterqa.newstarterqa.controller.baseController", {
             onInit: function () { },
 
+            getId: function (oId) {
+                return this.getView().byId(oId)
+            },
+
             enableSecA: function (bEditable) {
                 var aControls = this.getView().getControlsByFieldGroupId("secAFields");
                 aControls.forEach(function (oControl) {

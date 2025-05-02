@@ -7,7 +7,7 @@
 	xmlns:l="sap.ui.layout"
 	xmlns:unified="sap.ui.unified" controllerName="com.gcc.newstarterqa.newstarterqa.controller.View1" displayBlock="true">
 	<Page id="page" showHeader="false">
-		<IconTabBar id="_IDGenIconTabBar1" backgroundDesign="Solid" expandable="true" select="onTabSelect">
+		<IconTabBar id="_IDGenIconTabBar1" backgroundDesign="Solid" expandable="true" select="onTabChange">
 			<items>
 				<IconTabFilter id="_IDGenIconTabFilter1" text="Form" key="Form">
 					<VBox id="_IDGenVBox3">
@@ -139,7 +139,7 @@
 												<Label id="DBS" text="{i18n>DBS}"/>
 												<Input id="DBS1" width="15rem" value="{oneModel>/workPermit/documentNumber}" tooltip="{i18n>DBSTool}" change="generalInputCheck($event,'')" valueStateText="Enter a valid DBS number" />
 												<Label id="TeachRegNum" text="{i18n>TeachRegNum}"/>
-												<Input id="TeachRegNum1" width="15rem" value="{oneModel>/jobInfo/customString6}" liveChange="numberValidation" tooltip="{i18n>TeacherTool}" change="generalInputCheck($event,'')" valueStateText="Please enter the DfES ID number in a valid format NN/NNNNN" maxLength="8" />
+												<Input id="TeachRegNum1" width="15rem" value="{oneModel>/jobInfo/customString6}" liveChange="numberValidation" tooltip="{i18n>TeacherTool}" change="generalInputCheck($event,'')" valueStateText="Enter a valid TRN" maxLength="8" />
 												<Label id="BankSort" text="{i18n>BankSort}" required="true"/>
 												<Input id="BankSort1" width="15rem" maxLength="6" required="true" liveChange="numberValidation" change="onSortCodeChange" value="{oneModel>/PaymentInformationDetailV3/routingNumber}" tooltip="{i18n>sortCodeTool}" valueStateText="Bank Sort is a required field" />
 												<Label id="BankAccNum" text="{i18n>BankAccNum}" required="true"/>
@@ -295,7 +295,7 @@
 								<FlexBox visible="{= ${oneModel>/disable/mode} === 'bsc' || ${oneModel>/disable/mode} === 'display'}" id="idWeekYear1" alignItems="Center" justifyContent="Start" alignContent="Center">
 									<Label id="idWeekYear" text="Weeks Per Year"/>
 									<ComboBox id="idWeekYeardrop" required="false" items="{oneModel>/workingWeeks/}" change="onWorkingChange" class="sapUiTinyMarginBeginEnd" width="40%" tooltip="{i18n>weeksPerTool}" valueStateText="Enter a valid Weeks per year" >
-										<core:Item id="idWeekYearItem" key="{oneModel>externalCode}" text="{oneModel>cust_WorkingWeeks}"/>
+										<core:Item id="idWeekYearItem" key="{oneModel>externalCode}" text="{oneModel>cust_TTOWeeks}"/>
 									</ComboBox>
 									<Label id="idWorkingWeeks" text="Additional Working Weeks"/>
 									<ComboBox class="sapUiTinyMarginBegin" required="false" id="idWorkingWeeksdrop" width="50%" tooltip="{i18n>additionalTool}" change="onAddWorkChange" valueStateText="Enter a valid Additional Working Weeks" >

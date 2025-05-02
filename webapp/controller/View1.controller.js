@@ -12,18 +12,20 @@ sap.ui.define([
     var companyCode = "", initiator = "", useremail = "", formId1 = "", initiatorName = "", userId;
     var serviceURL = "", pernr = "", approverFlag = false, bscFlag = false, initiatorFlag = false, payGroup = "", nationalid = "", empTermination = "";
     var organizationCode = "", personnel = "", emplSubGroup = "", noMode = false;
+    const teacherGrade = "GBR/20", cirencesterCompanyCode = "4600", defaultCompanyCode = "XXXX", defaultPayGrade = "XXXXXXXX",
+      exceptionOrgList = ["4500", "4600"], factor = 32.5 / 27.5;
 
     return baseController.extend("com.gcc.newstarterqa.newstarterqa.controller.View1", {
       formatter: formatter,
       onInit: function (oEvent) {
         serviceURL = sap.ui.require.toUrl(this.getOwnerComponent().getManifestEntry('/sap.app/id').replaceAll('.', '/'));
         var dateValue = new Date();
-        this.getView().byId("DatePicker01").setDateValue(dateValue);
-        // this.getView().byId("contStartDate1").setValue(dateValue);
+        this.getId("DatePicker01").setDateValue(dateValue);
+        // this.getId("contStartDate1").setValue(dateValue);
 
         var link = this.getOwnerComponent().getModel("i18n").getResourceBundle().getText("SchoolsnetLink")
         var text = this.getOwnerComponent().getModel("i18n").getResourceBundle().getText("IntroText1")
-        this.getView().byId("_IDGenFormattedText1").setHtmlText("<p>" + text + "<a title=" + link + " href=\"" + link + "\"</a> e-Forms Pages.</p>")
+        this.getId("_IDGenFormattedText1").setHtmlText("<p>" + text + "<a title=" + link + " href=\"" + link + "\"</a> e-Forms Pages.</p>")
         // //Dob defaulting 10yrs prior
         // var currYear = CurrDate.getFullYear();
         // var day = CurrDate.getDay();
@@ -31,7 +33,7 @@ sap.ui.define([
         // var Year = currYear-10;
         // var minDate = day+ "-" + month + "-" + Year;
 
-        // this.getView().byId("Dob11").setMaxDate(new Date(minDate));
+        // this.getId("Dob11").setMaxDate(new Date(minDate));
         var data = [];
         var oneModel = new JSONModel(data);
         this.getView().setModel(oneModel, "oneModel");
@@ -58,8 +60,10 @@ sap.ui.define([
           .then(() => {
             if (!oModel2.getData().email) {
               oModel2.setData(mock);
-              useremail = "test00144566@noemail.gloucestershire.gov.uk";
+              useremail = "test00171345@noemail.gloucestershire.gov.uk";
               // test00171345@noemail.gloucestershire.gov.uk // Cirencester
+              // test00157472@noemail.gloucestershire.gov.uk // MAT user
+              // test00121713@noemail.gloucestershire.gov.uk // OxfordShire
             }
             else {
               useremail = oModel2.getData().email;
@@ -90,12 +94,25 @@ sap.ui.define([
                       this.getOwnerComponent().getModel("ZSFGTGW_NS01_SRV").read("/ZSFGT_NS01_FORMID_GETSet", {
                         success: function (oData) {
                           if (oData.results[0]) {
-                            this.getView().byId("_IDGenInput2").setValue(oData.results[0].Formid);
+                            this.getId("_IDGenInput2").setValue(oData.results[0].Formid);
+                            this.getId("_HIDGenFormId1").setValue(oData.results[0].Formid);
                           }
                         }.bind(this),
                         error: function (oData) {
                           console.log("form id service Error");
                         }
+                      });
+                    })
+                    .catch((e) => {
+                      MessageBox.error(e, {
+                        title: "Error Message",
+                        actions: [MessageBox.Action.OK],
+                        onClose: function (oAction) {
+                          if (oAction) {
+                            if (this.query) window.parent.close();
+                            else window.history.go(-1);
+                          }
+                        }.bind(this)
                       });
                     });
                 })
@@ -112,11 +129,11 @@ sap.ui.define([
               if (this.query.mode) {
                 // disabling Section A
                 this.enableSecA(false);
-                this.getView().byId("delete").setVisible(false);
-                this.getView().byId("submit").setVisible(false);
-                this.getView().byId("save").setText("Save");
-                // this.getView().byId("save").detachPress(this.onSave);
-                // this.getView().byId("save").attachPress(this.onSubmit, this);
+                this.getId("delete").setVisible(false);
+                this.getId("submit").setVisible(false);
+                this.getId("save").setText("Save");
+                // this.getId("save").detachPress(this.onSave);
+                // this.getId("save").attachPress(this.onSubmit, this);
                 switch (this.query.mode) {
                   case "bsc":
                     bscFlag = true;
@@ -129,8 +146,8 @@ sap.ui.define([
                   case "report":
                     approverFlag = true;
                     oModel.setProperty("/multiOrgFound", false);
-                    this.getView().byId("save").setVisible(false);
-                    this.getView().byId("cancel").setVisible(false);
+                    this.getId("save").setVisible(false);
+                    this.getId("cancel").setVisible(false);
                     break;
                   case "initiator":
                     initiatorFlag = true;
@@ -153,6 +170,18 @@ sap.ui.define([
                           .then(() => {
                             this.readFormidData(formId1, oModel);
                           });
+                      })
+                      .catch((e) => {
+                        MessageBox.error(e, {
+                          title: "Error Message",
+                          actions: [MessageBox.Action.OK],
+                          onClose: function (oAction) {
+                            if (oAction) {
+                              if (this.query) window.parent.close();
+                              else window.history.go(-1);
+                            }
+                          }.bind(this)
+                        });
                       });
                   } else
                     // fetching data from backend
@@ -181,49 +210,51 @@ sap.ui.define([
         } else oValue = false;
       },
 
-      onTabSelect: function (oEvent) {
-        // sap.ui.core.BusyIndicator.show();
+      _fetchLogData: function (formId) {
         var oModel = this.getView().getModel("oneModel");
-        var key = oEvent.getParameter("key");
-        var oFilter = new sap.ui.model.Filter('Formid', sap.ui.model.FilterOperator.EQ, this.getView().byId("_IDGenInput2").getValue());
-        if (key == "History") {
-          this.getOwnerComponent().getModel("ZSFGTGW_LOG_SRV").read("/zsf_logSet", {
-            filters: [oFilter],
-            success: function (oData) {
-              this.getView().byId("_HIDGenFormId1").setValue(this.getView().byId("_IDGenInput2").getValue());
-              var historyTable = [];
-              for (let i = 0; i < oData.results.length; i++) {
-                var history = {
-                  "SeqNumber": oData.results[i].SeqNumber,
-                  "StartedOn": oData.results[i].StartedOn,
-                  "Status": oData.results[i].Status,
-                  "OrganizationName": oData.results[i].OrganizationName,
-                  "Initiator": oData.results[i].Initiator,
-                  "Description": oData.results[i].Description,
-                  "FormOwner": oData.results[i].FormOwner,
-                  "AvailableFrom": oData.results[i].AvailableFrom,
-                }
-                historyTable.push(history);
+        var oFilter = new sap.ui.model.Filter('Formid', sap.ui.model.FilterOperator.EQ, formId);
+        this.getOwnerComponent().getModel("ZSFGTGW_LOG_SRV").read("/zsf_logSet", {
+          filters: [oFilter],
+          success: function (oData) {
+            var historyTable = [];
+            for (let i = 0; i < oData.results.length; i++) {
+              var history = {
+                "SeqNumber": oData.results[i].SeqNumber,
+                "StartedOn": oData.results[i].StartedOn,
+                "Status": oData.results[i].Status,
+                "OrganizationName": oData.results[i].OrganizationName,
+                "Initiator": oData.results[i].Initiator,
+                "Description": oData.results[i].Description,
+                "FormOwner": oData.results[i].FormOwner,
+                "AvailableFrom": oData.results[i].AvailableFrom,
+                "StatusCode": oData.results[i].StatusCode
               }
-              oModel.setProperty("/historyTable", historyTable);
-            }.bind(this),
-
-            error: function (oData) {
-              console.log("Error", oData);
+              historyTable.push(history);
             }
-          });
+            oModel.setProperty("/historyTable", historyTable);
+          }.bind(this),
 
-          this.getView().byId("PrintFrame").setVisible(false);
-          this.getView().byId("delete").setVisible(false);
-          this.getView().byId("save").setVisible(false);
-          this.getView().byId("submit").setVisible(false);
-          sap.ui.core.BusyIndicator.hide();
+          error: function (oData) {
+            console.log("Error", oData);
+          }
+        });
+      },
+
+      onTabChange: function (oEvent) {
+        var key = oEvent.getParameter("key");
+        if (key == "History") {
+          this.getId("PrintFrame").setVisible(false);
+          this.getId("delete").setVisible(false);
+          this.getId("save").setVisible(false);
+          this.getId("submit").setVisible(false);
         } else {
-          this.getView().byId("PrintFrame").setVisible(true);
-          this.getView().byId("delete").setVisible(true);
-          this.getView().byId("save").setVisible(true);
-          this.getView().byId("submit").setVisible(true);
-          sap.ui.core.BusyIndicator.hide();
+          this.getId("PrintFrame").setVisible(true);
+          this.getId("save").setVisible(true);
+          if (this.query && this.query.mode) {
+          } else {
+            this.getId("submit").setVisible(true);
+            this.getId("delete").setVisible(true);
+          }
         }
       },
 
@@ -347,11 +378,14 @@ sap.ui.define([
                     oModel.setProperty("/multiOrgFound", false);
                   }
                 } else {
-                  reject("You have not been set-up with the authorisation to launch this form. Please call ContactUs on 01452 425888 if you believe this is in error.");
+                  if (this.query && this.query.mode)
+                    resolve(false);
+                  else
+                    reject("You have not been set-up with the authorisation to launch this form. Please call ContactUs on 01452 425888 if you believe this is in error.");
                 }
               }.bind(this),
               error: function (e) {
-                console.log(`cust_ZFLM_MULTI_USERS entity failed for ${username}`);
+                console.log(`cust_ZFLM_MULTI_USERS entity failed for ${initi}`);
                 reject(e);
               }
             });
@@ -377,7 +411,6 @@ sap.ui.define([
               that.getPosCostCenter(data.d.results[0].company, oModel);
               // setting data of EmpJob for further usage
               oModel.setProperty("/EmpJobData", data.d.results[0]);
-              payGroup = data.d.results[0].payGroup;
 
               // fetching emplymentType code from its nav
               if (!(approverFlag || bscFlag || initiatorFlag || noMode)) {
@@ -600,7 +633,6 @@ sap.ui.define([
                 if (data && data.d.results[0]) {
                   // setting data of EmpJob for further usage
                   oModel.setProperty("/EmpJobData", data.d.results[0].jobInfoNav.results[0]);
-                  payGroup = data.d.results[0].jobInfoNav.results[0].payGroup;
                   resolve();
                 } else reject();
               },
@@ -621,7 +653,8 @@ sap.ui.define([
           success: function (data) {
             var reqArr = [];
             if (data.d.results.length == 1) {
-              this.getView().byId("_IDGenInput112").setEditable(false);
+              this.getId("_IDGenInput112").setEditable(false);
+              this.getId("_IDGenInput112").setFieldGroupIds("hardEdit");
             }
             else {
               data.d.results.forEach(function (oItem) {
@@ -666,7 +699,7 @@ sap.ui.define([
         oView.byId("BuildingSoc1").setEditable(bEditable);
         oView.byId("_IDGefnInput11").setEditable(bEditable);
         oView.byId("_IDGefnInput12").setEditable(bEditable);
-        //this.getView().byId("_IDGenfInput13").setEnabled(bEditable);
+        //this.getId("_IDGenfInput13").setEnabled(bEditable);
         oView.byId("_IDGefnInput14").setEditable(bEditable);
         oView.byId("_IDGenItem6").setEditable(bEditable);
 
@@ -686,9 +719,9 @@ sap.ui.define([
 
         oView.byId("_IDGefnInput122").setEditable(bEditable);
         oView.byId("_IDGefnInput112").setEditable(bEditable);
-        //this.getView().byId("_IDGenfInput132").setEnabled(bEditable);
+        //this.getId("_IDGenfInput132").setEnabled(bEditable);
         oView.byId("_IDGefnInput142").setEditable(bEditable);
-        // this.getView().byId("idCountry2").setEnabled(bEditable);
+        // this.getId("idCountry2").setEnabled(bEditable);
         oView.byId("_IDGenInput152").setEditable(bEditable);
         oView.byId("_IDGenInput162").setEditable(bEditable);
         oView.byId("_IDGenInput162s").setEditable(bEditable);
@@ -698,26 +731,26 @@ sap.ui.define([
 
       clearFields: function () {
 
-        this.getView().byId("titleB1").setSelectedKey(null);
-        this.getView().byId("contStartDate1").setValue(null);
-        this.getView().byId("country1").setSelectedKey(null);
-        this.getView().byId("Dob11").setValue(null);
-        this.getView().byId("Gender1").setSelectedKey(null);
-        this.getView().byId("issuDate1").setValue(null);
-        this.getView().byId("ClearDate1").setValue(null);
-        this.getView().byId("homeTelephone1").setValue("");
-        this.getView().byId("mobileTelephone1").setValue("");
-        this.getView().byId("emailAdd1").setValue("");
-        this.getView().byId("Ethicity1").setSelectedKey(null);
+        this.getId("titleB1").setSelectedKey(null);
+        this.getId("contStartDate1").setValue(null);
+        this.getId("country1").setSelectedKey(null);
+        this.getId("Dob11").setValue(null);
+        this.getId("Gender1").setSelectedKey(null);
+        this.getId("issuDate1").setValue(null);
+        this.getId("ClearDate1").setValue(null);
+        this.getId("homeTelephone1").setValue("");
+        this.getId("mobileTelephone1").setValue("");
+        this.getId("emailAdd1").setValue("");
+        this.getId("Ethicity1").setSelectedKey(null);
 
-        this.getView().byId("addEmergencyContact1").setSelected(false);
-        this.getView().byId("idAddEmergency").setVisible(false);
-        this.getView().byId("_IDGenCheckBox2").setSelected(false);
-        this.getView().byId("idSecondEmergency").setVisible(false);
-        this.getView().byId("_IDGenItem6").setSelectedKey(null);
-        this.getView().byId("_IDGenInput17").setSelectedKey(null);
-        this.getView().byId("idree4d2").setSelectedKey(null);
-        this.getView().byId("_IDGenInput172").setSelectedKey(null);
+        this.getId("addEmergencyContact1").setSelected(false);
+        this.getId("idAddEmergency").setVisible(false);
+        this.getId("_IDGenCheckBox2").setSelected(false);
+        this.getId("idSecondEmergency").setVisible(false);
+        this.getId("_IDGenItem6").setSelectedKey(null);
+        this.getId("_IDGenInput17").setSelectedKey(null);
+        this.getId("idree4d2").setSelectedKey(null);
+        this.getId("_IDGenInput172").setSelectedKey(null);
 
         this.getView().getModel("oneModel").setProperty("/editable", true);
         this.getView().getModel("oneModel").setProperty("/enableRate3", false);
@@ -788,11 +821,11 @@ sap.ui.define([
         var oView = that.getView();
         this.clearFields();
         oModel.setProperty("/fieldCodes", {});
-        this.getView().byId("idempCame1").setVisible(true);
-        this.getView().byId("empCame").setVisible(true);
+        this.getId("idempCame1").setVisible(true);
+        this.getId("empCame").setVisible(true);
 
-        this.getView().byId("idempCame").setVisible(false);
-        this.getView().byId("empCame3").setVisible(false);
+        this.getId("idempCame").setVisible(false);
+        this.getId("empCame3").setVisible(false);
         if (pernr) {
           //https://api55preview.sapsf.eu/odata/v2/PerNationalId?$filter=personIdExternal eq '10200048'
           $.ajax({
@@ -826,11 +859,11 @@ sap.ui.define([
                 var lenData = data.d.results.length
                 if (data.d.results[0].originalStartDate != "") {
                   var reqServDate = this.requiredDate(data.d.results[0].originalStartDate);
-                  this.getView().byId("contStartDate1").setDateValue(new Date(reqServDate));
+                  this.getId("contStartDate1").setDateValue(new Date(reqServDate));
                 }
                 if (data.d.results[0].startDate != "") {
                   var reqServDate = this.requiredDate(data.d.results[0].startDate);
-                  this.getView().byId("issuDate1").setDateValue(new Date(reqServDate));
+                  this.getId("issuDate1").setDateValue(new Date(reqServDate));
                 }
                 if (data.d.results[0].prevEmployeeId != null) {
                   var prevEmp = data.d.results[0].prevEmployeeId;
@@ -1078,7 +1111,7 @@ sap.ui.define([
             contentType: "application/json",
             success: function (data) {
               oModel.setProperty("/homeAddress", data.d.results[0]);
-              //this.getView().byId("Title").setSelectedItem().setText(oData.Title),
+              //this.getId("Title").setSelectedItem().setText(oData.Title),
               if (data.d.results[0].state != null) {
                 $.ajax({
                   url: serviceURL + "/odata/v2/PickListValueV2?$filter=PickListV2_id eq 'COUNTY_GCC' and status eq 'A' and optionId eq '" + data.d.results[0].state + "' &$format=json",
@@ -1303,7 +1336,7 @@ sap.ui.define([
               type: 'GET',
               contentType: "application/json",
               success: function (data) {
-                this.getView().byId("approver").setValue(data.d.results[0].label + " " + manName);
+                this.getId("approver").setValue(data.d.results[0].label + " " + manName);
               }.bind(this), error: function () { }
             });
           }.bind(this), error: function () { }
@@ -1350,7 +1383,7 @@ sap.ui.define([
                 oEvent.getSource().setValueState(sap.ui.core.ValueState.None);
                 if (oAction === sap.m.MessageBox.Action.YES) {
                   // setting company Code
-                  companyCode = oModel.getProperty("/OrgValues").find((el) => el.companyCode == orgCode);
+                  companyCode = oModel.getProperty("/OrgValues").find((el) => el.key == orgCode).companyCode;
                   organizationCode = orgCode;
                   // finding approver for the selected Org
                   this.findApprover(orgCode)
@@ -1363,30 +1396,30 @@ sap.ui.define([
 
                       // clearing out the form
                       // hiding section B C D E F
-                      this.getView().byId("_IDGenPanel4").setVisible(false);
-                      this.getView().byId("_IDGenPanel45").setVisible(false);
-                      this.getView().byId("_IDGenPanel4dhd51").setVisible(false);
-                      this.getView().byId("_IDGenPanel4dh51").setVisible(false);
+                      this.getId("_IDGenPanel4").setVisible(false);
+                      this.getId("_IDGenPanel45").setVisible(false);
+                      this.getId("_IDGenPanel4dhd51").setVisible(false);
+                      this.getId("_IDGenPanel4dh51").setVisible(false);
 
-                      this.getView().byId("_IDGenComboBox1").setSelectedKey(null);
+                      this.getId("_IDGenComboBox1").setSelectedKey(null);
                       //clearing out data of Section A
-                      this.getView().byId("_IDGenComboBox41").setValue(null);
-                      this.getView().byId("idempCame").setValue(null);
-                      this.getView().byId("_IDGenInput10").setValue(null);
-                      this.getView().byId("_IDGenComboBox411").setValue(null);
-                      this.getView().byId("_IDGenInput11").setValue(null);
-                      this.getView().byId("_IDGenInput112").setValue(null);
-                      this.getView().byId("TeachRegNum12").setValue(null);
+                      this.getId("_IDGenComboBox41").setValue(null);
+                      this.getId("idempCame").setValue(null);
+                      this.getId("_IDGenInput10").setValue(null);
+                      this.getId("_IDGenComboBox411").setValue(null);
+                      this.getId("_IDGenInput11").setValue(null);
+                      this.getId("_IDGenInput112").getEditable() ? this.getId("_IDGenInput112").setValue(null) : "";
+                      this.getId("TeachRegNum12").setValue(null);
 
                       // hiding fields of Section A
-                      this.getView().byId("_IDGenComboBox41").setVisible(false);
-                      this.getView().byId("idempCame1").setVisible(false);
-                      this.getView().byId("idempCame").setVisible(false);
-                      this.getView().byId("_IDGenInput10").setVisible(false);
-                      this.getView().byId("_IDGenComboBox411").setVisible(false);
-                      this.getView().byId("_IDGenInput11").setVisible(false);
-                      this.getView().byId("_IDGenInput112").setVisible(false);
-                      this.getView().byId("TeachRegNum12").setVisible(false);
+                      this.getId("_IDGenComboBox41").setVisible(false);
+                      this.getId("idempCame1").setVisible(false);
+                      this.getId("idempCame").setVisible(false);
+                      this.getId("_IDGenInput10").setVisible(false);
+                      this.getId("_IDGenComboBox411").setVisible(false);
+                      this.getId("_IDGenInput11").setVisible(false);
+                      this.getId("_IDGenInput112").setVisible(false);
+                      this.getId("TeachRegNum12").setVisible(false);
 
                     })
                     .catch((e) => {
@@ -1395,7 +1428,7 @@ sap.ui.define([
                     })
                 }
                 else {
-                  this.getView().byId("select08").setSelectedKey(oModel.getProperty("/lastSelectedOrg"));
+                  this.getId("select08").setSelectedKey(oModel.getProperty("/lastSelectedOrg"));
                 }
               }.bind(this)
             });
@@ -1407,6 +1440,9 @@ sap.ui.define([
             // finding approver for the selected Org
             this.findApprover(orgCode)
               .then(() => {
+                // setting company Code
+                companyCode = oModel.getProperty("/OrgValues").find((el) => el.key == orgCode).companyCode;
+                organizationCode = orgCode;
                 oModel.setProperty("/lastSelectedOrg", orgCode);
                 this._getEmployees(orgCode);
                 this.enableSecA(true);
@@ -1451,9 +1487,9 @@ sap.ui.define([
       onHoursPerWeekChange: function (oEvent) {
         var value = oEvent.getSource().getValue();
         if (value) {
-          if (+value > 37) {
+          if (+value > 40) {
             oEvent.getSource().setValueState(sap.ui.core.ValueState.Error);
-            oEvent.getSource().setValueStateText("Maximum hours per week are 37 hours. Please enter a number of hours up to 37 hours per week");
+            oEvent.getSource().setValueStateText("Maximum hours per week are 40 hours. Please enter a number of hours up to 40 hours per week");
           } else {
             oEvent.getSource().setValueState(sap.ui.core.ValueState.None);
             oEvent.getSource().setValueStateText("Hours per week is a required field");
@@ -1501,66 +1537,66 @@ sap.ui.define([
 
       oEmployeeSelect: function (oEvent) {
 
-        var oValue = this.getView().byId("_IDGenComboBox41").getSelectedItem();
+        var oValue = this.getId("_IDGenComboBox41").getSelectedItem();
         if (oValue) {
           oEvent.getSource().setValueState(sap.ui.core.ValueState.None);
-          this.getView().byId("empCame").setVisible(true);
-          this.getView().byId("idempCame").setVisible(true);
+          this.getId("empCame").setVisible(true);
+          this.getId("idempCame").setVisible(true);
 
           this.showSecAFields(true);
-          // this.getView().byId("DatePicker01").setEditable(false);
-          // this.getView().byId("Dob11").setEditable(false);
+          // this.getId("DatePicker01").setEditable(false);
+          // this.getId("Dob11").setEditable(false);
 
-          // this.getView().byId("country1").setEditable(false);
-          // this.getView().byId("Nationality1").setEditable(false);
-          // this.getView().byId("Disability1").setEditable(false);
-          // this.getView().byId("DBS1").setEditable(false);
-          // this.getView().byId("TeachRegNum1").setEditable(false);
-          // this.getView().byId("BankSort1").setEditable(false);
-          // this.getView().byId("BankAccNum1").setEditable(false);
+          // this.getId("country1").setEditable(false);
+          // this.getId("Nationality1").setEditable(false);
+          // this.getId("Disability1").setEditable(false);
+          // this.getId("DBS1").setEditable(false);
+          // this.getId("TeachRegNum1").setEditable(false);
+          // this.getId("BankSort1").setEditable(false);
+          // this.getId("BankAccNum1").setEditable(false);
 
 
-          // this.getView().byId("nationalIns1").setEditable(false);
-          // this.getView().byId("Ethicity1").setEditable(false);
-          // this.getView().byId("Gender1").setEditable(false);
-          // this.getView().byId("ClearDate1").setEditable(false);
-          // this.getView().byId("ClearDate1").setEditable(false);
-          // this.getView().byId("issuDate1").setEditable(false);
-          // this.getView().byId("issuDate1").setEditable(false);
-          // // this.getView().byId("BankName1").setEnabled(false);
-          // this.getView().byId("BuildingSoc1").setEditable(false);
-          // this.getView().byId("_IDGefnInput11").setEditable(false);
-          // this.getView().byId("_IDGefnInput12").setEditable(false);
-          // //this.getView().byId("_IDGenfInput13").setEnabled(false);
-          // this.getView().byId("_IDGefnInput14").setEditable(false);
-          // this.getView().byId("_IDGenItem6").setEditable(false);
+          // this.getId("nationalIns1").setEditable(false);
+          // this.getId("Ethicity1").setEditable(false);
+          // this.getId("Gender1").setEditable(false);
+          // this.getId("ClearDate1").setEditable(false);
+          // this.getId("ClearDate1").setEditable(false);
+          // this.getId("issuDate1").setEditable(false);
+          // this.getId("issuDate1").setEditable(false);
+          // // this.getId("BankName1").setEnabled(false);
+          // this.getId("BuildingSoc1").setEditable(false);
+          // this.getId("_IDGefnInput11").setEditable(false);
+          // this.getId("_IDGefnInput12").setEditable(false);
+          // //this.getId("_IDGenfInput13").setEnabled(false);
+          // this.getId("_IDGefnInput14").setEditable(false);
+          // this.getId("_IDGenItem6").setEditable(false);
 
 
           // //First Emergency 
 
-          // this.getView().byId("idree4d2").setEditable(false);
-          // this.getView().byId("_IDGenItem6").setEditable(false);
-          // // this.getView().byId("emergency1County").setEditable(false);
-          // this.getView().byId("_IDGenInput15").setEditable(false);
-          // this.getView().byId("_IDGenInput16").setEditable(false);
-          // this.getView().byId("_IDGenInput16s").setEditable(false);
-          // this.getView().byId("_IDGenInput17").setEditable(false);
-          // this.getView().byId("_IDGenInput18").setEditable(false);
-          // // this.getView().byId("_IDGenInput19").setEditable(false);
+          // this.getId("idree4d2").setEditable(false);
+          // this.getId("_IDGenItem6").setEditable(false);
+          // // this.getId("emergency1County").setEditable(false);
+          // this.getId("_IDGenInput15").setEditable(false);
+          // this.getId("_IDGenInput16").setEditable(false);
+          // this.getId("_IDGenInput16s").setEditable(false);
+          // this.getId("_IDGenInput17").setEditable(false);
+          // this.getId("_IDGenInput18").setEditable(false);
+          // // this.getId("_IDGenInput19").setEditable(false);
 
 
-          // this.getView().byId("_IDGefnInput122").setEditable(false);
-          // this.getView().byId("_IDGefnInput112").setEditable(false);
-          // //this.getView().byId("_IDGenfInput132").setEnabled(false);
-          // this.getView().byId("_IDGefnInput142").setEditable(false);
-          // // this.getView().byId("idCountry2").setEnabled(false);
-          // this.getView().byId("_IDGenInput152").setEditable(false);
-          // this.getView().byId("_IDGenInput162").setEditable(false);
-          // this.getView().byId("_IDGenInput162s").setEditable(false);
+          // this.getId("_IDGefnInput122").setEditable(false);
+          // this.getId("_IDGefnInput112").setEditable(false);
+          // //this.getId("_IDGenfInput132").setEnabled(false);
+          // this.getId("_IDGefnInput142").setEditable(false);
+          // // this.getId("idCountry2").setEnabled(false);
+          // this.getId("_IDGenInput152").setEditable(false);
+          // this.getId("_IDGenInput162").setEditable(false);
+          // this.getId("_IDGenInput162s").setEditable(false);
 
-          // this.getView().byId("_IDGenInput172").setEditable(false);
-          // this.getView().byId("_IDGenInput182").setEditable(false);
-          // // this.getView().byId("_IDGenInput192").setEditable(false);
+          // this.getId("_IDGenInput172").setEditable(false);
+          // this.getId("_IDGenInput182").setEditable(false);
+          // // this.getId("_IDGenInput192").setEditable(false);
           const myArray = oValue.getText().split(" ", 4);
           var firstName = myArray[0];
           var lastName = myArray[1];
@@ -1635,11 +1671,11 @@ sap.ui.define([
                                 if (data.d.results && data.d.results.length > 0) {
                                   for (let j = 0; j < data.d.results.length; j++) {
                                     if ((data.d.results[j].payGroup == "G1" || data.d.results[j].payGroup == "G2" || data.d.results[j].payGroup == "G4") && (data.d.results[j].emplStatus == discarded || data.d.results[j].emplStatus == terminated || data.d.results[j].emplStatus == retired || data.d.results[j].emplStatus == suspended)) {
-                                      this.getView().byId("_IDGenPanel451").setVisible(true);
-                                      this.getView().byId("idPersonalNum").setValue(empEmplData[i].userId);
-                                      this.getView().byId("idPosTitleD").setValue(data.d.results[j].customString1);
-                                      this.getView().byId("idNumberHoursD").setValue(data.d.results[j].standardHours);
-                                      this.getView().byId("idPA20").setDateValue(new Date(this.dateConverter(empEmplData[i].endDate)));
+                                      this.getId("_IDGenPanel451").setVisible(true);
+                                      this.getId("idPersonalNum").setValue(empEmplData[i].userId);
+                                      this.getId("idPosTitleD").setValue(data.d.results[j].customString1);
+                                      this.getId("idNumberHoursD").setValue(data.d.results[j].standardHours);
+                                      this.getId("idPA20").setDateValue(new Date(this.dateConverter(empEmplData[i].endDate)));
                                       this.getView().getModel("oneModel").setProperty("/SecDTerminData", { seqNumber: data.d.results[j].seqNumber, startDate: this.requiredDate(data.d.results[j].startDate) })
                                       $.ajax({
                                         url: serviceURL + "/odata/v2/cust_PersonnelArea?$filter= externalCode eq '" + data.d.results[j].customString3 + "'&$format=json",
@@ -1647,7 +1683,7 @@ sap.ui.define([
                                         contentType: "application/json", //job Info
                                         success: function (data) {
                                           if (data.d.results && data.d.results.length > 0) {
-                                            this.getView().byId("idLEASCHOOL").setValue(data.d.results[0].externalName + " (" + data.d.results[0].externalCode + ")");
+                                            this.getId("idLEASCHOOL").setValue(data.d.results[0].externalName + " (" + data.d.results[0].externalCode + ")");
                                           }
                                         }.bind(this),
                                         error: function (e) {
@@ -1683,9 +1719,9 @@ sap.ui.define([
             //   success: function (data) {
             //     for (let j = 0; j < data.d.results.length; j++) {
             //       if (data.d.results[j].payGroup == "G4" && oData.InsuranceNo && (data.d.results[j].emplStatus == discarded || data.d.results[j].emplStatus == terminated || data.d.results[j].emplStatus == retired || data.d.results[j].emplStatus == suspended)) {
-            //         this.getView().byId("_IDGenPanel451").setVisible(true);
-            //         this.getView().byId("idPersonalNum").setValue(oData.SelEmpCode);
-            //         this.getView().byId("idLEASCHOOL").setValue(oData.Organization);
+            //         this.getId("_IDGenPanel451").setVisible(true);
+            //         this.getId("idPersonalNum").setValue(oData.SelEmpCode);
+            //         this.getId("idLEASCHOOL").setValue(oData.Organization);
             //         this.getView().getModel("oneModel").setProperty("/SecDTerminData", { seqNumber: data.d.results[j].seqNumber, startDate: this.requiredDate(data.d.results[j].startDate) })
             //       }
             //     }
@@ -1722,12 +1758,14 @@ sap.ui.define([
           success: function (oData) {
 
             // Setting Header data
-            this.getView().byId("idInitiator").setValue(oData.Initiator);
-            this.getView().byId("_IDGenInput2").setValue(oData.Formid);
-            this.getView().byId("DatePicker01").setDateValue(new Date(this.convertS4Date(oData.Zdate)));
-            this.getView().byId("_IDGenInput4").setValue(oData.Organization);
+            this.getId("idInitiator").setValue(oData.Initiator);
+            this.getId("_IDGenInput2").setValue(oData.Formid);
+            this.getId("_HIDGenFormId1").setValue(oData.Formid);
+            this._fetchLogData(oData.Formid);
+            this.getId("DatePicker01").setDateValue(new Date(this.convertS4Date(oData.Zdate)));
+            this.getId("_IDGenInput4").setValue(oData.Organization);
             organizationCode = oData.Organization.split("(")[1].split(")")[0];
-            this.getView().byId("_IDGenInput4").setSelectedKey(organizationCode);
+            this.getId("_IDGenInput4").setSelectedKey(organizationCode);
             oModel.setProperty("/lastSelectedOrg", organizationCode);
             // finding the approver for the org
             this.findApprover(organizationCode)
@@ -1735,9 +1773,9 @@ sap.ui.define([
                 MessageBox.error(e);
               })
             oModel.setProperty("/CostCentreP", { costCenter: oData.CostCenter });
-            this.getView().byId("_IDGen1Inpu1t4").setValue(oData.CostCenter);
-            this.getView().byId("approver").setValue(oData.Approver);
-            this.getView().byId("_IDGenCheckBox1").setSelected(oData.Notify ? true : false);
+            this.getId("_IDGen1Inpu1t4").setValue(oData.CostCenter);
+            this.getId("approver").setValue(oData.Approver);
+            this.getId("_IDGenCheckBox1").setSelected(oData.Notify ? true : false);
             personnel = oData.Organization;
             this.ApproverCode = oData.ApproverCode;
             userId = oData.userID
@@ -1763,62 +1801,76 @@ sap.ui.define([
               }
               else this.enableSecB(false);
               //setting panel header
-              this.getView().byId("_IDGenPanel4").setHeaderText("Section B – New Employee Details");
-              this.getView().byId("idempCame").setVisible(true);
-              this.getView().byId("idempCame").setRequired(true);
-              this.getView().byId("empCame3").setVisible(true);
-              this.getView().byId("empCame3").setRequired(true);
+              this.getId("_IDGenPanel4").setHeaderText("Section B – New Employee Details");
+              this.getId("idempCame").setVisible(true);
+              this.getId("idempCame").setRequired(true);
+              this.getId("empCame3").setVisible(true);
+              this.getId("empCame3").setRequired(true);
 
-              this.getView().byId("_IDGenLabel64").setVisible(false);
-              this.getView().byId("_IDGenLabel64").setRequired(false);
-              this.getView().byId("_IDGenComboBox41").setVisible(false);
-              this.getView().byId("_IDGenComboBox41").setRequired(false);
+              this.getId("_IDGenLabel64").setVisible(false);
+              this.getId("_IDGenLabel64").setRequired(false);
+              this.getId("_IDGenComboBox41").setVisible(false);
+              this.getId("_IDGenComboBox41").setRequired(false);
 
-              this.getView().byId("idempCame1").setVisible(false);
-              this.getView().byId("empCame").setVisible(false);
+              this.getId("idempCame1").setVisible(false);
+              this.getId("empCame").setVisible(false);
             } else {
               //setting panel header
-              this.getView().byId("_IDGenPanel4").setHeaderText("Section B - Multi Employee Details");
+              this.getId("_IDGenPanel4").setHeaderText("Section B - Multi Employee Details");
               // disabling fields for user
               this.enableSecB(false);
               // Setting Employee Info
-              this.getView().byId("_IDGenComboBox41").setSelectedKey(oData.SelEmpCode); // "4789",
-              this.getView().byId("_IDGenComboBox41").setValue(oData.SelectEmployee); // "4789",
-              this.getView().byId("idempCame").setVisible(false);
-              this.getView().byId("idempCame").setRequired(false);
-              this.getView().byId("empCame3").setVisible(false);
-              this.getView().byId("empCame3").setRequired(false);
+              this.getId("_IDGenComboBox41").setSelectedKey(oData.SelEmpCode); // "4789",
+              this.getId("_IDGenComboBox41").setValue(oData.SelectEmployee); // "4789",
+              this.getId("idempCame").setVisible(false);
+              this.getId("idempCame").setRequired(false);
+              this.getId("empCame3").setVisible(false);
+              this.getId("empCame3").setRequired(false);
 
-              this.getView().byId("_IDGenLabel64").setVisible(true);
-              this.getView().byId("_IDGenLabel64").setRequired(true);
-              this.getView().byId("_IDGenComboBox41").setVisible(true);
-              this.getView().byId("_IDGenComboBox41").setRequired(true);
+              this.getId("_IDGenLabel64").setVisible(true);
+              this.getId("_IDGenLabel64").setRequired(true);
+              this.getId("_IDGenComboBox41").setVisible(true);
+              this.getId("_IDGenComboBox41").setRequired(true);
             }
 
             // Setting section A info
-            this.getView().byId("_IDGenComboBox1").setSelectedKey(oData.EmployeedOrganization);
-            this.getView().byId("idempCame").setSelectedKey(oData.NewEmployee);  //  "GCC Council",
-            this.getView().byId("idempCame").setValue(oData.NewEmployeeText);  //  "GCC Council",
-            this.getView().byId("_IDGenInput10").setValue(oData.PreviousEmp);  // "Teacher",
-            this.getView().byId("_IDGenComboBox411").setValue(oData.OrgContType); //"Cont Type",
-            this.getView().byId("_IDGenComboBox411").setSelectedKey(oData.OrgContTypeCode);  // "Cont Type",
-            this.getView().byId("_IDGenInput11").setValue(oData.PositionTitle);  // "Teacher",
-            this.getView().byId("_IDGenInput112").setValue(oData.PosCostCentre); //  "00000107622 Down Ampney Church of England ",
-            this.getView().byId("_IDGenInput112").setSelectedKey(oData.PosCcenterCode);
+            this.getId("_IDGenComboBox1").setSelectedKey(oData.EmployeedOrganization);
+            this.getId("idempCame").setSelectedKey(oData.NewEmployee);  //  "GCC Council",
+            this.getId("idempCame").setValue(oData.NewEmployeeText);  //  "GCC Council",
+            this.getId("_IDGenInput10").setValue(oData.PreviousEmp);  // "Teacher",
+            this.getId("_IDGenComboBox411").setValue(oData.OrgContType); //"Cont Type",
+            this.getId("_IDGenComboBox411").setSelectedKey(oData.OrgContTypeCode);  // "Cont Type",
+            this.getId("_IDGenInput11").setValue(oData.PositionTitle);  // "Teacher",
+            this.getId("_IDGenInput112").setValue(oData.PosCostCentre); //  "00000107622 Down Ampney Church of England ",
+            this.getId("_IDGenInput112").setSelectedKey(oData.PosCcenterCode);
 
-            if (oData.EmployeedOrganization == "X" && ((oData.OrgContTypeCode == "4" || oData.OrgContTypeCode == "5") || (oData.CompanyCode == "4600" && oData.OrgContTypeCode == "34"))) {
-              this.getView().byId("TeachRegNum11").setVisible(true);
-              this.getView().byId("TeachRegNum12").setVisible(true);
-              this.getView().byId("TeachRegNum").setVisible(false);
-              this.getView().byId("TeachRegNum1").setVisible(false);
-              this.getView().byId("TeachRegNum12").setRequired(true);
+            if ((oData.OrgContTypeCode == "4" || oData.OrgContTypeCode == "5") || (oData.CompanyCode == cirencesterCompanyCode && oData.OrgContTypeCode == "34")) {
+              if (oData.EmployeedOrganization == "X") {
+                this.getId("TeachRegNum11").setVisible(true);
+                this.getId("TeachRegNum12").setVisible(true);
+                this.getId("TeachRegNum").setVisible(false);
+                this.getId("TeachRegNum1").setVisible(false);
+                this.getId("TeachRegNum12").setRequired(true);
+                this.getId("TeachRegNum").setRequired(false);
+                this.getId("TeachRegNum1").setRequired(false);
+              } else {
+                this.getId("TeachRegNum11").setVisible(false);
+                this.getId("TeachRegNum12").setVisible(false);
+                this.getId("TeachRegNum").setVisible(true);
+                this.getId("TeachRegNum1").setVisible(true);
+                this.getId("TeachRegNum").setRequired(true);
+                this.getId("TeachRegNum1").setRequired(true);
+                this.getId("TeachRegNum12").setRequired(false);
+              }
             }
             else {
-              this.getView().byId("TeachRegNum11").setVisible(false);
-              this.getView().byId("TeachRegNum12").setVisible(false);
-              this.getView().byId("TeachRegNum").setVisible(true);
-              this.getView().byId("TeachRegNum1").setVisible(true);
-              this.getView().byId("TeachRegNum12").setRequired(false);
+              this.getId("TeachRegNum11").setVisible(false);
+              this.getId("TeachRegNum12").setVisible(false);
+              this.getId("TeachRegNum").setVisible(true);
+              this.getId("TeachRegNum1").setVisible(true);
+              this.getId("TeachRegNum12").setRequired(false);
+              this.getId("TeachRegNum").setRequired(false);
+              this.getId("TeachRegNum1").setRequired(true);
             }
             // Checking if confirmed button is pressed
             if (oData.ConfirmedButton == "X") {
@@ -1837,137 +1889,145 @@ sap.ui.define([
                 this.enableSecC(true);
               } else this.enableSecC(false);
             }
-            oData.ConfirmedButton == "X" ? this.getView().byId("_IDGenButton122").setText("Confirmed") : this.getView().byId("_IDGenButton122").setText("Confirm Employee Details"),
+            oData.ConfirmedButton == "X" ? this.getId("_IDGenButton122").setText("Confirmed") : this.getId("_IDGenButton122").setText("Confirm Employee Details"),
 
               // Setting section B Data
-              this.getView().byId("titleB1").setValue(oData.Title);  //"Mr.",
-            this.getView().byId("titleB1").setSelectedKey(oData.TitleCode);// "1100",
-            this.getView().byId("foreName1").setValue(oData.Forename);  // "Sandeep",
-            this.getView().byId("middelname1").setValue(oData.Middlename);  // "Singh",
-            this.getView().byId("surname1").setValue(oData.Surname); // // "Singh",
-            this.getView().byId("contStartDate1").setDateValue(new Date(this.convertS4Date(oData.SerStartDate))); // // "19.12.2023",
-            this.getView().byId("streetHouseNo1").setValue(oData.Houseno); // // "House No",
-            this.getView().byId("2ndadd1").setValue(oData.SecAddress); //  //"Second Address",
-            this.getView().byId("city1").setValue(oData.City); // // "City",
-            this.getView().byId("country1").setValue(oData.County); //  // "County",
-            this.getView().byId("country1").setSelectedKey(oData.CountyCode); // // "CountyCode",
-            this.getView().byId("postcode1").setValue(oData.Postcode); // // "201301",
-            this.getView().byId("homeTelephone1").setValue(oData.TelNo); // //"9911535981",
-            this.getView().byId("mobileTelephone1").setValue(oData.MobNo); //// "9911535981",
-            this.getView().byId("emailAdd1").setValue(oData.EmailAdd); // // "abc@abc.com",
-            this.getView().byId("Dob11").setDateValue(new Date(this.convertS4Date(oData.Dob)));  //"20.09.1999",
-            this.getView().byId("nationalIns1").setValue(oData.InsuranceNo)  //"Insurance No",
-            this.getView().byId("Nationality1").setValue(oData.Nationality); //"Indian",
-            this.getView().byId("Nationality1").setSelectedKey(oData.NatCode); //"IN",
-            this.getView().byId("Disability1").setValue(oData.Disability)  // "No",
-            this.getView().byId("Disability1").setSelectedKey(oData.DisabilityCode);  // "No",
-            this.getView().byId("Ethicity1").setValue(oData.Ethicity)  //"Ethicity",
-            this.getView().byId("Ethicity1").setSelectedKey(oData.EthnicityCode)  // "Ethicity",
-            this.getView().byId("Gender1").setValue(oData.Gender) //"Male",
-            this.getView().byId("Gender1").setSelectedKey(oData.GenderCode)  // "M",
-            this.getView().byId("DBS1").setValue(oData.DbsNo)  //"123",
-            this.getView().byId("TeachRegNum1").setValue(oData.RegNo)  //"321",
-            this.getView().byId("ClearDate1").setDateValue(new Date(this.convertS4Date(oData.ClearanceDate)))  //"19.12.2023",
-            this.getView().byId("issuDate1").setDateValue(new Date(this.convertS4Date(oData.IssueDate)))  //"19.12.2023",
-            this.getView().byId("BankSort1").setValue(oData.BankSortCode)  //"1234567",
+              this.getId("titleB1").setValue(oData.Title);  //"Mr.",
+            this.getId("titleB1").setSelectedKey(oData.TitleCode);// "1100",
+            this.getId("foreName1").setValue(oData.Forename);  // "Sandeep",
+            this.getId("middelname1").setValue(oData.Middlename);  // "Singh",
+            this.getId("surname1").setValue(oData.Surname); // // "Singh",
+            this.getId("contStartDate1").setDateValue(new Date(this.convertS4Date(oData.SerStartDate))); // // "19.12.2023",
+            this.getId("streetHouseNo1").setValue(oData.Houseno); // // "House No",
+            this.getId("2ndadd1").setValue(oData.SecAddress); //  //"Second Address",
+            this.getId("city1").setValue(oData.City); // // "City",
+            this.getId("country1").setValue(oData.County); //  // "County",
+            this.getId("country1").setSelectedKey(oData.CountyCode); // // "CountyCode",
+            this.getId("postcode1").setValue(oData.Postcode); // // "201301",
+            this.getId("homeTelephone1").setValue(oData.TelNo); // //"9911535981",
+            this.getId("mobileTelephone1").setValue(oData.MobNo); //// "9911535981",
+            this.getId("emailAdd1").setValue(oData.EmailAdd); // // "abc@abc.com",
+            this.getId("Dob11").setDateValue(new Date(this.convertS4Date(oData.Dob)));  //"20.09.1999",
+            this.getId("nationalIns1").setValue(oData.InsuranceNo)  //"Insurance No",
+            this.getId("Nationality1").setValue(oData.Nationality); //"Indian",
+            this.getId("Nationality1").setSelectedKey(oData.NatCode); //"IN",
+            this.getId("Disability1").setValue(oData.Disability)  // "No",
+            this.getId("Disability1").setSelectedKey(oData.DisabilityCode);  // "No",
+            this.getId("Ethicity1").setValue(oData.Ethicity)  //"Ethicity",
+            this.getId("Ethicity1").setSelectedKey(oData.EthnicityCode)  // "Ethicity",
+            this.getId("Gender1").setValue(oData.Gender) //"Male",
+            this.getId("Gender1").setSelectedKey(oData.GenderCode)  // "M",
+            this.getId("DBS1").setValue(oData.DbsNo)  //"123",
+            this.getId("TeachRegNum1").setValue(oData.RegNo)  //"321",
+            this.getId("ClearDate1").setDateValue(new Date(this.convertS4Date(oData.ClearanceDate)))  //"19.12.2023",
+            this.getId("issuDate1").setDateValue(new Date(this.convertS4Date(oData.IssueDate)))  //"19.12.2023",
+            this.getId("BankSort1").setValue(oData.BankSortCode)  //"1234567",
             oModel.setProperty("/bankName", { bankName: oData.BankName })  //"ABC Bank",
-            this.getView().byId("BankAccNum1").setValue(oData.BankAccNo)  //"12321312",
-            this.getView().byId("BuildingSoc1").setValue(oData.BuildSocRefNo)  //"RefNo123",
+            this.getId("BankAccNum1").setValue(oData.BankAccNo)  //"12321312",
+            this.getId("BuildingSoc1").setValue(oData.BuildSocRefNo)  //"RefNo123",
 
             // Setting First Emergency contact data
             if (oData.EmergencyAdd == "X") {
               // setting data to be visible
-              this.getView().byId("idAddEmergency").setVisible(true);
+              this.getId("idAddEmergency").setVisible(true);
               // checking checkbox value
-              this.getView().byId("addEmergencyContact1").setSelected(true);
+              this.getId("addEmergencyContact1").setSelected(true);
               if (initiatorFlag || noMode) this.enableFirstEmer(true)
               else
                 this.enableFirstEmer(false);
 
               // Setting Data for first emergency contact
-              this.getView().byId("_IDGefnInput11").setValue(oData.StreetAdd), //"Street1",
-                this.getView().byId("_IDGefnInput12").setValue(oData.AddLine)  //"Address1",
-              this.getView().byId("_IDGefnInput14").setValue(oData.CityF)  //"City1",
-              this.getView().byId("_IDGenItem6").setValue(oData.CountyF)  // "County1",
-              this.getView().byId("_IDGenItem6").setSelectedKey(oData.CountyCodeF)  //"County1Code",
-              this.getView().byId("_IDGenInput15").setValue(oData.PostCodeF)  //"201301",
-              this.getView().byId("_IDGenInput16").setValue(oData.NameF)
-              this.getView().byId("_IDGenInput16s").setValue(oData.SurnameF)  //"Name1",
-              this.getView().byId("_IDGenInput17").setValue(oData.RelationF) //"Son",
-              this.getView().byId("_IDGenInput17").setSelectedKey(oData.RelationFCode)  //"Son",
-              this.getView().byId("_IDGenInput18").setValue(oData.HomTelNoF) //"123441",
-            } else this.getView().byId("idAddEmergency").setVisible(false);
+              this.getId("_IDGefnInput11").setValue(oData.StreetAdd), //"Street1",
+                this.getId("_IDGefnInput12").setValue(oData.AddLine)  //"Address1",
+              this.getId("_IDGefnInput14").setValue(oData.CityF)  //"City1",
+              this.getId("_IDGenItem6").setValue(oData.CountyF)  // "County1",
+              this.getId("_IDGenItem6").setSelectedKey(oData.CountyCodeF)  //"County1Code",
+              this.getId("_IDGenInput15").setValue(oData.PostCodeF)  //"201301",
+              this.getId("_IDGenInput16").setValue(oData.NameF)
+              this.getId("_IDGenInput16s").setValue(oData.SurnameF)  //"Name1",
+              this.getId("_IDGenInput17").setValue(oData.RelationF) //"Son",
+              this.getId("_IDGenInput17").setSelectedKey(oData.RelationFCode)  //"Son",
+              this.getId("_IDGenInput18").setValue(oData.HomTelNoF) //"123441",
+            } else this.getId("idAddEmergency").setVisible(false);
 
             // checking Second emergency contact
             if (oData.SecondEmergencycontact == "X") {
               // same things for second emergency contacts
-              this.getView().byId("_IDGenCheckBox2").setSelected(true);
-              this.getView().byId("idSecondEmergency").setVisible(true);
+              this.getId("_IDGenCheckBox2").setSelected(true);
+              this.getId("idSecondEmergency").setVisible(true);
               if (initiatorFlag || noMode) this.enableSecEmer(true)
               else
                 this.enableSecEmer(false);
-              this.getView().byId("_IDGefnInput112").setValue(oData.StreetAddSec); // "Street2",
-              this.getView().byId("_IDGefnInput122").setValue(oData.AddLineSec); //"Address 2",
-              this.getView().byId("_IDGefnInput142").setValue(oData.CitySec);  //"County 2",
-              this.getView().byId("idree4d2").setValue(oData.CountySec);  // "City 2",
-              this.getView().byId("idree4d2").setSelectedKey(oData.CountyCodeSec);  //"CountyCode2",
-              this.getView().byId("_IDGenInput152").setValue(oData.PostCodeSec);  // "201301",
-              this.getView().byId("_IDGenInput162").setValue(oData.NameSec); // "Name 2",
-              this.getView().byId("_IDGenInput162s").setValue(oData.SurnameSec);  // "Surname 2",
-              this.getView().byId("_IDGenInput172").setValue(oData.RelationSec);  // "Son",
-              this.getView().byId("_IDGenInput172").setSelectedKey(oData.RelCodeSec); //"Son",
-              this.getView().byId("_IDGenInput182").setValue(oData.HomTelNoSec);  // "12321312",
-            } else this.getView().byId("idSecondEmergency").setVisible(false);
+              this.getId("_IDGefnInput112").setValue(oData.StreetAddSec); // "Street2",
+              this.getId("_IDGefnInput122").setValue(oData.AddLineSec); //"Address 2",
+              this.getId("_IDGefnInput142").setValue(oData.CitySec);  //"County 2",
+              this.getId("idree4d2").setValue(oData.CountySec);  // "City 2",
+              this.getId("idree4d2").setSelectedKey(oData.CountyCodeSec);  //"CountyCode2",
+              this.getId("_IDGenInput152").setValue(oData.PostCodeSec);  // "201301",
+              this.getId("_IDGenInput162").setValue(oData.NameSec); // "Name 2",
+              this.getId("_IDGenInput162s").setValue(oData.SurnameSec);  // "Surname 2",
+              this.getId("_IDGenInput172").setValue(oData.RelationSec);  // "Son",
+              this.getId("_IDGenInput172").setSelectedKey(oData.RelCodeSec); //"Son",
+              this.getId("_IDGenInput182").setValue(oData.HomTelNoSec);  // "12321312",
+            } else this.getId("idSecondEmergency").setVisible(false);
 
             // Setting Section C Data
             if (initiatorFlag || noMode) this.enableSecC(true);
             else this.enableSecC(false);
-            this.getView().byId("_IDGenComboBox17").setValue(oData.ContractType);  //"Permanent",
-            this.getView().byId("_IDGenComboBox17").setSelectedKey(oData.ContTypeCode);  // "P",
-            this.getView().byId("_IDGenDatePicker1").setDateValue(new Date(this.convertS4Date(oData.StartDate))); //  // "19.12.2023",
-            this.getView().byId("_IDGenDatePicker2").setDateValue(new Date(this.convertS4Date(oData.EndDate)));
-            this.getView().byId("_IDGenComboBox2").setValue(oData.Grade);  // "01-Grade",
+            this.getId("_IDGenComboBox17").setValue(oData.ContractType);  //"Permanent",
+            this.getId("_IDGenComboBox17").setSelectedKey(oData.ContTypeCode);  // "P",
+            this.getId("_IDGenDatePicker1").setDateValue(new Date(this.convertS4Date(oData.StartDate))); //  // "19.12.2023",
+            this.getId("_IDGenDatePicker2").setDateValue(new Date(this.convertS4Date(oData.EndDate)));
+            this.getId("_IDGenComboBox2").setValue(oData.Grade);  // "01-Grade",
             if (!oData.Grade)
-              this.getView().byId("_IDGenComboBox3").setEditable(false);
-            this.getView().byId("_IDGenComboBox2").setSelectedKey(oData.GradeCode); // "01",
-            this.getView().byId("_IDGenComboBox3").setValue(oData.ScalePoint);  // "01",
-            this.getView().byId("_IDGenComboBox3").setSelectedKey(oData.ScalePointCode);  // "01",
-            this.getView().byId("_IDGenComboBox6").setValue(oData.ClaimPos);// "11",t
-            this.getView().byId("_IDGenComboBox6").setSelectedKey(oData.ClaimPos ? oData.ClaimPos : null);
-            this.getView().byId("idFTE").setValue(oData.FteDec);
-            this.getView().byId("idFTEperc").setValue(oData.FtePerc);
-            this.getView().byId("Hoursperweek").setValue(oData.HoursPerWeek);
+              this.getId("_IDGenComboBox3").setEditable(false);
+            this.getId("_IDGenComboBox2").setSelectedKey(oData.GradeCode); // "01",
+            this.getId("_IDGenComboBox3").setValue(oData.ScalePoint);  // "01",
+            this.getId("_IDGenComboBox3").setSelectedKey(oData.ScalePointCode);  // "01",
+            this.getId("_IDGenComboBox6").setValue(oData.ClaimPos);// "11",t
+            this.getId("_IDGenComboBox6").setSelectedKey(oData.ClaimPos ? oData.ClaimPos : null);
+            this.getId("idFTE").setValue(oData.FteDec);
+            this.getId("idFTEperc").setValue(oData.FtePerc);
+            this.getId("Hoursperweek").setValue(oData.HoursPerWeek);
             if (oData.ProbPeriod) {
               if (oData.ProbPeriod == "Yes") {
-                this.getView().byId("_IDGenInput141").setSelectedKey("Yes");
-                this.getView().byId("probationEndDatePic").setDateValue(new Date(this.convertS4Date(oData.ProbPerEndDt)));
-                this.getView().byId("probationEndDate").setVisible(true);
-                this.getView().byId("probationEndDatePic").setVisible(true);
-                this.getView().byId("probationEndDatePic").setRequired(true);
-              }
-              else this.getView().byId("_IDGenInput141").setSelectedKey("No");
-            } else this.getView().byId("_IDGenInput141").setSelectedKey(null);
-            this.getView().byId("idWeekYeardrop").setSelectedKey(oData.WorkingWeeksInt);
-            this.getView().byId("idWeekYeardrop").setValue(oData.WorkingWeeks);
-            this.getView().byId("idWorkingWeeksdrop").setValue(oData.AddWorkWeek);
-            this.getView().byId("idWorkingWeeksdrop").setSelectedKey(oData.AddWorkWeekInt);
-            if (oData.ClaimPos == "Yes") {
-              this.getView().byId("idHoursPerWeek1").setVisible(false);
-              this.getView().byId("idWeekYear1").setVisible(false);
-              this.getView().byId("idfte1").setVisible(false);
-              // this.getView().byId("idfte1").setFieldGroupIds("");
-              // this.getView().byId("Hoursperweek").setFieldGroupIds("");
-            }
-            else {
-              if ((oData.OrgContTypeCode == "4" || oData.OrgContTypeCode == "5") || (oData.CompanyCode == "4600" && oData.OrgContTypeCode == "34")) {
-                this.getView().byId("idHoursPerWeek1").setVisible(false);
-                this.getView().byId("idWeekYear1").setVisible(false);
-                this.getView().byId("idfte1").setVisible(true);
+                this.getId("_IDGenInput141").setSelectedKey("Yes");
+                this.getId("probationEndDatePic").setDateValue(new Date(this.convertS4Date(oData.ProbPerEndDt)));
+                this.getId("probationEndDate").setVisible(true);
+                this.getId("probationEndDatePic").setVisible(true);
+                this.getId("probationEndDatePic").setRequired(true);
               }
               else {
-                this.getView().byId("idfte1").setVisible(false);
-                this.getView().byId("idHoursPerWeek1").setVisible(true);
-                this.getView().byId("idWeekYear1").setVisible(true);
+                this.getId("_IDGenInput141").setSelectedKey("No");
+                this.getId("probationEndDatePic").setVisible(false);
+                this.getId("probationEndDatePic").setRequired(false);
+              }
+            } else {
+              this.getId("_IDGenInput141").setSelectedKey(null);
+              this.getId("probationEndDatePic").setVisible(false);
+              this.getId("probationEndDatePic").setRequired(false);
+            }
+            this.getId("idWeekYeardrop").setSelectedKey(oData.WorkingWeeksInt);
+            this.getId("idWeekYeardrop").setValue(oData.WorkingWeeks);
+            this.getId("idWorkingWeeksdrop").setValue(oData.AddWorkWeek);
+            this.getId("idWorkingWeeksdrop").setSelectedKey(oData.AddWorkWeekInt);
+            if (oData.ClaimPos == "Yes") {
+              this.getId("idHoursPerWeek1").setVisible(false);
+              this.getId("idWeekYear1").setVisible(false);
+              this.getId("idfte1").setVisible(false);
+              // this.getId("idfte1").setFieldGroupIds("");
+              // this.getId("Hoursperweek").setFieldGroupIds("");
+            }
+            else {
+              if ((oData.OrgContTypeCode == "4" || oData.OrgContTypeCode == "5") || (oData.CompanyCode == cirencesterCompanyCode && oData.OrgContTypeCode == "34")) {
+                this.getId("idHoursPerWeek1").setVisible(false);
+                this.getId("idWeekYear1").setVisible(false);
+                this.getId("idfte1").setVisible(true);
+              }
+              else {
+                this.getId("idfte1").setVisible(false);
+                this.getId("idHoursPerWeek1").setVisible(true);
+                this.getId("idWeekYear1").setVisible(true);
               }
             }
             if (oData.Grade || oData.GradeCode) {
@@ -1975,90 +2035,101 @@ sap.ui.define([
             }
 
             // if (oData.WageTypeCheck1 || oData.WageTypeAmt1) {
-            // this.getView().byId("_IDGenComboBox6").setSelectedKey("yes");
-            // this.getView().byId("Hoursperweek").setValue(oData.WageType1);
-            // this.getView().byId("idWorkingWeeksdrop").setSelectedKey(oData.WageTypeCheck1);
-            // this.getView().byId("idWeekYeardrop").setSelectedKey(oData.WageTypeAmt1);
-            // this.getView().byId("idWeekYeardrop").setValue(oData.WageTypeAmt1);
+            // this.getId("_IDGenComboBox6").setSelectedKey("yes");
+            // this.getId("Hoursperweek").setValue(oData.WageType1);
+            // this.getId("idWorkingWeeksdrop").setSelectedKey(oData.WageTypeCheck1);
+            // this.getId("idWeekYeardrop").setSelectedKey(oData.WageTypeAmt1);
+            // this.getId("idWeekYeardrop").setValue(oData.WageTypeAmt1);
             // }
             if (oData.WageTypeCheck2 || oData.WageTypeAmt2) {
               this.getView().getModel("oneModel").setProperty("/wage2Value", oData.WageTypeAmt2);
             } else this.getView().getModel("oneModel").setProperty("/wage2Value", "");
             // if (oData.WageTypeCheck3 || oData.WageTypeAmt3) {
-            // this.getView().byId("idWorkingWeeksdrop").setValue(oData.WageTypeAmt3)
+            // this.getId("idWorkingWeeksdrop").setValue(oData.WageTypeAmt3)
             // }
 
 
-            this.getView().byId("idSelectTypePos1").setSelectedKey(oData.EmpSubGrp);
+            this.getId("idSelectTypePos1").setSelectedKey(oData.EmpSubGrp);
 
-            this.getView().byId("_IDGenComboBox8").setValue(oData.Allowance1);  // "1100",
-            this.getView().byId("_IDGenComboBox8").setSelectedKey(oData.AllowCode1);  // // "1100",
+            this.getId("_IDGenComboBox8").setValue(oData.Allowance1);  // "1100",
+            this.getId("_IDGenComboBox8").setSelectedKey(oData.AllowCode1);  // // "1100",
             if (!(oData.Allowance1 || oData.AllowCode1)) {
-              this.getView().byId("_IDGenInput191").setEditable(false); // "100",
-              this.getView().byId("_IDGenInput12").setEditable(false);
+              this.getId("_IDGenInput191").setEditable(false); // "100",
+              this.getId("_IDGenInput12").setEditable(false);
             }
             else {
               if (initiatorFlag || noMode)
                 this.getWageDetails(oData.AllowCode1, 1, oModel);
-              this.getView().byId("_IDGenInput191").setValue(oData.Amount1); // "100",
-              this.getView().byId("_IDGenInput12").setValue(oData.Unit1);  //"No",
+              this.getId("_IDGenInput191").setValue(oData.Amount1); // "100",
+              this.getId("_IDGenInput12").setValue(oData.Unit1);  //"No",
             }
-            this.getView().byId("_IDGenComboBox82").setValue(oData.Allowance2);  // "1101",
-            this.getView().byId("_IDGenComboBox82").setSelectedKey(oData.AllowCode2); // "1101",
+            this.getId("_IDGenComboBox82").setValue(oData.Allowance2);  // "1101",
+            this.getId("_IDGenComboBox82").setSelectedKey(oData.AllowCode2); // "1101",
             if (!(oData.Allowance2 || oData.AllowCode2)) {
-              this.getView().byId("_IDGenInput1912").setEditable(false); // "100",
-              this.getView().byId("_IDGenInput122").setEditable(false);
+              this.getId("_IDGenInput1912").setEditable(false); // "100",
+              this.getId("_IDGenInput122").setEditable(false);
             }
             else {
               if (initiatorFlag || noMode)
                 this.getWageDetails(oData.AllowCode2, 2, oModel);
-              this.getView().byId("_IDGenInput1912").setValue(oData.Amount2);  // "231",
-              this.getView().byId("_IDGenInput122").setValue(oData.Unit2);  // "Unit",
+              this.getId("_IDGenInput1912").setValue(oData.Amount2);  // "231",
+              this.getId("_IDGenInput122").setValue(oData.Unit2);  // "Unit",
             }
             if (!(oData.Allowance3 || oData.AllowCode3)) {
-              this.getView().byId("_IDGenInput1913").setEditable(false); // "100",
-              this.getView().byId("_IDGenInput123").setEditable(false);
+              this.getId("_IDGenInput1913").setEditable(false); // "100",
+              this.getId("_IDGenInput123").setEditable(false);
             }
             else {
-              this.getView().byId("_IDGenComboBox83").setValue(oData.Allowance3); // "1103",
-              this.getView().byId("_IDGenComboBox83").setSelectedKey(oData.AllowCode3);  //"1103",
+              this.getId("_IDGenComboBox83").setValue(oData.Allowance3); // "1103",
+              this.getId("_IDGenComboBox83").setSelectedKey(oData.AllowCode3);  //"1103",
               if (initiatorFlag || noMode)
                 this.getWageDetails(oData.AllowCode3, 3, oModel);
-              this.getView().byId("_IDGenInput1913").setValue(oData.Amount3);  // "223",
-              this.getView().byId("_IDGenInput123").setValue(oData.Unit3);  //"UnNo.",
+              this.getId("_IDGenInput1913").setValue(oData.Amount3);  // "223",
+              this.getId("_IDGenInput123").setValue(oData.Unit3);  //"UnNo.",
             }
 
-            if (bscFlag)
-              // checking if section D has to be visible
-              this.checkSectionD(oData);
+            if (this.query && this.query.report) {
+              if (oData.Personalnumber && oData.Pa20EndDate && oData.Selectoption && oData.SelOptCode && oData.LeaSchoolname && oData.NoHours)
+                this.getId("_IDGenPanel451").setVisible(true);
+              this.getId("idSelectTypePos1").setEditable(false);
+              this.getId("selectPositionCombobox").setEditable(false);
+              this.getId("_IDGenButton1d22").setVisible(false);
+            } else {
+              if (bscFlag)
+                // checking if section D has to be visible
+                this.checkSectionD(oData);
+            }
             // Setting section D data
-            this.getView().byId("idPersonalNum").setValue(oData.Personalnumber);  //"12312",
-            this.getView().byId("idPosTitleD").setValue(oData.PosTitle);  //"Teacher",
-            this.getView().byId("idPA20").setDateValue(new Date(this.convertS4Date(oData.Pa20EndDate))); // "20.12.2023",
-            this.getView().byId("idSelectOption").setValue(oData.Selectoption); // "SelOpt",
-            this.getView().byId("idSelectOption").setSelectedKey(oData.SelOptCode);  // "",
-            this.getView().byId("idLEASCHOOL").setValue(oData.LeaSchoolname);  //"Lea School",
-            this.getView().byId("idNumberHoursD").setValue(oData.NoHours); // "1",
+            this.getId("idPersonalNum").setValue(oData.Personalnumber);  //"12312",
+            this.getId("idPosTitleD").setValue(oData.PosTitle);  //"Teacher",
+            this.getId("idPA20").setDateValue(new Date(this.convertS4Date(oData.Pa20EndDate))); // "20.12.2023",
+            this.getId("idSelectOption").setValue(oData.Selectoption); // "SelOpt",
+            this.getId("idSelectOption").setSelectedKey(oData.SelOptCode);  // "",
+            this.getId("idLEASCHOOL").setValue(oData.LeaSchoolname);  //"Lea School",
+            this.getId("idNumberHoursD").setValue(oData.NoHours); // "1",
             this.getView().getModel("oneModel").setProperty("/SecDTerminData", { seqNumber: oData.seqNumber, startDate: oData.TermStartDt })
 
             if (bscFlag) {
-              // loading dropdowns of Position title
-              this.dropdownsBsc(oModel, oData);
+              if (this.query && this.query.report) { }
+              else
+                // loading dropdowns of Position title
+                this.dropdownsBsc(oModel, oData);
             }
 
             // filling section E data
-            this.getView().byId("idSelectTypePos1").setSelectedKey(oData.TypeOfPosCode);
-            this.getView().byId("idSelectTypePos1").setValue(oData.TypeOfPos);
-            this.getView().byId("selectPositionCombobox").setSelectedKey(oData.SelectPosCode);
-            this.getView().byId("selectPositionCombobox").setValue(oData.SelectPos);
-            this.getView().byId("idPositionCostCentre").setValue(oData.SecEPosCcenter);
+            this.getId("idSelectTypePos1").setSelectedKey(oData.TypeOfPosCode);
+            this.getId("idSelectTypePos1").setValue(oData.TypeOfPos);
+            this.getId("selectPositionCombobox").setSelectedKey(oData.SelectPosCode);
+            this.getId("selectPositionCombobox").setValue(oData.SelectPos);
+            this.getId("idPositionCostCentre").setValue(oData.SecEPosCcenter);
             oModel.setProperty("/costCenter", { costCenter: oData.SecEPosCcenter });
-            this.getView().byId("idJobTitle").setValue(oData.SecEPosTitle);
-            this.getView().byId("idEmployeeSubGroup").setValue(oData.TypeOfPos ? oData.TypeOfPos.split(" ")[0] : "");
-            this.getView().byId("idGrade").setValue(oData.SecEGrade);
+            this.getId("idJobTitle").setValue(oData.SecEPosTitle);
+            this.getId("idEmployeeSubGroup").setValue(oData.TypeOfPos ? oData.TypeOfPos.split(" ")[0] : "");
+            this.getId("idGrade").setValue(oData.SecEGrade);
 
             //   previewData[counter][items[i].Day] = { [items[i].Day]: items[i].HoursWorked, dataFound: "true", DaysName: items[i].Day, ScheduleDay: items[i].ScheduleDay, Daykey: items[i].DayKey };
             // previewData[counter].Type = "Hours";
+            var oModelWS = new JSONModel();
             if (oData.HeadToWsNav.results && oData.HeadToWsNav.results.length > 0) {
               var wsData = [];
               var s4WsData = oData.HeadToWsNav.results;
@@ -2071,7 +2142,6 @@ sap.ui.define([
                 }
                 wsData.push(singleData);
               }
-              var oModelWS = new JSONModel();
               oModelWS.setProperty("/WSItems", JSON.parse(JSON.stringify(wsData)));
               oModelWS.setProperty("/WSSavedItems", JSON.parse(JSON.stringify(wsData)));
               this.preparePreviewData(oModelWS)
@@ -2108,9 +2178,9 @@ sap.ui.define([
               for (let i = 0; i < oData.results.length; i++) {
                 comment += oData.results[i].comment + "\n";
               }
-              this.getView().byId("_IDGenTextArea1").setValue(comment);
-              this.getView().byId("_IDGenTextArea1").setVisible(true);
-              this.getView().byId("_IDGenLabeldf11").setVisible(true);
+              this.getId("_IDGenTextArea1").setValue(comment);
+              this.getId("_IDGenTextArea1").setVisible(true);
+              this.getId("_IDGenLabeldf11").setVisible(true);
             }
           }.bind(this),
           error: function (oData) {
@@ -2128,19 +2198,19 @@ sap.ui.define([
       s4LogCreation: async function (Status, managerId) {
 
         var log_payload = {
-          "OrganizationName": this.getView().byId("_IDGenInput4").getValue(),
-          "Formid": this.getView().byId("_IDGenInput2").getValue(),
-          "StartedOn": new Date(this.getView().byId("DatePicker01").getValue()),
+          "OrganizationName": this.getId("_IDGenInput4").getValue(),
+          "Formid": this.getId("_IDGenInput2").getValue(),
+          "StartedOn": new Date(this.getId("DatePicker01").getValue()),
           "Status": Status,
           "Type": "NS01",
           "OrganizationName": personnel,
           "OrgCode": personnel.match(/\((.*?)\)/)[1],
           "InitCode": initiator,
-          "Initiator": this.getView().byId("idInitiator").getValue(),
-          "Description": "Schools New Starter Form",
-          "FormOwner": Status == "S" ? this.getView().byId("approver").getValue() : this.getView().byId("idInitiator").getValue(),
+          "Initiator": this.getId("idInitiator").getValue(),
+          "Description": "New Starter Form",
+          "FormOwner": Status == "S" ? this.getId("approver").getValue() : this.getId("idInitiator").getValue(),
           "FormOwnerCode": Status == "S" ? managerId : initiator,
-          "ApproverName": Status == "S" ? this.getView().byId("approver").getValue() : "",
+          "ApproverName": Status == "S" ? this.getId("approver").getValue() : "",
           "ApproverCode": Status == "S" ? managerId : "",
           "AvailableFrom": new Date(),
         }
@@ -2148,7 +2218,7 @@ sap.ui.define([
           {
             success: function (oData) {
               console.log(`${oData.Formid} log created`);
-
+              this._fetchLogData(oData.Formid);
             }.bind(this),
             error: function (oData) {
               console.log("Error", oData);
@@ -2276,10 +2346,10 @@ sap.ui.define([
           }
         }
         sap.ui.core.BusyIndicator.show();
-        var perArea = this.getView().byId("_IDGenInput4").getValue().split("(")[1].split(")")[0];
-        var grade = this.getView().byId("_IDGenComboBox2").getSelectedItem() != null ? this.getView().byId("_IDGenComboBox2").getSelectedItem().getKey() : this.getView().byId("_IDGenComboBox2").getSelectedKey();
-        var startDate = new Date(this.getView().byId("_IDGenDatePicker1").getValue()).toLocaleDateString('en-CA');
-        var empGrp = this.getView().byId("idSelectTypePos1").getValue().split(" ")[0];
+        var perArea = this.getId("_IDGenInput4").getValue().split("(")[1].split(")")[0];
+        var grade = this.getId("_IDGenComboBox2").getSelectedItem() != null ? this.getId("_IDGenComboBox2").getSelectedItem().getKey() : this.getId("_IDGenComboBox2").getSelectedKey();
+        var startDate = new Date(this.getId("_IDGenDatePicker1").getValue()).toLocaleDateString('en-CA');
+        var empGrp = this.getId("idSelectTypePos1").getValue().split(" ")[0];
 
         // fetching Position data
         this.getPositions(perArea, grade, startDate, empGrp);
@@ -2291,7 +2361,7 @@ sap.ui.define([
         //     sap.ui.core.BusyIndicator.hide();
         //     data.d.results.sort();
         //     this.getView().getModel("oneModel").setProperty("/Positions", data.d.results);
-        //     this.getView().byId("selectPositionCombobox").setEditable(true)
+        //     this.getId("selectPositionCombobox").setEditable(true)
         //     if (data.d.results.length == 0) {
         //       MessageBox.error("There are no suitable positions available. Please set one up and then click on the refresh button");
         //     }
@@ -2309,66 +2379,75 @@ sap.ui.define([
           oEvent.getSource().setValueState(sap.ui.core.ValueState.None);
           sap.ui.core.BusyIndicator.show();
           var oKey = oEvent.getSource().getSelectedItem().getKey();
-          var oValue = this.getView().byId("selectPositionCombobox").getSelectedItem().getText();
+          var oValue = this.getId("selectPositionCombobox").getSelectedItem().getText();
           if (oValue) {
             var obj = this.getView().getModel("oneModel").getProperty("/Positions").filter((el) => el.code == oKey)[0];
-            var url = serviceURL + "/odata/v2" + obj.PositionCostAssignmentItems.__deferred.uri.split("/odata/v2")[1] + "?$format=json";
-            var that = this;
-            $.ajax({
-              url: url,
-              type: 'GET',
-              contentType: "application/json",
-              success: function (data) {
-                sap.ui.core.BusyIndicator.hide();
-                that.getView().getModel("oneModel").setProperty("/costCenter", data.d.results[0]);
-              },
-              error: function (e) {
-                console.log("error: " + e);
-                sap.ui.core.BusyIndicator.hide();
-              }
-            });
+            this.checkActualHours(obj)
+              .then(() => {
+                oEvent.getSource().setValueState(sap.ui.core.ValueState.None);
+                var url = serviceURL + "/odata/v2" + obj.PositionCostAssignmentItems.__deferred.uri.split("/odata/v2")[1] + "?$format=json";
+                var that = this;
+                $.ajax({
+                  url: url,
+                  type: 'GET',
+                  contentType: "application/json",
+                  success: function (data) {
+                    sap.ui.core.BusyIndicator.hide();
+                    that.getView().getModel("oneModel").setProperty("/costCenter", data.d.results[0]);
+                  },
+                  error: function (e) {
+                    console.log("error: " + e);
+                    sap.ui.core.BusyIndicator.hide();
+                  }
+                });
 
-            var url1 = serviceURL + "/odata/v2" + obj.cust_employeeTypeNav.__deferred.uri.split("/odata/v2")[1] + "?$format=json";
-            $.ajax({
-              url: url1,
-              type: 'GET',
-              contentType: "application/json",
-              success: function (data) {
-                sap.ui.core.BusyIndicator.hide();
-                that.getView().byId("idSelectTypePos1").getSelectedItem() != null ? that.getView().byId("idSelectTypePos1").getSelectedItem().setKey(data.d.optionId) : that.getView().byId("idSelectTypePos1").setSelectedKey(data.d.optionId);
-              },
-              error: function (e) {
-                console.log("error: " + e);
-                sap.ui.core.BusyIndicator.hide();
-              }
-            });
+                var url1 = serviceURL + "/odata/v2" + obj.cust_employeeTypeNav.__deferred.uri.split("/odata/v2")[1] + "?$format=json";
+                $.ajax({
+                  url: url1,
+                  type: 'GET',
+                  contentType: "application/json",
+                  success: function (data) {
+                    sap.ui.core.BusyIndicator.hide();
+                    that.getView().byId("idSelectTypePos1").getSelectedItem() != null ? that.getView().byId("idSelectTypePos1").getSelectedItem().setKey(data.d.optionId) : that.getView().byId("idSelectTypePos1").setSelectedKey(data.d.optionId);
+                  },
+                  error: function (e) {
+                    console.log("error: " + e);
+                    sap.ui.core.BusyIndicator.hide();
+                  }
+                });
 
-            var isClaimPos = this.getView().byId("_IDGenComboBox6").getSelectedItem() != null ? this.getView().byId("_IDGenComboBox6").getSelectedItem().getText() : this.getView().byId("_IDGenComboBox6").getValue();
-            if (isClaimPos == "No") {
-              var isTeacher = this.getView().byId("_IDGenComboBox411").getSelectedItem() != null ? this.getView().byId("_IDGenComboBox411").getSelectedItem().getKey() : this.getView().byId("_IDGenComboBox411").getSelectedKey()
-              const standardHoursFTE = 32.5;
-              if ((isTeacher == "4" || isTeacher == "5") || (companyCode == "4600" && isTeacher == "34")) {
-                var givenFTE = this.getView().byId("idFTE").getValue();
-                this.getView().byId("Hoursperweek").setValue((parseFloat(givenFTE) * standardHoursFTE).toFixed(2));
-              }
-              else {
-                var standHours = obj.standardHours;
-                var givenHours = this.getView().byId("Hoursperweek").getValue();
-                this.getView().byId("idFTE").setValue((parseFloat(givenHours) / parseFloat(standHours)).toFixed(2));
-                this.getView().byId("idFTEperc").setValue(((parseFloat(givenHours) / parseFloat(standHours)) * 100).toFixed(2) + "%");
-              }
-            }
-            this.getView().byId("idPos").setVisible(true);
-            this.getView().byId("idJobT").setVisible(true);
-            this.getView().byId("idEmpSub").setVisible(true);
-            this.getView().byId("idGrade1").setVisible(true);
-            this.getView().byId("idPositionCostCentre").setVisible(true);
-            this.getView().byId("idJobTitle").setVisible(true);
-            this.getView().byId("idJobTitle").setValue(obj.jobTitle);
-            this.getView().byId("idEmployeeSubGroup").setVisible(true);
-            this.getView().byId("idEmployeeSubGroup").setValue(obj.cust_employeeType);
-            this.getView().byId("idGrade").setVisible(true);
-            this.getView().byId("idGrade").setValue(obj.cust_PayScaleGroup);
+                var isClaimPos = this.getId("_IDGenComboBox6").getSelectedItem() != null ? this.getId("_IDGenComboBox6").getSelectedItem().getText() : this.getId("_IDGenComboBox6").getValue();
+                if (isClaimPos == "No") {
+                  var isTeacher = this.getId("_IDGenComboBox411").getSelectedItem() != null ? this.getId("_IDGenComboBox411").getSelectedItem().getKey() : this.getId("_IDGenComboBox411").getSelectedKey()
+                  const standardHoursFTE = 32.5;
+                  if ((isTeacher == "4" || isTeacher == "5") || (companyCode == cirencesterCompanyCode && isTeacher == "34")) {
+                    var givenFTE = this.getId("idFTE").getValue();
+                    this.getId("Hoursperweek").setValue((parseFloat(givenFTE) * standardHoursFTE).toFixed(2));
+                  }
+                  else {
+                    var standHours = obj.standardHours;
+                    var givenHours = this.getId("Hoursperweek").getValue();
+                    this.getId("idFTE").setValue((parseFloat(givenHours) / parseFloat(standHours)).toFixed(5));
+                    this.getId("idFTEperc").setValue(((parseFloat(givenHours) / parseFloat(standHours)) * 100).toFixed(2) + "%");
+                  }
+                }
+                this.getId("idPos").setVisible(true);
+                this.getId("idJobT").setVisible(true);
+                this.getId("idEmpSub").setVisible(true);
+                this.getId("idGrade1").setVisible(true);
+                this.getId("idPositionCostCentre").setVisible(true);
+                this.getId("idJobTitle").setVisible(true);
+                this.getId("idJobTitle").setValue(obj.jobTitle);
+                this.getId("idEmployeeSubGroup").setVisible(true);
+                this.getId("idEmployeeSubGroup").setValue(obj.cust_employeeType);
+                this.getId("idGrade").setVisible(true);
+                this.getId("idGrade").setValue(obj.cust_PayScaleGroup);
+              })
+              .catch((e) => {
+                MessageBox.error(e)
+                sap.ui.core.BusyIndicator.hide();
+                oEvent.getSource().setValueState(sap.ui.core.ValueState.Error);
+              })
           }
         }
         else {
@@ -2471,35 +2550,35 @@ sap.ui.define([
 
       clearAllowanceDetails: function (allowanceRow) {
         if (allowanceRow == 1) {
-          this.getView().byId("_IDGenInput191").setValue(null);
-          this.getView().byId("_IDGenInput191").setValueState(sap.ui.core.ValueState.Warning);
-          this.getView().byId("_IDGenInput191").setValueStateText("Please ensure you enter the monthly allowance amount not annual. If your employee is part time please also pro-rata the allowance as necessary");
-          this.getView().byId("_IDGenInput12").setValue(null);
-          this.getView().byId("_IDGenInput12").setValueState(sap.ui.core.ValueState.Warning);
-          this.getView().byId("_IDGenInput12").setValueStateText("Please ensure you enter the monthly allowance amount not annual. If your employee is part time please also pro-rata the allowance as necessary");
+          this.getId("_IDGenInput191").setValue(null);
+          this.getId("_IDGenInput191").setValueState(sap.ui.core.ValueState.Warning);
+          this.getId("_IDGenInput191").setValueStateText("Please ensure you enter the monthly allowance amount not annual. If your employee is part time please also pro-rata the allowance as necessary");
+          this.getId("_IDGenInput12").setValue(null);
+          this.getId("_IDGenInput12").setValueState(sap.ui.core.ValueState.Warning);
+          this.getId("_IDGenInput12").setValueStateText("Please ensure you enter the monthly allowance amount not annual. If your employee is part time please also pro-rata the allowance as necessary");
         }
         else if (allowanceRow == 2) {
-          this.getView().byId("_IDGenInput1912").setValue(null);
-          this.getView().byId("_IDGenInput1912").setValueState(sap.ui.core.ValueState.Warning);
-          this.getView().byId("_IDGenInput1912").setValueStateText("Please ensure you enter the monthly allowance amount not annual. If your employee is part time please also pro-rata the allowance as necessary");
-          this.getView().byId("_IDGenInput122").setValue(null);
-          this.getView().byId("_IDGenInput122").setValueState(sap.ui.core.ValueState.Warning);
-          this.getView().byId("_IDGenInput122").setValueStateText("Please ensure you enter the monthly allowance amount not annual. If your employee is part time please also pro-rata the allowance as necessary");
+          this.getId("_IDGenInput1912").setValue(null);
+          this.getId("_IDGenInput1912").setValueState(sap.ui.core.ValueState.Warning);
+          this.getId("_IDGenInput1912").setValueStateText("Please ensure you enter the monthly allowance amount not annual. If your employee is part time please also pro-rata the allowance as necessary");
+          this.getId("_IDGenInput122").setValue(null);
+          this.getId("_IDGenInput122").setValueState(sap.ui.core.ValueState.Warning);
+          this.getId("_IDGenInput122").setValueStateText("Please ensure you enter the monthly allowance amount not annual. If your employee is part time please also pro-rata the allowance as necessary");
         }
         else {
-          this.getView().byId("_IDGenInput1913").setValue(null);
-          this.getView().byId("_IDGenInput1913").setValueState(sap.ui.core.ValueState.Warning);
-          this.getView().byId("_IDGenInput1913").setValueStateText("Please ensure you enter the monthly allowance amount not annual. If your employee is part time please also pro-rata the allowance as necessary");
-          this.getView().byId("_IDGenInput123").setValue(null);
-          this.getView().byId("_IDGenInput123").setValueState(sap.ui.core.ValueState.Warning);
-          this.getView().byId("_IDGenInput123").setValueStateText("Please ensure you enter the monthly allowance amount not annual. If your employee is part time please also pro-rata the allowance as necessary");
+          this.getId("_IDGenInput1913").setValue(null);
+          this.getId("_IDGenInput1913").setValueState(sap.ui.core.ValueState.Warning);
+          this.getId("_IDGenInput1913").setValueStateText("Please ensure you enter the monthly allowance amount not annual. If your employee is part time please also pro-rata the allowance as necessary");
+          this.getId("_IDGenInput123").setValue(null);
+          this.getId("_IDGenInput123").setValueState(sap.ui.core.ValueState.Warning);
+          this.getId("_IDGenInput123").setValueStateText("Please ensure you enter the monthly allowance amount not annual. If your employee is part time please also pro-rata the allowance as necessary");
         }
       },
 
       checkAllowanceType: function (allowanceType, allNumber) {
-        var all1 = this.getView().byId("_IDGenComboBox8").getSelectedItem() ? this.getView().byId("_IDGenComboBox8").getSelectedItem().getKey() : this.getView().byId("_IDGenComboBox8").getSelectedKey();
-        var all2 = this.getView().byId("_IDGenComboBox82").getSelectedItem() ? this.getView().byId("_IDGenComboBox82").getSelectedItem().getKey() : this.getView().byId("_IDGenComboBox82").getSelectedKey();
-        var all3 = this.getView().byId("_IDGenComboBox83").getSelectedItem() ? this.getView().byId("_IDGenComboBox83").getSelectedItem().getKey() : this.getView().byId("_IDGenComboBox83").getSelectedKey();
+        var all1 = this.getId("_IDGenComboBox8").getSelectedItem() ? this.getId("_IDGenComboBox8").getSelectedItem().getKey() : this.getId("_IDGenComboBox8").getSelectedKey();
+        var all2 = this.getId("_IDGenComboBox82").getSelectedItem() ? this.getId("_IDGenComboBox82").getSelectedItem().getKey() : this.getId("_IDGenComboBox82").getSelectedKey();
+        var all3 = this.getId("_IDGenComboBox83").getSelectedItem() ? this.getId("_IDGenComboBox83").getSelectedItem().getKey() : this.getId("_IDGenComboBox83").getSelectedKey();
         var sameAllowanceFound = false;
         if (allNumber != 1) {
           if (all1 == allowanceType)
@@ -2519,25 +2598,24 @@ sap.ui.define([
       onSelectPayScaleGroup: function (oEvent) {
         if (oEvent) {
           var grade = oEvent.getSource().getSelectedItem() != null ? oEvent.getSource().getSelectedItem().getKey() : oEvent.getSource().getSelectedKey();
-        } else var grade = this.getView().byId("_IDGenComboBox2").getSelectedKey();
+        } else var grade = this.getId("_IDGenComboBox2").getSelectedKey();
         if (grade) {
           if (oEvent)
             oEvent.getSource().setValueState(sap.ui.core.ValueState.None);
           var oModel = this.getView().getModel("oneModel");
-          this.getView().byId("_IDGenComboBox3").setValue("");
+          this.getId("_IDGenComboBox3").setValue("");
           if (grade != "") {
             this._getTTOWeeks(grade);
-            var workingWeeks = this.getView().byId("idWeekYeardrop").getSelectedItem() != null ? this.getView().byId("idWeekYeardrop").getSelectedItem().getText() : this.getView().byId("idWeekYeardrop").getValue();
+            var workingWeeks = this.getId("idWeekYeardrop").getSelectedItem() != null ? this.getId("idWeekYeardrop").getSelectedItem().getText() : this.getId("idWeekYeardrop").getValue();
             this._checkWage2(grade, workingWeeks);
-            // var 
+
             $.ajax({
               url: serviceURL + "/odata/v2/PayScaleLevel?$filter=substringof('" + grade + "', code)&$format=json",
               type: 'GET',
               contentType: "application/json",
               success: function (data) {
-
                 if (!(approverFlag || bscFlag)) {
-                  this.getView().byId("_IDGenComboBox3").setEditable(true);
+                  this.getId("_IDGenComboBox3").setEditable(true);
                 }
                 oModel.setProperty("/scalePoint", data.d.results);
               }.bind(this),
@@ -2547,7 +2625,7 @@ sap.ui.define([
             });
           }
           else {
-            this.getView().byId("_IDGenComboBox3").setEditable(false);
+            this.getId("_IDGenComboBox3").setEditable(false);
           }
         }
         else {
@@ -2721,99 +2799,99 @@ sap.ui.define([
           oEvent.getSource().setValueState(sap.ui.core.ValueState.None);
           orgValue = oEvent.getSource().getSelectedItem().getText();
           if (orgValue === "Yes") {
-            this.getView().byId("_IDGenPanel4").setHeaderText("Section B - Multi Employee Details");
+            this.getId("_IDGenPanel4").setHeaderText("Section B - Multi Employee Details");
             // getting employee data
-            var org = this.getView().byId("_IDGenInput4").getValue().split("(")[1].split(")")[0];
+            var org = this.getId("_IDGenInput4").getValue().split("(")[1].split(")")[0];
             this._getEmployees(org);
 
-            this.getView().byId("_IDGenInput10").setValue(this.getView().byId("_IDGenInput4").getValue());
+            this.getId("_IDGenInput10").setValue(this.getId("_IDGenInput4").getValue());
             // changing the fields on user inputs
-            this.getView().byId("idempCame").setVisible(false);
-            this.getView().byId("idempCame").setRequired(false);
-            this.getView().byId("empCame3").setVisible(false);
-            this.getView().byId("empCame3").setRequired(false);
+            this.getId("idempCame").setVisible(false);
+            this.getId("idempCame").setRequired(false);
+            this.getId("empCame3").setVisible(false);
+            this.getId("empCame3").setRequired(false);
 
-            this.getView().byId("_IDGenLabel64").setVisible(true);
-            this.getView().byId("_IDGenLabel64").setRequired(true);
-            this.getView().byId("_IDGenComboBox41").setVisible(true);
-            this.getView().byId("_IDGenComboBox41").setRequired(true);
+            this.getId("_IDGenLabel64").setVisible(true);
+            this.getId("_IDGenLabel64").setRequired(true);
+            this.getId("_IDGenComboBox41").setVisible(true);
+            this.getId("_IDGenComboBox41").setRequired(true);
 
             this.showSecAFields(false);
 
           } else {
 
-            this.getView().byId("_IDGenPanel4").setHeaderText("Section B – New Employee Details");
+            this.getId("_IDGenPanel4").setHeaderText("Section B – New Employee Details");
 
-            this.getView().byId("_IDGenInput10").setValue("");
+            this.getId("_IDGenInput10").setValue("");
             // changing the fields on user inputs
-            this.getView().byId("idempCame").setVisible(true);
-            this.getView().byId("idempCame").setRequired(true);
-            this.getView().byId("empCame3").setVisible(true);
-            this.getView().byId("empCame3").setRequired(true);
+            this.getId("idempCame").setVisible(true);
+            this.getId("idempCame").setRequired(true);
+            this.getId("empCame3").setVisible(true);
+            this.getId("empCame3").setRequired(true);
 
-            this.getView().byId("_IDGenLabel64").setVisible(false);
-            this.getView().byId("_IDGenLabel64").setRequired(false);
-            this.getView().byId("_IDGenComboBox41").setVisible(false);
-            this.getView().byId("_IDGenComboBox41").setRequired(false);
+            this.getId("_IDGenLabel64").setVisible(false);
+            this.getId("_IDGenLabel64").setRequired(false);
+            this.getId("_IDGenComboBox41").setVisible(false);
+            this.getId("_IDGenComboBox41").setRequired(false);
 
-            this.getView().byId("idempCame1").setVisible(false);
-            this.getView().byId("empCame").setVisible(false);
+            this.getId("idempCame1").setVisible(false);
+            this.getId("empCame").setVisible(false);
 
-            this.getView().byId("TeachRegNum11").setVisible(false);
-            this.getView().byId("TeachRegNum12").setVisible(false);
-            this.getView().byId("TeachRegNum").setVisible(true);
-            this.getView().byId("TeachRegNum1").setVisible(true);
-            this.getView().byId("TeachRegNum12").setRequired(false);
+            this.getId("TeachRegNum11").setVisible(false);
+            this.getId("TeachRegNum12").setVisible(false);
+            this.getId("TeachRegNum").setVisible(true);
+            this.getId("TeachRegNum1").setVisible(true);
+            this.getId("TeachRegNum12").setRequired(false);
 
             this.showSecAFields(true);
 
-            // this.getView().byId("_IDGenLabel621").setVisible(true);
-            // this.getView().byId("_IDGenInput10").setVisible(true);
-            // this.getView().byId("_IDGenLabel6421").setVisible(true);
-            // this.getView().byId("_IDGenComboBox411").setVisible(true);
-            // this.getView().byId("_IDGenLabel6411").setVisible(true);
-            // this.getView().byId("_IDGenInput11").setVisible(true);
-            // this.getView().byId("_IDGenLabel611").setVisible(true);
-            // this.getView().byId("_IDGenInput112").setVisible(true);
+            // this.getId("_IDGenLabel621").setVisible(true);
+            // this.getId("_IDGenInput10").setVisible(true);
+            // this.getId("_IDGenLabel6421").setVisible(true);
+            // this.getId("_IDGenComboBox411").setVisible(true);
+            // this.getId("_IDGenLabel6411").setVisible(true);
+            // this.getId("_IDGenInput11").setVisible(true);
+            // this.getId("_IDGenLabel611").setVisible(true);
+            // this.getId("_IDGenInput112").setVisible(true);
 
-            // this.getView().byId("country1").setEditable(true);
-            // this.getView().byId("Dob11").setEditable(true);
-            // this.getView().byId("Nationality1").setEditable(true);
-            // this.getView().byId("Disability1").setEditable(true);
-            // this.getView().byId("DBS1").setEditable(true);
-            // this.getView().byId("TeachRegNum1").setEditable(true);
-            // this.getView().byId("BankSort1").setEditable(true);
-            // this.getView().byId("BankAccNum1").setEditable(true);
-            // this.getView().byId("nationalIns1").setEditable(true);
-            // this.getView().byId("Ethicity1").setEditable(true);
-            // this.getView().byId("Gender1").setEditable(true);
-            // this.getView().byId("ClearDate1").setEditable(true);
-            // this.getView().byId("ClearDate1").setEditable(true);
-            // this.getView().byId("issuDate1").setEditable(true);
-            // this.getView().byId("issuDate1").setEditable(true);
-            // //this.getView().byId("BankName1").setEnabled(true);
-            // this.getView().byId("BuildingSoc1").setEditable(true);
-            // this.getView().byId("_IDGefnInput11").setEditable(true);
-            // this.getView().byId("_IDGefnInput12").setEditable(true);
-            // this.getView().byId("_IDGefnInput14").setEditable(true);
-            // this.getView().byId("_IDGenItem6").setEditable(true);
-            // // this.getView().byId("idCountry").setEnabled(true);
-            // this.getView().byId("_IDGenInput15").setEditable(true);
-            // this.getView().byId("_IDGenInput16").setEditable(true);
-            // this.getView().byId("_IDGenInput16s").setEditable(true);
-            // this.getView().byId("_IDGenInput17").setEditable(true);
-            // this.getView().byId("_IDGenInput18").setEditable(true);
-            // // this.getView().byId("_IDGenInput19").setEditable(true);
-            // this.getView().byId("_IDGefnInput112").setEditable(true);
-            // this.getView().byId("_IDGefnInput122").setEditable(true);
-            // this.getView().byId("_IDGefnInput142").setEditable(true);
-            // this.getView().byId("idree4d2").setEditable(true);
-            // this.getView().byId("_IDGenInput152").setEditable(true);
-            // this.getView().byId("_IDGenInput162").setEditable(true);
-            // this.getView().byId("_IDGenInput162s").setEditable(true);
-            // this.getView().byId("_IDGenInput172").setEditable(true);
-            // this.getView().byId("_IDGenInput182").setEditable(true);
-            // // this.getView().byId("_IDGenInput192").setEditable(true);
+            // this.getId("country1").setEditable(true);
+            // this.getId("Dob11").setEditable(true);
+            // this.getId("Nationality1").setEditable(true);
+            // this.getId("Disability1").setEditable(true);
+            // this.getId("DBS1").setEditable(true);
+            // this.getId("TeachRegNum1").setEditable(true);
+            // this.getId("BankSort1").setEditable(true);
+            // this.getId("BankAccNum1").setEditable(true);
+            // this.getId("nationalIns1").setEditable(true);
+            // this.getId("Ethicity1").setEditable(true);
+            // this.getId("Gender1").setEditable(true);
+            // this.getId("ClearDate1").setEditable(true);
+            // this.getId("ClearDate1").setEditable(true);
+            // this.getId("issuDate1").setEditable(true);
+            // this.getId("issuDate1").setEditable(true);
+            // //this.getId("BankName1").setEnabled(true);
+            // this.getId("BuildingSoc1").setEditable(true);
+            // this.getId("_IDGefnInput11").setEditable(true);
+            // this.getId("_IDGefnInput12").setEditable(true);
+            // this.getId("_IDGefnInput14").setEditable(true);
+            // this.getId("_IDGenItem6").setEditable(true);
+            // // this.getId("idCountry").setEnabled(true);
+            // this.getId("_IDGenInput15").setEditable(true);
+            // this.getId("_IDGenInput16").setEditable(true);
+            // this.getId("_IDGenInput16s").setEditable(true);
+            // this.getId("_IDGenInput17").setEditable(true);
+            // this.getId("_IDGenInput18").setEditable(true);
+            // // this.getId("_IDGenInput19").setEditable(true);
+            // this.getId("_IDGefnInput112").setEditable(true);
+            // this.getId("_IDGefnInput122").setEditable(true);
+            // this.getId("_IDGefnInput142").setEditable(true);
+            // this.getId("idree4d2").setEditable(true);
+            // this.getId("_IDGenInput152").setEditable(true);
+            // this.getId("_IDGenInput162").setEditable(true);
+            // this.getId("_IDGenInput162s").setEditable(true);
+            // this.getId("_IDGenInput172").setEditable(true);
+            // this.getId("_IDGenInput182").setEditable(true);
+            // // this.getId("_IDGenInput192").setEditable(true);
           }
         }
         else
@@ -2839,7 +2917,7 @@ sap.ui.define([
         //   }
         // })
 
-        const workCntrct = workContract ? workContract : this.getView().byId("_IDGenComboBox411").getSelectedKey();
+        const workCntrct = workContract ? workContract : this.getId("_IDGenComboBox411").getSelectedKey();
 
         //Title
         $.ajax({
@@ -2967,7 +3045,7 @@ sap.ui.define([
             });
             oModel.setProperty("/nationality", data.d.results);
             oModel.setProperty("/defaultNationality", "GBR");
-            this.getView().byId("Nationality1").setValue(data.d.results.filter((el) => el.externalCode == "GBR")[0].label_en_GB);
+            this.getId("Nationality1").setValue(data.d.results.filter((el) => el.externalCode == "GBR")[0].label_en_GB);
           }.bind(this),
           error: function (e) {
             console.log("error: " + e);
@@ -2994,7 +3072,7 @@ sap.ui.define([
 
         // allowance dropdown
         var empJob = oModel.getProperty("/EmpJobData");
-        const subArea = (workCntrct == "4" || workCntrct == "5") || (companyCode == "4600" || workCntrct == "34") ? "S001" : "S002";
+        const subArea = (workCntrct == "4" || workCntrct == "5") ? "S001" : (companyCode == cirencesterCompanyCode || workCntrct == "34") ? "SA01" : "S002";
         $.ajax({
           url: serviceURL + `/odata/v2/cust_ZFLM_WAGTYPES_DD?$format=json&$filter=cust_PersSubarea eq '${subArea}' and cust_PersArea eq '${empJob.customString3}'`,
           type: 'GET',
@@ -3024,6 +3102,20 @@ sap.ui.define([
             console.log("error: " + e);
           }
         });
+
+        // Loading all the Personnel Area data
+        $.ajax({
+          url: serviceURL + "/odata/v2/cust_PersonnelArea?$format=json&$select=cust_PayrollArea,externalCode",
+          type: 'GET',
+          contentType: "application/json",
+          success: function (data) {
+            oModel.setProperty("/PersonnelAreaDetails", data.d.results);
+            payGroup = data.d.results.find((el) => el.externalCode == organizationCode).cust_PayrollArea;
+          },
+          error: function (e) {
+            console.log("error: " + e);
+          }
+        })
       },
 
       getPositions: function (perArea, grade, startDate, empGrp) {
@@ -3037,7 +3129,7 @@ sap.ui.define([
               sap.ui.core.BusyIndicator.hide();
               data.d.results.sort();
               this.getView().getModel("oneModel").setProperty("/Positions", data.d.results);
-              this.getView().byId("selectPositionCombobox").setEditable(true)
+              this.getId("selectPositionCombobox").setEditable(true)
               if (data.d.results.length == 0) {
                 MessageBox.error("There are no suitable positions available. Please set one up and then click on the refresh button");
               }
@@ -3060,45 +3152,60 @@ sap.ui.define([
         else
           lea = "B";
         var teacher;
-        if ((oData.OrgContTypeCode == "4" || oData.OrgContTypeCode == "5") || (oData.CompanyCode == "4600" && oData.OrgContTypeCode == "34"))
+        if ((oData.OrgContTypeCode == "4" || oData.OrgContTypeCode == "5") || (oData.CompanyCode == cirencesterCompanyCode && oData.OrgContTypeCode == "34"))
           teacher = "A";
         else
           teacher = "B";
 
         // fetching position type data for BSC
         $.ajax({
-          url: serviceURL + "/odata/v2/cust_ZFLM_POS_LIST?$format=json &$filter=cust_LEARRemaining eq '" + lea + "' and cust_TeacherRSupport eq '" + teacher + "'",
+          url: serviceURL + `/odata/v2/cust_ZFLM_POS_LIST?$format=json&$filter=cust_LEARRemaining eq '${lea}' and cust_TeacherRSupport eq '${teacher}'`,
           type: 'GET',
           contentType: "application/json",
           success: function (data) {
-            var posTypeData = [];
-            var posData = data;
-            for (let i = 0; i < posData.d.results.length; i++) {
-              $.ajax({
-                url: serviceURL + "/odata/v2/PickListValueV2?$format=json&$filter=PickListV2_id eq 'employee-type' and status eq 'A' and externalCode eq '" + posData.d.results[i].cust_EESubgroup + "'",
-                type: 'GET',
-                contentType: "application/json",
-                success: function (data) {
-                  if (data.d.results[0]) {
-                    var temp = {
-                      externalCode: data.d.results[0].externalCode,
-                      code: data.d.results[0].optionId,
-                      posType: data.d.results[0].externalCode + " - " + (data.d.results[0].label_en_GB).toUpperCase()
+            var posData = data.d.results;
+            // fetching employee group of the organization
+            $.ajax({
+              url: serviceURL + `/odata/v2/cust_PersonnelArea?$format=json&$filter=externalCode eq '${organizationCode}'&$select=cust_EmployeeGroup`,
+              type: 'GET',
+              contentType: "application/json",
+              success: function (data) {
+                var batchArr = [];
+                posData.forEach(function (oItem) {
+                  batchArr.push(`/PickListValueV2?$filter=PickListV2_id eq 'employee-type' and status eq 'A' and externalCode eq '${oItem.cust_EESubgroup}' and parentPickListValue eq '${data.d.results[0].cust_EmployeeGroup}'`)
+                });
+
+                this.batchCall(batchArr, serviceURL)
+                  .then((resp) => {
+                    try {
+                      var posTypeData = [];
+                      for (let i = 0; i < resp.length; i++) {
+                        if (resp[i].statusCode == "200" && resp[i].data.results.length != 0) {
+                          var temp = {
+                            externalCode: resp[i].data.results[0].externalCode,
+                            code: resp[i].data.results[0].optionId,
+                            posType: resp[i].data.results[0].externalCode + " - " + (resp[i].data.results[0].label_en_GB).toUpperCase()
+                          }
+                          posTypeData.push(temp);
+                        }
+                      }
+                      posTypeData.sort((a, b) => {
+                        if (+a.externalCode < +b.externalCode) return -1;
+                        if (+a.externalCode > +b.externalCode) return 1;
+                      });
+                      oModel.setProperty("/positionType", posTypeData);
                     }
-                    posTypeData.push(temp);
-                    posTypeData.sort((a, b) => {
-                      if (+a.externalCode < +b.externalCode) return -1;
-                      if (+a.externalCode > +b.externalCode) return 1;
-                    });
-                    oModel.setProperty("/positionType", posTypeData);
-                  }
-                },
-                error: function (e) {
-                  console.log("error: " + e);
-                }
-              });
-            }
-          },
+                    catch (e) {
+                      console.log(e);
+                    }
+                  })
+                  .catch((e) => console.log(e));
+              }.bind(this),
+              error: function () {
+                console.log("error: " + e);
+              }
+            })
+          }.bind(this),
           error: function (e) {
             console.log("error: " + e);
           }
@@ -3115,76 +3222,29 @@ sap.ui.define([
       },
 
       getGrades: function (oModel, workContract) {
-        var f3digits = (((oModel.getProperty("/CostCentreP")).costCenter).toString()).substring(oModel.getProperty("/CostCentreP").costCenter.length - 3),
-          grade = [];
+        var f3digits = (((oModel.getProperty("/CostCentreP")).costCenter).toString()).substring(oModel.getProperty("/CostCentreP").costCenter.length - 3);
         if (f3digits != undefined) {
-          var job = oModel.getProperty("/EmpJobData");
           $.ajax({
             url: serviceURL + "/odata/v2/PayScaleGroup?$filter=startswith(payScaleGroup,'" + f3digits + "')&$format=json",
             type: 'GET',
             contentType: "application/json",
             success: function (data) {
               if (data.d.results.length == 0) {
-                var ContractType = this.getView().byId("_IDGenComboBox411").getSelectedKey();
-                var cirencesterCheck = companyCode == "4600";
-                var TeacherRSupport = (ContractType == "4" || ContractType == "5") || (cirencesterCheck && ContractType == "34") ? "A" : "B";
-                $.ajax({
-                  url: serviceURL + "/odata/v2/cust_ZFLM_GRADE_NEW?$filter=(cust_CompanyCode eq " + companyCode + " or cust_CompanyCode eq null) and cust_TeacherRSupport eq '" + TeacherRSupport + "'&$format=json",
-                  type: 'GET',
-                  contentType: "application/json",
-                  success: function (data) {
-                    if (data.d.results.length != 0) {
-                      var aPayScaleGroups = [];
-                      aPayScaleGroups = data.d.results.filter((el) => el.cust_CompanyCode == companyCode);
-                      if (aPayScaleGroups.length == 0)
-                        aPayScaleGroups = data.d.results.filter((el) => el.cust_CompanyCode == null);
-
-                      // code for deleting duplicates
-                      var finalPayScaleGroupData = [];
-                      for (let b = 0; b < aPayScaleGroups.length; b++) {
-                        var a = finalPayScaleGroupData.filter((el) => el.cust_PayScaleGroup == aPayScaleGroups[b].cust_PayScaleGroup);
-                        if (a.length == 0 && aPayScaleGroups[b].cust_PayScaleGroup != "")
-                          finalPayScaleGroupData.push(aPayScaleGroups[b]);
-                      }
-
-                      // fetching data of all the pay scale groups
-                      //using batch call for avoiding multiple calls
-                      var aUrls = []
-                      finalPayScaleGroupData.forEach(function (oItem) {
-                        aUrls.push("/PayScaleGroup?$filter=payScaleGroup eq '" + oItem.cust_PayScaleGroup + "'")
-                      })
-                      this.batchCall(aUrls, serviceURL)
-                        .then((resp) => {
-                          var finalArray = [];
-                          for (let i = resp.length - 1; i >= 0; i--) {
-                            if (resp[i].statusCode == "200" && resp[i].data.results.length != 0) {
-                              finalArray.push(resp[i].data.results[0]);
-                            }
-                          }
-                          finalArray.sort(function (a, b) {
-                            if (a.externalName_en_GB < b.externalName_en_GB) return -1;
-                            else return 1;
-                          })
-                          oModel.setProperty("/grade", finalArray);
-                        })
-                        .catch((e) => console.log(e));
-                    }
-                  }.bind(this),
-                  error: function (e) {
-                    console.log("error: " + e);
-                  }
-                });
+                this.getGradesFromOrg(oModel);
               } else {
-                if ((workContract == "5" || workContract == "4") || (companyCode == "4600" && workContract == "34")) {
-                  var reqGradeList = data.d.results.filter((el) => el.payScaleType == "GBR/20");
+                if ((workContract == "5" || workContract == "4") || (companyCode == cirencesterCompanyCode && workContract == "34")) {
+                  var reqGradeList = data.d.results.filter((el) => el.payScaleType == teacherGrade);
                 } else {
-                  var reqGradeList = data.d.results.filter((el) => el.payScaleType != "GBR/20");
+                  var reqGradeList = data.d.results.filter((el) => el.payScaleType != teacherGrade);
                 }
-                reqGradeList.sort(function (a, b) {
-                  if (a.externalName_en_GB > b.externalName_en_GB) return -1;
-                  else return 1;
-                })
-                oModel.setProperty("/grade", reqGradeList);
+                if (reqGradeList.length == 0) this.getGradesFromOrg(oModel);
+                else {
+                  reqGradeList.sort(function (a, b) {
+                    if (a.externalName_en_GB > b.externalName_en_GB) return -1;
+                    else return 1;
+                  })
+                  oModel.setProperty("/grade", reqGradeList);
+                }
               }
             }.bind(this),
             error: function (e) {
@@ -3194,6 +3254,58 @@ sap.ui.define([
         }
       },
 
+      getGradesFromOrg: function (oModel) {
+        var ContractType = this.getId("_IDGenComboBox411").getSelectedKey();
+        var cirencesterCheck = companyCode == cirencesterCompanyCode;
+        var TeacherRSupport = (ContractType == "4" || ContractType == "5") || (cirencesterCheck && ContractType == "34") ? "A" : "B";
+        $.ajax({
+          url: serviceURL + "/odata/v2/cust_ZFLM_GRADE_NEW?$filter=(cust_CompanyCode eq " + companyCode + " or cust_CompanyCode eq null) and cust_TeacherRSupport eq '" + TeacherRSupport + "'&$format=json",
+          type: 'GET',
+          contentType: "application/json",
+          success: function (data) {
+            if (data.d.results.length != 0) {
+              var aPayScaleGroups = [];
+              aPayScaleGroups = data.d.results.filter((el) => el.cust_CompanyCode == companyCode);
+              if (aPayScaleGroups.length == 0)
+                aPayScaleGroups = data.d.results.filter((el) => el.cust_CompanyCode == null);
+
+              // code for deleting duplicates
+              var finalPayScaleGroupData = [];
+              for (let b = 0; b < aPayScaleGroups.length; b++) {
+                var a = finalPayScaleGroupData.filter((el) => el.cust_PayScaleGroup == aPayScaleGroups[b].cust_PayScaleGroup);
+                if (a.length == 0 && aPayScaleGroups[b].cust_PayScaleGroup != "")
+                  finalPayScaleGroupData.push(aPayScaleGroups[b]);
+              }
+
+              // fetching data of all the pay scale groups
+              //using batch call for avoiding multiple calls
+              var aUrls = []
+              finalPayScaleGroupData.forEach(function (oItem) {
+                aUrls.push("/PayScaleGroup?$filter=payScaleGroup eq '" + oItem.cust_PayScaleGroup + "'")
+              })
+              this.batchCall(aUrls, serviceURL)
+                .then((resp) => {
+                  var finalArray = [];
+                  for (let i = resp.length - 1; i >= 0; i--) {
+                    if (resp[i].statusCode == "200" && resp[i].data.results.length != 0) {
+                      finalArray.push(resp[i].data.results[0]);
+                    }
+                  }
+                  finalArray.sort(function (a, b) {
+                    if (a.externalName_en_GB < b.externalName_en_GB) return -1;
+                    else return 1;
+                  })
+                  oModel.setProperty("/grade", finalArray);
+                })
+                .catch((e) => console.log(e));
+            }
+          }.bind(this),
+          error: function (e) {
+            console.log("error: " + e);
+          }
+        });
+      },
+
       onConfirmEmpDetails: function (oEvent) {
         // checking if all the required fields are filled or not
         var errorFound = this.checkSecA();
@@ -3201,7 +3313,7 @@ sap.ui.define([
           MessageBox.error("Please fill all mandatory fields");
         }
         else {
-          var ComboYesNo = this.getView().byId("_IDGenComboBox1").getSelectedItem() != null ? this.getView().byId("_IDGenComboBox1").getSelectedItem().getKey() : this.getView().byId("_IDGenComboBox1").getSelectedKey();
+          var ComboYesNo = this.getId("_IDGenComboBox1").getSelectedItem() != null ? this.getId("_IDGenComboBox1").getSelectedItem().getKey() : this.getId("_IDGenComboBox1").getSelectedKey();
           MessageBox.confirm("You will not be able to change your selection. Are you sure you'd like to go ahead?", {
             actions: [MessageBox.Action.OK, MessageBox.Action.CANCEL],
             emphasizedAction: MessageBox.Action.OK,
@@ -3210,16 +3322,16 @@ sap.ui.define([
                 // loading all the dropdowns
                 this.allDropdowns(this.getView().getModel("oneModel"));
                 // disabling confirm button and changing texts
-                this.getView().byId("_IDGenButton122").setText("Confirmed");
+                this.getId("_IDGenButton122").setText("Confirmed");
                 // disabling all the fields
                 this.enableSecA(false);
                 //disabling the organization editable
-                this.getView().byId("_IDGenInput4").setEditable(false);
+                this.getId("_IDGenInput4").setEditable(false);
                 // show section B C D E F
-                this.getView().byId("_IDGenPanel4").setVisible(true);
-                this.getView().byId("_IDGenPanel45").setVisible(true);
-                this.getView().byId("_IDGenPanel4dhd51").setVisible(true);
-                this.getView().byId("_IDGenPanel4dh51").setVisible(true);
+                this.getId("_IDGenPanel4").setVisible(true);
+                this.getId("_IDGenPanel45").setVisible(true);
+                this.getId("_IDGenPanel4dhd51").setVisible(true);
+                this.getId("_IDGenPanel4dh51").setVisible(true);
                 if (ComboYesNo == "X") {
                   this.enableSecB(false);
                   this.enableFirstEmer(false);
@@ -3227,7 +3339,7 @@ sap.ui.define([
                 }
                 else {
                   this.enableSecB(true);
-                  this.getView().byId("addEmergencyContact1").setEnabled(true);
+                  this.getId("addEmergencyContact1").setEnabled(true);
                 }
                 // that.getView().byId("titleB1").setEditable(false);
                 // that.getView().byId("foreName1").setEditable(false);
@@ -3253,29 +3365,29 @@ sap.ui.define([
       },
 
       onChangeEmergencySecond: function (oEvent) {
-        var checked = this.getView().byId("_IDGenCheckBox2").getSelected();
+        var checked = this.getId("_IDGenCheckBox2").getSelected();
         if (checked) {
-          this.getView().byId("idSecondEmergency").setVisible(true);
+          this.getId("idSecondEmergency").setVisible(true);
           this.enableSecEmer(true);
         } else {
-          this.getView().byId("idSecondEmergency").setVisible(false);
+          this.getId("idSecondEmergency").setVisible(false);
         }
       },
 
       onAddEmergency: function (oEvent) {
-        var checked = this.getView().byId("addEmergencyContact1").getSelected();
+        var checked = this.getId("addEmergencyContact1").getSelected();
         if (checked) {
-          this.getView().byId("idAddEmergency").setVisible(true);
+          this.getId("idAddEmergency").setVisible(true);
           this.enableFirstEmer(true);
         } else {
-          this.getView().byId("idAddEmergency").setVisible(false);
+          this.getId("idAddEmergency").setVisible(false);
         }
       },
 
       onAddComment: function () {
         sap.ui.core.BusyIndicator.show();
-        var oComm = this.getView().byId("_IDGenTextArea2").getValue();
-        var CommExist = this.getView().byId("_IDGenTextArea1").getValue();
+        var oComm = this.getId("_IDGenTextArea2").getValue();
+        var CommExist = this.getId("_IDGenTextArea1").getValue();
         var newDate = new Date();
         if (oComm == "") {
           sap.ui.core.BusyIndicator.hide();
@@ -3292,27 +3404,53 @@ sap.ui.define([
             nhour = d.getHours(),
             nmin = d.getMinutes(),
             nsec = d.getSeconds();
-          //initiator values
 
-          var details = initiatorName;
+          var statusText;
+          try {
+            const arr = this.getView().getModel("oneModel").getProperty("/historyTable");
+            const status = arr.reduce((a, b) => +a.SeqNumber > +b.SeqNumber ? a : b).StatusCode;
+            switch (status) {
+              case "I":
+                statusText = "Initial";
+                break;
+              case "E":
+                statusText = "Draft";
+                break;
+              case "S":
+                statusText = "Submitted";
+                break;
+              case "R":
+                statusText = "Rejected";
+                break;
+              case "B":
+                statusText = "BSC Team";
+                break;
+              default:
+                statusText = "Initial";
+                break;
+            }
+          }
+          catch {
+            statusText = "Initial";
+          }
 
           if (CommExist == "") {
-            var oAuthComm = "Comments added by " + details + " on " + tday[nday] + ", " + ndate + " " + tmonth[nmonth] + " " + nyear + " " + nhour + ":" + nmin + ":" + nsec + " GMT at Status Initial - \n" + oComm;
+            var oAuthComm = `Comments added by ${initiatorName} on ${tday[nday]}, ${ndate} ${tmonth[nmonth]} ${nyear} ${nhour}:${nmin}:${nsec} at Status ${statusText} - \n` + oComm;
           }
           else {
-            oAuthComm = "Comments added by " + details + " on " + tday[nday] + ", " + ndate + " " + tmonth[nmonth] + " " + nyear + " " + nhour + ":" + nmin + ":" + nsec + " GMT at Status Initial - \n" + oComm + "\n\n" + CommExist;
+            oAuthComm = `Comments added by ${initiatorName} on ${tday[nday]}, ${ndate} ${tmonth[nmonth]} ${nyear} ${nhour}:${nmin}:${nsec} at Status ${statusText} - \n` + oComm + "\n\n" + CommExist;
           }
-          this.getView().byId("_IDGenTextArea1").setVisible(true);
-          this.getView().byId("_IDGenLabeldf11").setVisible(true);
-          this.getView().byId("_IDGenTextArea1").setValue(oAuthComm);
-          this.getView().byId("_IDGenTextArea2").setValue("");
+          this.getId("_IDGenTextArea1").setVisible(true);
+          this.getId("_IDGenLabeldf11").setVisible(true);
+          this.getId("_IDGenTextArea1").setValue(oAuthComm);
+          this.getId("_IDGenTextArea2").setValue("");
           sap.ui.core.BusyIndicator.hide();
         }
 
       },
 
       //sectionBSC
-      finalValidationsBSC: function (oEvent) {
+      finalValidationsBSC: function () {
         var flag = false;
         var aControls = this.getView().getControlsByFieldGroupId("sectionBSC");
         aControls.forEach(function (oControl) {
@@ -3327,6 +3465,28 @@ sap.ui.define([
         });
         return flag
 
+      },
+
+      checkActualHours: function (oPositionData) {
+        return new Promise(
+          function (resolve, reject) {
+            // Getting all the required values
+            const actualHours = this.getId("Hoursperweek").getValue();
+            var standardHours = oPositionData.standardHours;
+            const contractType = this.getId("_IDGenComboBox411").getSelectedKey();
+
+            // checking if the employee is a teacher and org not in exception list
+            if ((contractType == "4" || contractType == "5") && !(exceptionOrgList.includes(companyCode))) {
+              standardHours *= factor;
+            }
+
+            // checking if standard hours is lesser than the actual hours
+            if (+actualHours > +standardHours) {
+              reject(`The actual expected hours exceed the standard weekly hours.
+                Please review and adjust the standard weekly hours accordingly`);
+            } else resolve();
+          }.bind(this)
+        )
       },
 
       oSaveCall: function (call, that) {
@@ -3372,7 +3532,7 @@ sap.ui.define([
               oControl.setValueState(sap.ui.core.ValueState.None);
             }
           });
-          var checkValidation = this.finalValidationsBSC(oEvent);
+          var checkValidation = this.finalValidationsBSC();
 
           if (checkValidation) {
             MessageBox.error(`You have not filled all the required fields`);
@@ -3394,7 +3554,7 @@ sap.ui.define([
 
         // checking if all the fields are filled before submitting
         this.checkingFields();
-        if (this.getView().byId("_IDGenButton122").getEnabled()) {
+        if (this.getId("_IDGenButton122").getEnabled()) {
           this._messLog("Please confirm employee details");
         }
         var MessageLog = this.getView().getModel("oneModel").getProperty("/MessageLog");
@@ -3406,15 +3566,15 @@ sap.ui.define([
         } else {
           this.WSValidations().then((s) => {
             console.log("success");
-            if (this.getView().byId("_IDGenComboBox1").getSelectedKey() == "N") {
-              if (this.getView().byId("DBS1").getValue() == "") {
+            if (this.getId("_IDGenComboBox1").getSelectedKey() == "N") {
+              if (this.getId("DBS1").getValue() == "") {
                 MessageBox.warning(`Please remember it is your responsibility to conduct a risk assessment for this employee before they start work should the DBS clearance not have been received
                   Do you want to Proceed?`, {
                   actions: [sap.m.MessageBox.Action.YES, sap.m.MessageBox.Action.NO],
                   emphasizedAction: sap.m.MessageBox.Action.YES,
                   onClose: function (oAction) {
                     if (oAction === sap.m.MessageBox.Action.NO) {
-                      this.getView().byId("DBS1").setValueState(sap.ui.core.ValueState.Warning);
+                      this.getId("DBS1").setValueState(sap.ui.core.ValueState.Warning);
                       return;
                     } else submitForm(this)
                   }.bind(this),
@@ -3446,12 +3606,11 @@ sap.ui.define([
       WSValidations: function (oModel) {
         return new Promise(
           function (resolve, reject) {
-            const fteWorkhours = 32.5;
-            if (this.getView().byId("_IDGenComboBox6").getSelectedKey() == "No") {
+            if (this.getId("_IDGenComboBox6").getSelectedKey() == "No") {
               // checking validations for Work Schedule
               var oModelWS = this.getView().getModel("WSModel");
               var oScheduleData = oModelWS ? oModelWS.getProperty("/WSItems") : undefined;
-              var isClaimOnlyNo = this.getView().byId("_IDGenComboBox6").getSelectedKey();
+              var isClaimOnlyNo = this.getId("_IDGenComboBox6").getSelectedKey();
               if (isClaimOnlyNo && isClaimOnlyNo == "No") {
                 if (!(oScheduleData && oScheduleData[0].HoursWorked)) {
                   MessageBox.error("You must create a work schedule for each new employee");
@@ -3460,13 +3619,16 @@ sap.ui.define([
                 }
               }
 
-              if (!this.getView().byId("idfte1").getVisible())
-                var actualHours = this.getView().byId("Hoursperweek").getValue();
+              // hardcoding total working hours UAT-619
+              const fteWorkhours = companyCode == cirencesterCompanyCode ? 37 : 32.5;
+              if (!this.getId("idfte1").getVisible())
+                var actualHours = this.getId("Hoursperweek").getValue();
               else
-                actualHours = (this.getView().byId("idFTE").getValue() * fteWorkhours).toFixed(2);
+                actualHours = (+(this.getId("idFTE").getValue() * fteWorkhours)).toFixed(2);
+
               var hoursEntered = this.getView().getModel("WSModel") ? this.getView().getModel("WSModel").getProperty("/WSHoursPerWeek") : "";
               if (+hoursEntered != +actualHours) {
-                MessageBox.error("The work schedule entered does not match this employee’s working hours, please update the work schedule so that this matches");
+                MessageBox.error(`The work schedule entered does not match this employee’s working hours, please update the work schedule so that this matches ${actualHours}`);
                 reject();
                 return;
               }
@@ -3514,7 +3676,7 @@ Please note that this schedule will repeat every ${oScheduleData.length} days, a
 
       payload: function (purpose, delInd) {
 
-        if ((this.getView().byId("_IDGenComboBox6").getSelectedItem() && this.getView().byId("_IDGenComboBox6").getSelectedItem().getKey() == "No") || this.getView().byId("_IDGenComboBox6").getValue() == "No") {
+        if ((this.getId("_IDGenComboBox6").getSelectedItem() && this.getId("_IDGenComboBox6").getSelectedItem().getKey() == "No") || this.getId("_IDGenComboBox6").getValue() == "No") {
           var wsData = [];
           var oModelWS = this.getView().getModel("WSModel") ? this.getView().getModel("WSModel").getProperty("/WSPreviewItems") ? this.getView().getModel("WSModel").getProperty("/WSPreviewItems") : [] : [];
 
@@ -3524,7 +3686,7 @@ Please note that this schedule will repeat every ${oScheduleData.length} days, a
             objData.forEach(function (oItem, index) {
               if (oItem[1].DaysName) {
                 var prepareWS = {
-                  "Formid": this.getView().byId("_IDGenInput2").getValue() != '' ? this.getView().byId("_IDGenInput2").getValue() : '',
+                  "Formid": this.getId("_IDGenInput2").getValue() != '' ? this.getId("_IDGenInput2").getValue() : '',
                   "Counter": (i + 1).toString(),
                   "DaysName": oItem[1].DaysName,
                   "Type": "H",
@@ -3538,51 +3700,51 @@ Please note that this schedule will repeat every ${oScheduleData.length} days, a
           }
         }
         var payload = {
-          "Formid": this.getView().byId("_IDGenInput2").getValue() != '' ? this.getView().byId("_IDGenInput2").getValue() : '',
-          "Initiator": this.getView().byId("idInitiator").getValue() != '' ? this.getView().byId("idInitiator").getValue() : '',
-          "Zdate": this.getView().byId("DatePicker01").getValue() != '' ? this.dateToReq(this.getView().byId("DatePicker01").getValue()) : '',
-          "DateInt": this.convToMillisec(this.getView().byId("DatePicker01").getValue()) != '' ? this.convToMillisec(this.getView().byId("DatePicker01").getValue()) : '', //"19.12.2023",
-          "Organization": this.getView().byId("_IDGenInput4").getValue() != '' ? this.getView().byId("_IDGenInput4").getValue() : '', // "1001",
-          "CostCenter": this.getView().byId("_IDGen1Inpu1t4").getValue() != '' ? this.getView().byId("_IDGen1Inpu1t4").getValue() : '', //"CC01",
+          "Formid": this.getId("_IDGenInput2").getValue() != '' ? this.getId("_IDGenInput2").getValue() : '',
+          "Initiator": this.getId("idInitiator").getValue() != '' ? this.getId("idInitiator").getValue() : '',
+          "Zdate": this.getId("DatePicker01").getValue() != '' ? this.dateToReq(this.getId("DatePicker01").getValue()) : '',
+          "DateInt": this.convToMillisec(this.getId("DatePicker01").getValue()) != '' ? this.convToMillisec(this.getId("DatePicker01").getValue()) : '', //"19.12.2023",
+          "Organization": this.getId("_IDGenInput4").getValue() != '' ? this.getId("_IDGenInput4").getValue() : '', // "1001",
+          "CostCenter": this.getId("_IDGen1Inpu1t4").getValue() != '' ? this.getId("_IDGen1Inpu1t4").getValue() : '', //"CC01",
           "CostCenterCode": initiator,
-          "Approver": this.getView().byId("approver").getValue() != '' ? this.getView().byId("approver").getValue() : '', // "Approver",
+          "Approver": this.getId("approver").getValue() != '' ? this.getId("approver").getValue() : '', // "Approver",
           "ApproverCode": this.ApproverCode != undefined ? this.ApproverCode : approverCode, //"AppCode",
           "userID": userId ? userId : "",
           "CompanyCode": companyCode,
           "Paygroup": payGroup,
 
-          "EmployeedOrganization": this.getView().byId("_IDGenComboBox1").getSelectedItem() != null ? this.getView().byId("_IDGenComboBox1").getSelectedItem().getKey() : this.getView().byId("_IDGenComboBox1").getSelectedKey(),
-          "SelectEmployee": this.getView().byId("_IDGenComboBox41").getSelectedItem() != null ? this.getView().byId("_IDGenComboBox41").getSelectedItem().getText() : this.getView().byId("_IDGenComboBox41").getValue(), //"4789 Std Candidate 134",
-          "SelEmpCode": this.getView().byId("_IDGenComboBox41").getSelectedItem() != null ? this.getView().byId("_IDGenComboBox41").getSelectedItem().getKey() : this.getView().byId("_IDGenComboBox41").getSelectedKey(),// "4789",
+          "EmployeedOrganization": this.getId("_IDGenComboBox1").getSelectedItem() != null ? this.getId("_IDGenComboBox1").getSelectedItem().getKey() : this.getId("_IDGenComboBox1").getSelectedKey(),
+          "SelectEmployee": this.getId("_IDGenComboBox41").getSelectedItem() != null ? this.getId("_IDGenComboBox41").getSelectedItem().getText() : this.getId("_IDGenComboBox41").getValue(), //"4789 Std Candidate 134",
+          "SelEmpCode": this.getId("_IDGenComboBox41").getSelectedItem() != null ? this.getId("_IDGenComboBox41").getSelectedItem().getKey() : this.getId("_IDGenComboBox41").getSelectedKey(),// "4789",
 
-          "NewEmployee": this.getView().byId("idempCame").getSelectedItem() != null ? this.getView().byId("idempCame").getSelectedItem().getKey() : this.getView().byId("idempCame").getSelectedKey(), //  "GCC Council",
-          "NewEmployeeText": this.getView().byId("idempCame").getSelectedItem() != null ? this.getView().byId("idempCame").getSelectedItem().getText() : this.getView().byId("idempCame").getValue() ? this.getView().byId("idempCame").getValue() : this.getView().byId("idempCame1").getValue(),
-          "PreviousEmp": this.getView().byId("_IDGenInput10").getValue() != '' ? this.getView().byId("_IDGenInput10").getValue() : '', // "Teacher",
-          "OrgContType": this.getView().byId("_IDGenComboBox411").getSelectedItem() != null ? this.getView().byId("_IDGenComboBox411").getSelectedItem().getText() : this.getView().byId("_IDGenComboBox411").getValue(), //"Cont Type",
-          "OrgContTypeCode": this.getView().byId("_IDGenComboBox411").getSelectedItem() != null ? this.getView().byId("_IDGenComboBox411").getSelectedItem().getKey() : this.getView().byId("_IDGenComboBox411").getSelectedKey(), // "Cont Type",
-          "PositionTitle": this.getView().byId("_IDGenInput11").getValue() != '' ? this.getView().byId("_IDGenInput11").getValue() : '', // "Teacher",
-          "PosCostCentre": this.getView().byId("_IDGenInput112").getValue() != '' ? this.getView().byId("_IDGenInput112").getValue() : '', //  "00000107622 Down Ampney Church of England ",
-          "PosCcenterCode": this.getView().byId("_IDGenInput112").getSelectedKey() != '' ? this.getView().byId("_IDGenInput112").getSelectedKey() : '', //  "107622",
-          "ConfirmedButton": this.getView().byId("_IDGenButton122").getText("Confirmed") == 'Confirmed' ? "X" : '',
-          "Title": this.getView().byId("titleB1").getSelectedItem() != null ? this.getView().byId("titleB1").getSelectedItem().getText() : this.getView().byId("titleB1").getValue(),
-          "TitleCode": this.getView().byId("titleB1").getSelectedItem() != null ? this.getView().byId("titleB1").getSelectedItem().getKey() : this.getView().byId("titleB1").getSelectedKey(),
-          "Forename": this.getView().byId("foreName1").getValue() != '' ? this.getView().byId("foreName1").getValue() : '', // "Sandeep",
-          "Middlename": this.getView().byId("middelname1").getValue() != '' ? this.getView().byId("middelname1").getValue() : '', // "Singh",
-          "Surname": this.getView().byId("surname1").getValue() != '' ? this.getView().byId("surname1").getValue() : '', // "Singh",
-          "FullName": this.getView().byId("foreName1").getValue() + " " + this.getView().byId("surname1").getValue(),
-          "SerStartDate": this.getView().byId("contStartDate1").getValue() != '' ? this.dateToReq(this.getView().byId("contStartDate1").getValue()) : '',
-          "SerStartDateInt": this.convToMillisec(this.getView().byId("contStartDate1").getValue()) != '' ? this.convToMillisec(this.getView().byId("contStartDate1").getValue()) : '', //"19.12.2023",
-          // "EmpAddress": this.getView().byId("empAdd1").getValue() != '' ? this.getView().byId("empAdd1").getValue() : '', // "EmpAddress",
-          "Houseno": this.getView().byId("streetHouseNo1").getValue() != '' ? this.getView().byId("streetHouseNo1").getValue() : '', // "House No",
-          "SecAddress": this.getView().byId("2ndadd1").getValue() != '' ? this.getView().byId("2ndadd1").getValue() : '', //"Second Address",
-          // "District":this.getView().byId("_IDGenInput112").getValue() != '' ? this.getView().byId("_IDGenInput112").getValue() : '', // "District",
-          "City": this.getView().byId("city1").getValue() != '' ? this.getView().byId("city1").getValue() : '', // "City",
-          "County": this.getView().byId("country1").getSelectedItem() != null ? this.getView().byId("country1").getSelectedItem().getText() : this.getView().byId("country1").getValue(), // "County",
-          "CountyCode": this.getView().byId("country1").getSelectedItem() != null ? this.getView().byId("country1").getSelectedItem().getKey() : this.getView().byId("country1").getSelectedKey(),
-          "Postcode": this.getView().byId("postcode1").getValue() != '' ? (this.getView().byId("postcode1").getValue()).toUpperCase() : '', // "201301",
-          "TelNo": this.getView().byId("homeTelephone1").getValue() != '' ? this.getView().byId("homeTelephone1").getValue() : '', //"9911535981",
-          "MobNo": this.getView().byId("mobileTelephone1").getValue() != '' ? this.getView().byId("mobileTelephone1").getValue() : '', // "9911535981",
-          "EmailAdd": this.getView().byId("emailAdd1").getValue() != '' ? this.getView().byId("emailAdd1").getValue() : '', // "abc@abc.com",
+          "NewEmployee": this.getId("idempCame").getSelectedItem() != null ? this.getId("idempCame").getSelectedItem().getKey() : this.getId("idempCame").getSelectedKey(), //  "GCC Council",
+          "NewEmployeeText": this.getId("idempCame").getSelectedItem() != null ? this.getId("idempCame").getSelectedItem().getText() : this.getId("idempCame").getValue() ? this.getId("idempCame").getValue() : this.getId("idempCame1").getValue(),
+          "PreviousEmp": this.getId("_IDGenInput10").getValue() != '' ? this.getId("_IDGenInput10").getValue() : '', // "Teacher",
+          "OrgContType": this.getId("_IDGenComboBox411").getSelectedItem() != null ? this.getId("_IDGenComboBox411").getSelectedItem().getText() : this.getId("_IDGenComboBox411").getValue(), //"Cont Type",
+          "OrgContTypeCode": this.getId("_IDGenComboBox411").getSelectedItem() != null ? this.getId("_IDGenComboBox411").getSelectedItem().getKey() : this.getId("_IDGenComboBox411").getSelectedKey(), // "Cont Type",
+          "PositionTitle": this.getId("_IDGenInput11").getValue() != '' ? this.getId("_IDGenInput11").getValue() : '', // "Teacher",
+          "PosCostCentre": this.getId("_IDGenInput112").getValue() != '' ? this.getId("_IDGenInput112").getValue() : '', //  "00000107622 Down Ampney Church of England ",
+          "PosCcenterCode": this.getId("_IDGenInput112").getSelectedKey() != '' ? this.getId("_IDGenInput112").getSelectedKey() : '', //  "107622",
+          "ConfirmedButton": this.getId("_IDGenButton122").getText("Confirmed") == 'Confirmed' ? "X" : '',
+          "Title": this.getId("titleB1").getSelectedItem() != null ? this.getId("titleB1").getSelectedItem().getText() : this.getId("titleB1").getValue(),
+          "TitleCode": this.getId("titleB1").getSelectedItem() != null ? this.getId("titleB1").getSelectedItem().getKey() : this.getId("titleB1").getSelectedKey(),
+          "Forename": this.getId("foreName1").getValue() != '' ? this.getId("foreName1").getValue() : '', // "Sandeep",
+          "Middlename": this.getId("middelname1").getValue() != '' ? this.getId("middelname1").getValue() : '', // "Singh",
+          "Surname": this.getId("surname1").getValue() != '' ? this.getId("surname1").getValue() : '', // "Singh",
+          "FullName": this.getId("foreName1").getValue() + " " + this.getId("surname1").getValue(),
+          "SerStartDate": this.getId("contStartDate1").getValue() != '' ? this.dateToReq(this.getId("contStartDate1").getValue()) : '',
+          "SerStartDateInt": this.convToMillisec(this.getId("contStartDate1").getValue()) != '' ? this.convToMillisec(this.getId("contStartDate1").getValue()) : '', //"19.12.2023",
+          // "EmpAddress": this.getId("empAdd1").getValue() != '' ? this.getId("empAdd1").getValue() : '', // "EmpAddress",
+          "Houseno": this.getId("streetHouseNo1").getValue() != '' ? this.getId("streetHouseNo1").getValue() : '', // "House No",
+          "SecAddress": this.getId("2ndadd1").getValue() != '' ? this.getId("2ndadd1").getValue() : '', //"Second Address",
+          // "District":this.getId("_IDGenInput112").getValue() != '' ? this.getId("_IDGenInput112").getValue() : '', // "District",
+          "City": this.getId("city1").getValue() != '' ? this.getId("city1").getValue() : '', // "City",
+          "County": this.getId("country1").getSelectedItem() != null ? this.getId("country1").getSelectedItem().getText() : this.getId("country1").getValue(), // "County",
+          "CountyCode": this.getId("country1").getSelectedItem() != null ? this.getId("country1").getSelectedItem().getKey() : this.getId("country1").getSelectedKey(),
+          "Postcode": this.getId("postcode1").getValue() != '' ? (this.getId("postcode1").getValue()).toUpperCase() : '', // "201301",
+          "TelNo": this.getId("homeTelephone1").getValue() != '' ? this.getId("homeTelephone1").getValue() : '', //"9911535981",
+          "MobNo": this.getId("mobileTelephone1").getValue() != '' ? this.getId("mobileTelephone1").getValue() : '', // "9911535981",
+          "EmailAdd": this.getId("emailAdd1").getValue() != '' ? this.getId("emailAdd1").getValue() : '', // "abc@abc.com",
 
           "TelType": "B",
           "TelFlag": "X",
@@ -3590,43 +3752,43 @@ Please note that this schedule will repeat every ${oScheduleData.length} days, a
           "MobFlag": "X",
           "EmailType": "EmailType",
 
-          "EmergencyAdd": this.getView().byId("addEmergencyContact1").getSelected() == true ? "X" : '',//"X",addEmergencyContact1
-          "Dob": this.getView().byId("Dob11").getValue() != '' ? this.dateToReq(this.getView().byId("Dob11").getValue()) : '', //"20.09.1999",
-          "DobInt": this.getView().byId("Dob11").getValue() != '' ? this.convToMillisec(this.getView().byId("Dob11").getValue()) : '', //"20.09.1999",
-          "InsuranceNo": this.getView().byId("nationalIns1").getValue() != '' ? (this.getView().byId("nationalIns1").getValue()).toUpperCase() : '', //"Insurance No",
-          "Nationality": this.getView().byId("Nationality1").getSelectedItem() != null ? (this.getView().byId("Nationality1").getSelectedItem().getText()).toUpperCase() : (this.getView().byId("Nationality1").getValue()).toUpperCase(), //"Indian",
-          "NatCode": this.getView().byId("Nationality1").getSelectedItem() != null ? (this.getView().byId("Nationality1").getSelectedItem().getKey()).toUpperCase() : (this.getView().byId("Nationality1").getSelectedKey()).toUpperCase(), //"IN",
-          "Disability": this.getView().byId("Disability1").getSelectedItem() != null ? this.getView().byId("Disability1").getSelectedItem().getText() : this.getView().byId("Disability1").getValue(), // "No",
-          "DisabilityCode": this.getView().byId("Disability1").getSelectedItem() != null ? this.getView().byId("Disability1").getSelectedItem().getKey() : this.getView().byId("Disability1").getSelectedKey(), // "No",
-          "Ethicity": this.getView().byId("Ethicity1").getSelectedItem() != null ? this.getView().byId("Ethicity1").getSelectedItem().getText() : this.getView().byId("Ethicity1").getValue(), //"Ethicity",
-          "EthnicityCode": this.getView().byId("Ethicity1").getSelectedItem() != null ? this.getView().byId("Ethicity1").getSelectedItem().getKey() : this.getView().byId("Ethicity1").getSelectedKey(), // "Ethicity",
+          "EmergencyAdd": this.getId("addEmergencyContact1").getSelected() == true ? "X" : '',//"X",addEmergencyContact1
+          "Dob": this.getId("Dob11").getValue() != '' ? this.dateToReq(this.getId("Dob11").getValue()) : '', //"20.09.1999",
+          "DobInt": this.getId("Dob11").getValue() != '' ? this.convToMillisec(this.getId("Dob11").getValue()) : '', //"20.09.1999",
+          "InsuranceNo": this.getId("nationalIns1").getValue() != '' ? (this.getId("nationalIns1").getValue()).toUpperCase() : '', //"Insurance No",
+          "Nationality": this.getId("Nationality1").getSelectedItem() != null ? (this.getId("Nationality1").getSelectedItem().getText()).toUpperCase() : (this.getId("Nationality1").getValue()).toUpperCase(), //"Indian",
+          "NatCode": this.getId("Nationality1").getSelectedItem() != null ? (this.getId("Nationality1").getSelectedItem().getKey()).toUpperCase() : (this.getId("Nationality1").getSelectedKey()).toUpperCase(), //"IN",
+          "Disability": this.getId("Disability1").getSelectedItem() != null ? this.getId("Disability1").getSelectedItem().getText() : this.getId("Disability1").getValue(), // "No",
+          "DisabilityCode": this.getId("Disability1").getSelectedItem() != null ? this.getId("Disability1").getSelectedItem().getKey() : this.getId("Disability1").getSelectedKey(), // "No",
+          "Ethicity": this.getId("Ethicity1").getSelectedItem() != null ? this.getId("Ethicity1").getSelectedItem().getText() : this.getId("Ethicity1").getValue(), //"Ethicity",
+          "EthnicityCode": this.getId("Ethicity1").getSelectedItem() != null ? this.getId("Ethicity1").getSelectedItem().getKey() : this.getId("Ethicity1").getSelectedKey(), // "Ethicity",
 
-          "Gender": this.getView().byId("Gender1").getSelectedItem() != null ? this.getView().byId("Gender1").getSelectedItem().getText() : "", //"Male",
-          "GenderCode": this.getView().byId("Gender1").getSelectedItem() != null ? this.getView().byId("Gender1").getSelectedItem().getKey() : this.getView().byId("Gender1").getSelectedKey(), // "M",
-          "DbsNo": this.getView().byId("DBS1").getValue() != '' ? this.getView().byId("DBS1").getValue() : '', //"123",
-          "RegNo": this.getView().byId("TeachRegNum12").getVisible() ? this.getView().byId("TeachRegNum12").getValue() : this.getView().byId("TeachRegNum1").getValue(), //"321",
-          "ClearanceDate": this.getView().byId("ClearDate1").getValue() != '' ? this.dateToReq(this.getView().byId("ClearDate1").getValue()) : '', //"19.12.2023",
-          "ClearDateInt": this.getView().byId("ClearDate1").getValue() != '' ? this.convToMillisec(this.getView().byId("ClearDate1").getValue()) : '', //"19.12.2023",
-          "IssueDate": this.getView().byId("issuDate1").getValue() != '' ? this.dateToReq(this.getView().byId("issuDate1").getValue()) : '', //"19.12.2023",
-          "IssueDateInt": this.getView().byId("issuDate1").getValue() != '' ? this.convToMillisec(this.getView().byId("issuDate1").getValue()) : '', //"19.12.2023",
-          "BankSortCode": this.getView().byId("BankSort1").getValue() != '' ? this.getView().byId("BankSort1").getValue() : '', //"1234567",
-          "BankName": this.getView().byId("BankName1").getValue() != '' ? this.getView().byId("BankName1").getValue() : '', //"ABC Bank",
-          "BankAccNo": this.getView().byId("BankAccNum1").getValue() != '' ? this.getView().byId("BankAccNum1").getValue() : '', //"12321312",
-          "BuildSocRefNo": this.getView().byId("BuildingSoc1").getValue() != '' ? this.getView().byId("BuildingSoc1").getValue() : '', //"RefNo123",
-          "StreetAdd": this.getView().byId("_IDGefnInput11").getValue() != '' ? this.getView().byId("_IDGefnInput11").getValue() : '', //"Street1",
-          "AddLine": this.getView().byId("_IDGefnInput12").getValue() != '' ? this.getView().byId("_IDGefnInput12").getValue() : '', //"Address1",
-          // "DistrictF": this.getView().byId("_IDGefnInput14").getValue() != '' ? this.getView().byId("").getValue() : '',//"District1",
-          "CityF": this.getView().byId("_IDGefnInput14").getValue() != '' ? this.getView().byId("_IDGefnInput14").getValue() : '', //"City1",
+          "Gender": this.getId("Gender1").getSelectedItem() != null ? this.getId("Gender1").getSelectedItem().getText() : "", //"Male",
+          "GenderCode": this.getId("Gender1").getSelectedItem() != null ? this.getId("Gender1").getSelectedItem().getKey() : this.getId("Gender1").getSelectedKey(), // "M",
+          "DbsNo": this.getId("DBS1").getValue() != '' ? this.getId("DBS1").getValue() : '', //"123",
+          "RegNo": this.getId("TeachRegNum12").getVisible() ? this.getId("TeachRegNum12").getValue() : this.getId("TeachRegNum1").getValue(), //"321",
+          "ClearanceDate": this.getId("ClearDate1").getValue() != '' ? this.dateToReq(this.getId("ClearDate1").getValue()) : '', //"19.12.2023",
+          "ClearDateInt": this.getId("ClearDate1").getValue() != '' ? this.convToMillisec(this.getId("ClearDate1").getValue()) : '', //"19.12.2023",
+          "IssueDate": this.getId("issuDate1").getValue() != '' ? this.dateToReq(this.getId("issuDate1").getValue()) : '', //"19.12.2023",
+          "IssueDateInt": this.getId("issuDate1").getValue() != '' ? this.convToMillisec(this.getId("issuDate1").getValue()) : '', //"19.12.2023",
+          "BankSortCode": this.getId("BankSort1").getValue() != '' ? this.getId("BankSort1").getValue() : '', //"1234567",
+          "BankName": this.getId("BankName1").getValue() != '' ? this.getId("BankName1").getValue() : '', //"ABC Bank",
+          "BankAccNo": this.getId("BankAccNum1").getValue() != '' ? this.getId("BankAccNum1").getValue() : '', //"12321312",
+          "BuildSocRefNo": this.getId("BuildingSoc1").getValue() != '' ? this.getId("BuildingSoc1").getValue() : '', //"RefNo123",
+          "StreetAdd": this.getId("_IDGefnInput11").getValue() != '' ? this.getId("_IDGefnInput11").getValue() : '', //"Street1",
+          "AddLine": this.getId("_IDGefnInput12").getValue() != '' ? this.getId("_IDGefnInput12").getValue() : '', //"Address1",
+          // "DistrictF": this.getId("_IDGefnInput14").getValue() != '' ? this.getId("").getValue() : '',//"District1",
+          "CityF": this.getId("_IDGefnInput14").getValue() != '' ? this.getId("_IDGefnInput14").getValue() : '', //"City1",
 
-          "CountyF": this.getView().byId("_IDGenItem6").getSelectedItem() != null ? this.getView().byId("_IDGenItem6").getSelectedItem().getText() : this.getView().byId("_IDGenItem6").getValue(), // "County1",
-          "CountyCodeF": this.getView().byId("_IDGenItem6").getSelectedItem() != null ? this.getView().byId("_IDGenItem6").getSelectedItem().getKey() : this.getView().byId("_IDGenItem6").getSelectedKey(), //"County1Code",
-          "PostCodeF": this.getView().byId("_IDGenInput15").getValue() != '' ? (this.getView().byId("_IDGenInput15").getValue()).toUpperCase() : '', //"201301",
-          "NameF": this.getView().byId("_IDGenInput16").getValue() != '' ? this.getView().byId("_IDGenInput16").getValue() : '', //"Name1",
-          "SurnameF": this.getView().byId("_IDGenInput16s").getValue() != '' ? this.getView().byId("_IDGenInput16s").getValue() : '',//"Surname 1",
-          "RelationF": this.getView().byId("_IDGenInput17").getSelectedItem() != null ? this.getView().byId("_IDGenInput17").getSelectedItem().getText() : this.getView().byId("_IDGenInput17").getValue(),//"Son",
-          "RelationFCode": this.getView().byId("_IDGenInput17").getSelectedItem() != null ? this.getView().byId("_IDGenInput17").getSelectedItem().getKey() : this.getView().byId("_IDGenInput17").getSelectedKey(), //"Son",
-          "HomTelNoF": this.getView().byId("_IDGenInput18").getValue() != '' ? this.getView().byId("_IDGenInput18").getValue() : '',//"123441",
-          // "MobileNoF": this.getView().byId("_IDGenInput19").getValue() != '' ? this.getView().byId("_IDGenInput19").getValue() : '',//"412322",
+          "CountyF": this.getId("_IDGenItem6").getSelectedItem() != null ? this.getId("_IDGenItem6").getSelectedItem().getText() : this.getId("_IDGenItem6").getValue(), // "County1",
+          "CountyCodeF": this.getId("_IDGenItem6").getSelectedItem() != null ? this.getId("_IDGenItem6").getSelectedItem().getKey() : this.getId("_IDGenItem6").getSelectedKey(), //"County1Code",
+          "PostCodeF": this.getId("_IDGenInput15").getValue() != '' ? (this.getId("_IDGenInput15").getValue()).toUpperCase() : '', //"201301",
+          "NameF": this.getId("_IDGenInput16").getValue() != '' ? this.getId("_IDGenInput16").getValue() : '', //"Name1",
+          "SurnameF": this.getId("_IDGenInput16s").getValue() != '' ? this.getId("_IDGenInput16s").getValue() : '',//"Surname 1",
+          "RelationF": this.getId("_IDGenInput17").getSelectedItem() != null ? this.getId("_IDGenInput17").getSelectedItem().getText() : this.getId("_IDGenInput17").getValue(),//"Son",
+          "RelationFCode": this.getId("_IDGenInput17").getSelectedItem() != null ? this.getId("_IDGenInput17").getSelectedItem().getKey() : this.getId("_IDGenInput17").getSelectedKey(), //"Son",
+          "HomTelNoF": this.getId("_IDGenInput18").getValue() != '' ? this.getId("_IDGenInput18").getValue() : '',//"123441",
+          // "MobileNoF": this.getId("_IDGenInput19").getValue() != '' ? this.getId("_IDGenInput19").getValue() : '',//"412322",
 
           "MobileNo2F": "",
           "PhnTypeF": "X",
@@ -3634,106 +3796,105 @@ Please note that this schedule will repeat every ${oScheduleData.length} days, a
           "MobTypeF": "X",
           "MobFlagF": "X",
 
-          "SecondEmergencycontact": this.getView().byId("_IDGenCheckBox2").getSelected() == true ? "X" : '', //_IDGenCheckBox2 "X",
-          "StreetAddSec": this.getView().byId("_IDGefnInput112").getValue() != '' ? this.getView().byId("_IDGefnInput112").getValue() : '', // "Street2",
-          "AddLineSec": this.getView().byId("_IDGefnInput122").getValue() != '' ? this.getView().byId("_IDGefnInput122").getValue() : '', //"Address 2",
-          // "DistrictSec": this.getView().byId("").getValue() != '' ? this.getView().byId("").getValue() : '',"District2",
-          "CitySec": this.getView().byId("_IDGefnInput142").getValue() != '' ? this.getView().byId("_IDGefnInput142").getValue() : '', //"County 2",
+          "SecondEmergencycontact": this.getId("_IDGenCheckBox2").getSelected() == true ? "X" : '', //_IDGenCheckBox2 "X",
+          "StreetAddSec": this.getId("_IDGefnInput112").getValue() != '' ? this.getId("_IDGefnInput112").getValue() : '', // "Street2",
+          "AddLineSec": this.getId("_IDGefnInput122").getValue() != '' ? this.getId("_IDGefnInput122").getValue() : '', //"Address 2",
+          // "DistrictSec": this.getId("").getValue() != '' ? this.getId("").getValue() : '',"District2",
+          "CitySec": this.getId("_IDGefnInput142").getValue() != '' ? this.getId("_IDGefnInput142").getValue() : '', //"County 2",
 
-          "CountySec": this.getView().byId("idree4d2").getSelectedItem() != null ? this.getView().byId("idree4d2").getSelectedItem().getText() : this.getView().byId("idree4d2").getValue(), // "City 2",
-          "CountyCodeSec": this.getView().byId("idree4d2").getSelectedItem() != null ? this.getView().byId("idree4d2").getSelectedItem().getKey() : this.getView().byId("idree4d2").getSelectedKey(), //"CountyCode2",
-          "PostCodeSec": this.getView().byId("_IDGenInput152").getValue() != '' ? (this.getView().byId("_IDGenInput152").getValue()).toUpperCase() : '', // "201301",
-          "NameSec": this.getView().byId("_IDGenInput162").getValue() != '' ? this.getView().byId("_IDGenInput162").getValue() : '', // "Name 2",
-          "SurnameSec": this.getView().byId("_IDGenInput162s").getValue() != '' ? this.getView().byId("_IDGenInput162s").getValue() : '', // "Surname 2",
-          "RelationSec": this.getView().byId("_IDGenInput172").getSelectedItem() != null ? this.getView().byId("_IDGenInput172").getSelectedItem().getText() : this.getView().byId("_IDGenInput172").getValue(), // "Son",
-          "RelCodeSec": this.getView().byId("_IDGenInput172").getSelectedItem() != null ? this.getView().byId("_IDGenInput172").getSelectedItem().getKey() : this.getView().byId("_IDGenInput172").getSelectedKey(), //"Son",
-          "HomTelNoSec": this.getView().byId("_IDGenInput182").getValue() != '' ? this.getView().byId("_IDGenInput182").getValue() : '', // "12321312",
-          // "MobileNoSec": this.getView().byId("_IDGenInput192").getValue() != '' ? this.getView().byId("_IDGenInput192").getValue() : '', // "132312",
+          "CountySec": this.getId("idree4d2").getSelectedItem() != null ? this.getId("idree4d2").getSelectedItem().getText() : this.getId("idree4d2").getValue(), // "City 2",
+          "CountyCodeSec": this.getId("idree4d2").getSelectedItem() != null ? this.getId("idree4d2").getSelectedItem().getKey() : this.getId("idree4d2").getSelectedKey(), //"CountyCode2",
+          "PostCodeSec": this.getId("_IDGenInput152").getValue() != '' ? (this.getId("_IDGenInput152").getValue()).toUpperCase() : '', // "201301",
+          "NameSec": this.getId("_IDGenInput162").getValue() != '' ? this.getId("_IDGenInput162").getValue() : '', // "Name 2",
+          "SurnameSec": this.getId("_IDGenInput162s").getValue() != '' ? this.getId("_IDGenInput162s").getValue() : '', // "Surname 2",
+          "RelationSec": this.getId("_IDGenInput172").getSelectedItem() != null ? this.getId("_IDGenInput172").getSelectedItem().getText() : this.getId("_IDGenInput172").getValue(), // "Son",
+          "RelCodeSec": this.getId("_IDGenInput172").getSelectedItem() != null ? this.getId("_IDGenInput172").getSelectedItem().getKey() : this.getId("_IDGenInput172").getSelectedKey(), //"Son",
+          "HomTelNoSec": this.getId("_IDGenInput182").getValue() != '' ? this.getId("_IDGenInput182").getValue() : '', // "12321312",
+          // "MobileNoSec": this.getId("_IDGenInput192").getValue() != '' ? this.getId("_IDGenInput192").getValue() : '', // "132312",
 
           "PhnTypeSec": "X",
           "PhnFlagSec": "X",
           "MobTypeSec": "X",
           "MobFlagSec": "X",
 
-          "ContractType": this.getView().byId("_IDGenComboBox17").getSelectedItem() != null ? this.getView().byId("_IDGenComboBox17").getSelectedItem().getText() : this.getView().byId("_IDGenComboBox17").getValue(), // Permanent,
-          "ContTypeCode": this.getView().byId("_IDGenComboBox17").getSelectedItem() != null ? this.getView().byId("_IDGenComboBox17").getSelectedItem().getKey() : this.getView().byId("_IDGenComboBox17").getSelectedKey(), // P,
-          "StartDate": this.getView().byId("_IDGenDatePicker1").getValue() != '' ? this.dateToReq(this.getView().byId("_IDGenDatePicker1").getValue()) : '', // "19.12.2023",
-          "StartDateInt": this.getView().byId("_IDGenDatePicker1").getValue() != '' ? this.convToMillisec(this.getView().byId("_IDGenDatePicker1").getValue()) : '', // "19.12.2023",
-          "EndDate": this.getView().byId("_IDGenDatePicker2").getValue() != '' ? this.dateToReq(this.getView().byId("_IDGenDatePicker2").getValue()) : '', // "",
-          "EndDateInt": this.getView().byId("_IDGenDatePicker2").getValue() != '' ? this.convToMillisec(this.getView().byId("_IDGenDatePicker2").getValue()) : '', // "",
-          "Grade": this.getView().byId("_IDGenComboBox2").getSelectedItem() != null ? this.getView().byId("_IDGenComboBox2").getSelectedItem().getText() : this.getView().byId("_IDGenComboBox2").getValue(), // "01-Grade",
-          "GradeCode": this.getView().byId("_IDGenComboBox2").getSelectedItem() != null ? this.getView().byId("_IDGenComboBox2").getSelectedItem().getKey() : this.getView().byId("_IDGenComboBox2").getSelectedKey(), // "01",
-          "ScalePoint": this.getView().byId("_IDGenComboBox3").getSelectedItem() != null ? this.getView().byId("_IDGenComboBox3").getSelectedItem().getText() : this.getView().byId("_IDGenComboBox3").getValue(), // "01",
-          "ScalePointCode": this.getView().byId("_IDGenComboBox3").getSelectedItem() != null ? this.getView().byId("_IDGenComboBox3").getSelectedItem().getKey() : this.getView().byId("_IDGenComboBox3").getSelectedKey(), // "01",
-          "ClaimPos": this.getView().byId("_IDGenComboBox6").getSelectedItem() != null ? this.getView().byId("_IDGenComboBox6").getSelectedItem().getText() : this.getView().byId("_IDGenComboBox6").getValue(), // "11",
-          "FteDec": this.getView().byId("idFTE").getValue() != '' ? this.getView().byId("idFTE").getValue() : '',
-          "FtePerc": this.getView().byId("idFTEperc").getValue() != '' ? this.getView().byId("idFTEperc").getValue() : '',
-          "HoursPerWeek": this.getView().byId("Hoursperweek").getValue() != '' ? this.getView().byId("Hoursperweek").getValue() : '',
-          "ProbPeriod": this.getView().byId("_IDGenInput141").getSelectedItem() != null ? this.getView().byId("_IDGenInput141").getSelectedItem().getText() : this.getView().byId("_IDGenInput141").getValue(), // "30",
-          "ProbPerEndDt": this.getView().byId("probationEndDatePic").getValue() != '' ? this.dateToReq(this.getView().byId("probationEndDatePic").getValue()) : '', //"",
-          "ProbPerEndDtInt": this.getView().byId("probationEndDatePic").getValue() != '' ? this.convToMillisec(this.getView().byId("probationEndDatePic").getValue()) : '', // "",
-          "WorkingWeeks": this.getView().byId("idWeekYeardrop").getSelectedItem() != null ? this.getView().byId("idWeekYeardrop").getSelectedItem().getText() : this.getView().byId("idWeekYeardrop").getValue(),
-          "WorkingWeeksInt": this.getView().byId("idWeekYeardrop").getSelectedItem() != null ? this.getView().byId("idWeekYeardrop").getSelectedItem().getKey() : this.getView().byId("idWeekYeardrop").getSelectedKey(),
-          "AddWorkWeek": this.getView().byId("idWorkingWeeksdrop").getSelectedItem() != null ? this.getView().byId("idWorkingWeeksdrop").getSelectedItem().getText() : this.getView().byId("idWorkingWeeksdrop").getValue(),
-          "AddWorkWeekInt": this.getView().byId("idWorkingWeeksdrop").getSelectedItem() != null ? this.getView().byId("idWorkingWeeksdrop").getSelectedItem().getKey() : this.getView().byId("idWorkingWeeksdrop").getSelectedKey(),
+          "ContractType": this.getId("_IDGenComboBox17").getSelectedItem() != null ? this.getId("_IDGenComboBox17").getSelectedItem().getText() : this.getId("_IDGenComboBox17").getValue(), // Permanent,
+          "ContTypeCode": this.getId("_IDGenComboBox17").getSelectedItem() != null ? this.getId("_IDGenComboBox17").getSelectedItem().getKey() : this.getId("_IDGenComboBox17").getSelectedKey(), // P,
+          "StartDate": this.getId("_IDGenDatePicker1").getValue() != '' ? this.dateToReq(this.getId("_IDGenDatePicker1").getValue()) : '', // "19.12.2023",
+          "StartDateInt": this.getId("_IDGenDatePicker1").getValue() != '' ? this.convToMillisec(this.getId("_IDGenDatePicker1").getValue()) : '', // "19.12.2023",
+          "EndDate": this.getId("_IDGenDatePicker2").getValue() != '' ? this.dateToReq(this.getId("_IDGenDatePicker2").getValue()) : '', // "",
+          "EndDateInt": this.getId("_IDGenDatePicker2").getValue() != '' ? this.convToMillisec(this.getId("_IDGenDatePicker2").getValue()) : '', // "",
+          "Grade": this.getId("_IDGenComboBox2").getSelectedItem() != null ? this.getId("_IDGenComboBox2").getSelectedItem().getText() : this.getId("_IDGenComboBox2").getValue(), // "01-Grade",
+          "GradeCode": this.getId("_IDGenComboBox2").getSelectedItem() != null ? this.getId("_IDGenComboBox2").getSelectedItem().getKey() : this.getId("_IDGenComboBox2").getSelectedKey(), // "01",
+          "ScalePoint": this.getId("_IDGenComboBox3").getSelectedItem() != null ? this.getId("_IDGenComboBox3").getSelectedItem().getText() : this.getId("_IDGenComboBox3").getValue(), // "01",
+          "ScalePointCode": this.getId("_IDGenComboBox3").getSelectedItem() != null ? this.getId("_IDGenComboBox3").getSelectedItem().getKey() : this.getId("_IDGenComboBox3").getSelectedKey(), // "01",
+          "ClaimPos": this.getId("_IDGenComboBox6").getSelectedItem() != null ? this.getId("_IDGenComboBox6").getSelectedItem().getText() : this.getId("_IDGenComboBox6").getValue(), // "11",
+          "FteDec": this.getId("idFTE").getValue() != '' ? (+this.getId("idFTE").getValue()).toFixed(5) : '',
+          "FtePerc": this.getId("idFTEperc").getValue() != '' ? this.getId("idFTEperc").getValue() : '',
+          "HoursPerWeek": this.getId("Hoursperweek").getValue() != '' ? this.getId("Hoursperweek").getValue() : '',
+          "ProbPeriod": this.getId("_IDGenInput141").getSelectedItem() != null ? this.getId("_IDGenInput141").getSelectedItem().getText() : this.getId("_IDGenInput141").getValue(), // "30",
+          "ProbPerEndDt": this.getId("probationEndDatePic").getValue() != '' ? this.dateToReq(this.getId("probationEndDatePic").getValue()) : '', //"",
+          "ProbPerEndDtInt": this.getId("probationEndDatePic").getValue() != '' ? this.convToMillisec(this.getId("probationEndDatePic").getValue()) : '', // "",
+          "WorkingWeeks": this.getId("idWeekYeardrop").getSelectedItem() != null ? this.getId("idWeekYeardrop").getSelectedItem().getText() : this.getId("idWeekYeardrop").getValue(),
+          "WorkingWeeksInt": this.getId("idWeekYeardrop").getSelectedItem() != null ? this.getId("idWeekYeardrop").getSelectedItem().getKey() : this.getId("idWeekYeardrop").getSelectedKey(),
+          "AddWorkWeek": this.getId("idWorkingWeeksdrop").getSelectedItem() != null ? this.getId("idWorkingWeeksdrop").getSelectedItem().getText() : this.getId("idWorkingWeeksdrop").getValue(),
+          "AddWorkWeekInt": this.getId("idWorkingWeeksdrop").getSelectedItem() != null ? this.getId("idWorkingWeeksdrop").getSelectedItem().getKey() : this.getId("idWorkingWeeksdrop").getSelectedKey(),
 
           "WageType1": "1005",
-          "WageTypeCheck1": this.getView().byId("idWeekYeardrop").getSelectedItem() != null ? "X" : this.getView().byId("idWeekYeardrop").getValue() != "" ? "X" : "",
-          "WageTypeAmt1": this.getView().byId("idWeekYeardrop").getSelectedItem() != null ? this.getView().byId("idWeekYeardrop").getSelectedItem().getText() : this.getView().byId("idWeekYeardrop").getValue(),
+          "WageTypeCheck1": this.getId("idWeekYeardrop").getSelectedItem() != null ? "X" : this.getId("idWeekYeardrop").getValue() != "" ? "X" : "",
+          "WageTypeAmt1": this.getId("idWeekYeardrop").getSelectedItem() != null ? this.getId("idWeekYeardrop").getSelectedItem().getText() : this.getId("idWeekYeardrop").getValue(),
 
           "WageType2": "1010",
-          "WageTypeCheck2": this.getView().getModel("oneModel").getProperty("/wage2Value") != "" || undefined ? "X" : "",
-          "WageTypeAmt2": this.getView().getModel("oneModel").getProperty("/wage2Value") != "" || undefined ? this.getView().getModel("oneModel").getProperty("/wage2Value") : "",
+          "WageTypeCheck2": this.getView().getModel("oneModel").getProperty("/wage2Value") ? "X" : "",
+          "WageTypeAmt2": this.getView().getModel("oneModel").getProperty("/wage2Value") ? this.getView().getModel("oneModel").getProperty("/wage2Value") : "",
 
           "WageType3": "1011",
-          "WageTypeCheck3": this.getView().byId("idWorkingWeeksdrop").getSelectedItem() != null ? "X" : this.getView().byId("idWorkingWeeksdrop").getValue() != "" ? "X" : "",
-          "WageTypeAmt3": this.getView().byId("idWorkingWeeksdrop").getSelectedItem() != null ? this.getView().byId("idWorkingWeeksdrop").getSelectedItem().getText() : this.getView().byId("idWorkingWeeksdrop").getValue(),
+          "WageTypeCheck3": +this.getId("idWorkingWeeksdrop").getValue() ? "X" : "",
+          "WageTypeAmt3": this.getId("idWorkingWeeksdrop").getSelectedItem() != null ? this.getId("idWorkingWeeksdrop").getSelectedItem().getText() : this.getId("idWorkingWeeksdrop").getValue(),
 
-
-          "TypeOfPos": this.getView().byId("idSelectTypePos1").getSelectedItem() != null ? this.getView().byId("idSelectTypePos1").getSelectedItem().getText() : this.getView().byId("idSelectTypePos1").getValue(),
-          "TypeOfPosCode": this.getView().byId("idSelectTypePos1").getSelectedItem() != null ? this.getView().byId("idSelectTypePos1").getSelectedItem().getKey() : this.getView().byId("idSelectTypePos1").getSelectedKey(),
-          "SelectPos": this.getView().byId("selectPositionCombobox").getSelectedItem() != null ? this.getView().byId("selectPositionCombobox").getSelectedItem().getText() : this.getView().byId("selectPositionCombobox").getValue(),
-          "SelectPosCode": this.getView().byId("selectPositionCombobox").getSelectedItem() != null ? this.getView().byId("selectPositionCombobox").getSelectedItem().getKey() : this.getView().byId("selectPositionCombobox").getSelectedKey(),
-          "SecEPosCcenter": this.getView().byId("idPositionCostCentre").getSelectedItem() != null ? this.getView().byId("idPositionCostCentre").getSelectedItem().getText() : this.getView().byId("idPositionCostCentre").getValue(),
-          "SecEPosCcenterCode": this.getView().byId("idPositionCostCentre").getSelectedItem() != null ? this.getView().byId("idPositionCostCentre").getSelectedItem().getKey() : this.getView().byId("idPositionCostCentre").getSelectedKey(),
-          "SecEPosTitle": this.getView().byId("idJobTitle").getValue() != '' ? this.getView().byId("idJobTitle").getValue() : '',
-          "EmpSubGrp": this.getView().byId("idSelectTypePos1").getSelectedItem() != null ? this.getView().byId("idSelectTypePos1").getSelectedItem().getKey() : this.getView().byId("idSelectTypePos1").getSelectedKey(),
+          "TypeOfPos": this.getId("idSelectTypePos1").getSelectedItem() != null ? this.getId("idSelectTypePos1").getSelectedItem().getText() : this.getId("idSelectTypePos1").getValue(),
+          "TypeOfPosCode": this.getId("idSelectTypePos1").getSelectedItem() != null ? this.getId("idSelectTypePos1").getSelectedItem().getKey() : this.getId("idSelectTypePos1").getSelectedKey(),
+          "SelectPos": this.getId("selectPositionCombobox").getSelectedItem() != null ? this.getId("selectPositionCombobox").getSelectedItem().getText() : this.getId("selectPositionCombobox").getValue(),
+          "SelectPosCode": this.getId("selectPositionCombobox").getSelectedItem() != null ? this.getId("selectPositionCombobox").getSelectedItem().getKey() : this.getId("selectPositionCombobox").getSelectedKey(),
+          "SecEPosCcenter": this.getId("idPositionCostCentre").getSelectedItem() != null ? this.getId("idPositionCostCentre").getSelectedItem().getText() : this.getId("idPositionCostCentre").getValue(),
+          "SecEPosCcenterCode": this.getId("idPositionCostCentre").getSelectedItem() != null ? this.getId("idPositionCostCentre").getSelectedItem().getKey() : this.getId("idPositionCostCentre").getSelectedKey(),
+          "SecEPosTitle": this.getId("idJobTitle").getValue() != '' ? this.getId("idJobTitle").getValue() : '',
+          "EmpSubGrp": this.getId("idSelectTypePos1").getSelectedItem() != null ? this.getId("idSelectTypePos1").getSelectedItem().getKey() : this.getId("idSelectTypePos1").getSelectedKey(),
           "EmpSubGrpCode": emplSubGroup != '' ? emplSubGroup : '',
-          "SecEGrade": this.getView().byId("idGrade").getValue() != '' ? this.getView().byId("idGrade").getValue() : '',
-          "SecEGradCode": this.getView().byId("idGrade").getValue() != '' ? this.getView().byId("idGrade").getValue() : '',
-          "Allowance1": this.getView().byId("_IDGenComboBox8").getSelectedItem() != null ? this.getView().byId("_IDGenComboBox8").getSelectedItem().getText() : this.getView().byId("_IDGenComboBox8").getValue(), // "1100",
-          "AllowCode1": this.getView().byId("_IDGenComboBox8").getSelectedItem() != null ? this.getView().byId("_IDGenComboBox8").getSelectedItem().getKey() : this.getView().byId("_IDGenComboBox8").getSelectedKey(), // // "1100",
-          "Amount1": this.getView().byId("_IDGenInput191").getValue() != '' ? this.getView().byId("_IDGenInput191").getValue() : '', // "100",
-          "Unit1": this.getView().byId("_IDGenInput12").getValue() != '' ? this.getView().byId("_IDGenInput12").getValue() : '', //"No",
-          "Allowance2": this.getView().byId("_IDGenComboBox82").getSelectedItem() != null ? this.getView().byId("_IDGenComboBox82").getSelectedItem().getText() : this.getView().byId("_IDGenComboBox82").getValue(), // "1100",
-          "AllowCode2": this.getView().byId("_IDGenComboBox82").getSelectedItem() != null ? this.getView().byId("_IDGenComboBox82").getSelectedItem().getKey() : this.getView().byId("_IDGenComboBox82").getSelectedKey(), // // "1100",
-          "Amount2": this.getView().byId("_IDGenInput1912").getValue() != '' ? this.getView().byId("_IDGenInput1912").getValue() : '', // "231",
-          "Unit2": this.getView().byId("_IDGenInput122").getValue() != '' ? this.getView().byId("_IDGenInput122").getValue() : '', // "Unit",
-          "Allowance3": this.getView().byId("_IDGenComboBox83").getSelectedItem() != null ? this.getView().byId("_IDGenComboBox83").getSelectedItem().getText() : this.getView().byId("_IDGenComboBox83").getValue(), // "1100",
-          "AllowCode3": this.getView().byId("_IDGenComboBox83").getSelectedItem() != null ? this.getView().byId("_IDGenComboBox83").getSelectedItem().getKey() : this.getView().byId("_IDGenComboBox83").getSelectedKey(), // // "1100",
-          "Amount3": this.getView().byId("_IDGenInput1913").getValue() != '' ? this.getView().byId("_IDGenInput1913").getValue() : '', // "223",
-          "Unit3": this.getView().byId("_IDGenInput123").getValue() != '' ? this.getView().byId("_IDGenInput123").getValue() : '', //"UnNo.",
+          "SecEGrade": this.getId("idGrade").getValue() != '' ? this.getId("idGrade").getValue() : '',
+          "SecEGradCode": this.getId("idGrade").getValue() != '' ? this.getId("idGrade").getValue() : '',
+          "Allowance1": this.getId("_IDGenComboBox8").getSelectedItem() != null ? this.getId("_IDGenComboBox8").getSelectedItem().getText() : this.getId("_IDGenComboBox8").getValue(), // "1100",
+          "AllowCode1": this.getId("_IDGenComboBox8").getSelectedItem() != null ? this.getId("_IDGenComboBox8").getSelectedItem().getKey() : this.getId("_IDGenComboBox8").getSelectedKey(), // // "1100",
+          "Amount1": this.getId("_IDGenInput191").getValue() != '' ? this.getId("_IDGenInput191").getValue() : '', // "100",
+          "Unit1": this.getId("_IDGenInput12").getValue() != '' ? this.getId("_IDGenInput12").getValue() : '', //"No",
+          "Allowance2": this.getId("_IDGenComboBox82").getSelectedItem() != null ? this.getId("_IDGenComboBox82").getSelectedItem().getText() : this.getId("_IDGenComboBox82").getValue(), // "1100",
+          "AllowCode2": this.getId("_IDGenComboBox82").getSelectedItem() != null ? this.getId("_IDGenComboBox82").getSelectedItem().getKey() : this.getId("_IDGenComboBox82").getSelectedKey(), // // "1100",
+          "Amount2": this.getId("_IDGenInput1912").getValue() != '' ? this.getId("_IDGenInput1912").getValue() : '', // "231",
+          "Unit2": this.getId("_IDGenInput122").getValue() != '' ? this.getId("_IDGenInput122").getValue() : '', // "Unit",
+          "Allowance3": this.getId("_IDGenComboBox83").getSelectedItem() != null ? this.getId("_IDGenComboBox83").getSelectedItem().getText() : this.getId("_IDGenComboBox83").getValue(), // "1100",
+          "AllowCode3": this.getId("_IDGenComboBox83").getSelectedItem() != null ? this.getId("_IDGenComboBox83").getSelectedItem().getKey() : this.getId("_IDGenComboBox83").getSelectedKey(), // // "1100",
+          "Amount3": this.getId("_IDGenInput1913").getValue() != '' ? this.getId("_IDGenInput1913").getValue() : '', // "223",
+          "Unit3": this.getId("_IDGenInput123").getValue() != '' ? this.getId("_IDGenInput123").getValue() : '', //"UnNo.",
 
 
-          "Personalnumber": this.getView().byId("idPersonalNum").getValue() != '' ? this.getView().byId("idPersonalNum").getValue() : '', //"12312",
-          "PosTitle": this.getView().byId("idPosTitleD").getValue() != '' ? this.getView().byId("idPosTitleD").getValue() : '', //"Teacher",
-          "Pa20EndDate": this.getView().byId("idPA20").getValue() != '' ? this.dateToReq(this.getView().byId("idPA20").getValue()) : '', // "20.12.2023",
-          "Pa20EndDtInt": this.getView().byId("idPA20").getValue() != '' ? this.convToMillisec(this.getView().byId("idPA20").getValue()) : '', //"20.12.2023",
-          "Selectoption": this.getView().byId("idSelectOption").getSelectedItem() != null ? this.getView().byId("idSelectOption").getSelectedItem().getText() : this.getView().byId("idSelectOption").getValue(), // "SelOpt",
-          "SelOptCode": this.getView().byId("idSelectOption").getSelectedItem() != null ? this.getView().byId("idSelectOption").getSelectedItem().getKey() : this.getView().byId("idSelectOption").getSelectedKey(), // "",
-          "LeaSchoolname": this.getView().byId("idLEASCHOOL").getValue() != '' ? this.getView().byId("idLEASCHOOL").getValue() : '', //"Lea School",
-          "NoHours": this.getView().byId("idNumberHoursD").getValue() != '' ? this.getView().byId("idNumberHoursD").getValue() : '', // "1",
+          "Personalnumber": this.getId("idPersonalNum").getValue() != '' ? this.getId("idPersonalNum").getValue() : '', //"12312",
+          "PosTitle": this.getId("idPosTitleD").getValue() != '' ? this.getId("idPosTitleD").getValue() : '', //"Teacher",
+          "Pa20EndDate": this.getId("idPA20").getValue() != '' ? this.dateToReq(this.getId("idPA20").getValue()) : '', // "20.12.2023",
+          "Pa20EndDtInt": this.getId("idPA20").getValue() != '' ? this.convToMillisec(this.getId("idPA20").getValue()) : '', //"20.12.2023",
+          "Selectoption": this.getId("idSelectOption").getSelectedItem() != null ? this.getId("idSelectOption").getSelectedItem().getText() : this.getId("idSelectOption").getValue(), // "SelOpt",
+          "SelOptCode": this.getId("idSelectOption").getSelectedItem() != null ? this.getId("idSelectOption").getSelectedItem().getKey() : this.getId("idSelectOption").getSelectedKey(), // "",
+          "LeaSchoolname": this.getId("idLEASCHOOL").getValue() != '' ? this.getId("idLEASCHOOL").getValue() : '', //"Lea School",
+          "NoHours": this.getId("idNumberHoursD").getValue() != '' ? this.getId("idNumberHoursD").getValue() : '', // "1",
           "seqNumber": this.getView().getModel("oneModel").getProperty("/SecDTerminData") != undefined || this.getView().getModel("oneModel").getProperty("/SecDTerminData") != "" ? this.getView().getModel("oneModel").getProperty("/SecDTerminData/seqNumber") : "",
           "TermStartDt": this.getView().getModel("oneModel").getProperty("/SecDTerminData") != undefined || this.getView().getModel("oneModel").getProperty("/SecDTerminData") != "" ? this.dateToReq(this.getView().getModel("oneModel").getProperty("/SecDTerminData/startDate")) : "",
           "TermStartDtInt": this.getView().getModel("oneModel").getProperty("/SecDTerminData") != undefined || this.getView().getModel("oneModel").getProperty("/SecDTerminData") != "" ? this.convToMillisec(this.getView().getModel("oneModel").getProperty("/SecDTerminData/startDate")) : "",
 
           "Purpose": purpose,
           "DeleteIndicator": delInd,
-          "Notify": this.getView().byId("_IDGenCheckBox1").getSelected() ? "X" : "",
+          "Notify": this.getId("_IDGenCheckBox1").getSelected() ? "X" : "",
           "hdr_to_com_nav": [
             {
-              "Formid": this.getView().byId("_IDGenInput2").getValue() != '' ? this.getView().byId("_IDGenInput2").getValue() : '',
-              "comment": this.getView().byId("_IDGenTextArea1").getValue() != '' ? this.getView().byId("_IDGenTextArea1").getValue() : ''
+              "Formid": this.getId("_IDGenInput2").getValue() != '' ? this.getId("_IDGenInput2").getValue() : '',
+              "comment": this.getId("_IDGenTextArea1").getValue() != '' ? this.getId("_IDGenTextArea1").getValue() : ''
             }
           ],
           // paylod for work schedules
@@ -3747,7 +3908,7 @@ Please note that this schedule will repeat every ${oScheduleData.length} days, a
         sap.ui.core.BusyIndicator.show();
         var appUrl = window.location.origin + "/site?siteId=" + window.location.search.split("siteId=")[1].split("&")[0] + window.location.hash.split("Display")[0] + "Display";
         var reqUrl = appUrl.includes("GCC_SemObj") ? appUrl + "&/?formId=" : appUrl + "#?formId=";
-        var Formid = this.getView().byId("_IDGenInput2").getValue();
+        var Formid = this.getId("_IDGenInput2").getValue();
         var wrkFlow = {
           "definitionId": "eu10.gccdev.eforms.nS01",
           "context": {
@@ -3771,7 +3932,7 @@ Please note that this schedule will repeat every ${oScheduleData.length} days, a
           console.log("---workflow Data---");
           console.log("Workflow has been triggered and Form has been Submitted");
           sap.ui.core.BusyIndicator.hide();
-          MessageBox.success(`Form: ${this.getView().byId("_IDGenInput2").getValue()} is submitted successfully
+          MessageBox.success(`Form: ${this.getId("_IDGenInput2").getValue()} is submitted successfully
           
           Please call ContactUs on 01452 425888 should you have any queries regarding this e-Form.`, {
             actions: [MessageBox.Action.OK],
@@ -3798,7 +3959,7 @@ Please note that this schedule will repeat every ${oScheduleData.length} days, a
         sap.ui.core.BusyIndicator.show();
         var purpose = "P";
         var Request_Payload = this.payload(purpose, "");
-        var formId = this.getView().byId("_IDGenInput2").getValue();
+        var formId = this.getId("_IDGenInput2").getValue();
 
         this.getOwnerComponent().getModel("ZSFGTGW_NS01_SRV").create("/ZSFGT_NS01Set",
           // this.getOwnerComponent().getModel("/ZSFGTGW_NS01_SRV").create("/ZSFGT_NS01Set",
@@ -3847,7 +4008,7 @@ Please note that this schedule will repeat every ${oScheduleData.length} days, a
           onClose: function (sAction) {
             if (sAction === "YES") {
               sap.ui.core.BusyIndicator.show();
-              this.getOwnerComponent().getModel("ZSFGTGW_NS01_SRV").remove(`/ZSFGT_NS01Set('${this.getView().byId("_IDGenInput2").getValue()}')`, {
+              this.getOwnerComponent().getModel("ZSFGTGW_NS01_SRV").remove(`/ZSFGT_NS01Set('${this.getId("_IDGenInput2").getValue()}')`, {
                 success: function (oData) {
                   sap.ui.core.BusyIndicator.hide();
                   this.s4LogCreation("D");
@@ -3878,16 +4039,16 @@ Please note that this schedule will repeat every ${oScheduleData.length} days, a
       //Validation
       onChangeEndDate: function (oEvent) {
         if (oEvent && oEvent.mParameters && oEvent.mParameters.id) {
-          this.getView().byId(oEvent.mParameters.id).setValueState(sap.ui.core.ValueState.None);
+          this.getId(oEvent.mParameters.id).setValueState(sap.ui.core.ValueState.None);
         }
-        var endDate = this.getView().byId("_IDGgenInput12").getValue();
-        var startDate = this.getView().byId("_IDGenDatePicker1").getValue();
+        var endDate = this.getId("_IDGgenInput12").getValue();
+        var startDate = this.getId("_IDGenDatePicker1").getValue();
         if (!startDate) {
           MessageBox.error("Please fill Start Date before entering End Date");
-          this.getView().byId("_IDGgenInput12").setValueState(sap.ui.core.ValueState.Error);
-          this.getView().byId("_IDGgenInput12").setValueStateText("Please fill Start Date before entering End Date");
+          this.getId("_IDGgenInput12").setValueState(sap.ui.core.ValueState.Error);
+          this.getId("_IDGgenInput12").setValueStateText("Please fill Start Date before entering End Date");
         } else {
-          this.getView().byId("_IDGgenInput12").setValueState(sap.ui.core.ValueState.None);
+          this.getId("_IDGgenInput12").setValueState(sap.ui.core.ValueState.None);
         }
       },
       specialCharCheck: function (oEvent, reqField) {
@@ -3911,6 +4072,8 @@ Please note that this schedule will repeat every ${oScheduleData.length} days, a
       },
       validateEmail: function (oEvent) {
         var email = oEvent.getSource().getValue();
+        var busyDialog = new sap.m.BusyDialog();
+        var oModel = this.getView().getModel("oneModel");
         oEvent.getSource().setValueStateText("Email is a required field");
         if (email) {
           var mailregex = /^\w+[\w-+\.]*\@\w+([-\.]\w+)*\.[a-zA-Z]{2,}$/;
@@ -3918,20 +4081,63 @@ Please note that this schedule will repeat every ${oScheduleData.length} days, a
             oEvent.getSource().setValueState(sap.ui.core.ValueState.Error);
             oEvent.getSource().setValueStateText("This email address is invalid, please re-enter, should you have any further difficulties, please call ContactUs on 01452 425888");
           } else {
+            busyDialog.open();
+            busyDialog.setText("Validating Email");
             oEvent.getSource().setValueState(sap.ui.core.ValueState.None);
+            // Call for checking if email already exist
             $.ajax({
-              url: serviceURL + "/odata/v2/PerEmail?$filter=emailAddress eq '" + email + "'&$format=json",
+              url: serviceURL + "/odata/v2/PerEmail?$filter=emailAddress eq '" + email + "'&$format=json&$select=personIdExternal",
               type: 'GET',
               contentType: "application/json",
               success: function (data) {
                 if (data.d.results && data.d.results.length > 0) {
-                  oEvent.getSource().setValueState(sap.ui.core.ValueState.Error);
-                  oEvent.getSource().setValueStateText(`We can confirm ${email} is already set up and their SAP no is ${data.d.results[0].personIdExternal}. Please use this number to submit claims`);
-                  MessageBox.error(`We can confirm ${email} is already set up and their SAP no is ${data.d.results[0].personIdExternal}. Please use this number to submit claims`);
-                }
+                  // If found, checking if the person exist in the same pay group
+                  $.ajax({
+                    url: serviceURL + `/odata/v2/EmpEmployment?$filter=personIdExternal eq '${data.d.results[0].personIdExternal}'&$format=json&$expand=jobInfoNav&$select=personIdExternal,userId,jobInfoNav`,
+                    type: 'GET',
+                    contentType: "application/json",
+                    success: function (data) {
+                      try {
+                        if (data.d.results && data.d.results.length > 0) {
+                          // looping for checking if any job has the same pay group
+                          for (let i = 0; i < data.d.results.length; i++) {
+                            var tempPayGroup = oModel.getProperty("/PersonnelAreaDetails").find((el) => el.externalCode == data.d.results[i].jobInfoNav.results[0].customString3).cust_PayrollArea;
+                            if (tempPayGroup == payGroup) {
+                              // Fetching username for showing the error message
+                              $.ajax({
+                                url: serviceURL + `/odata/v2/UserAccount?$filter=personIdExternal eq '${data.d.results[i].personIdExternal}'&$format=json&$select=personIdExternal,username`,
+                                type: 'GET',
+                                contentType: "application/json",
+                                success: function (data) {
+                                  oEvent.getSource().setValueState(sap.ui.core.ValueState.Error);
+                                  oEvent.getSource().setValueStateText(`We can confirm that ${data.d.results[0].username} is already set up and their SAP ID is ${data.d.results[0].personIdExternal}. Please cancel this form and create a new form selecting Yes to the initial question Is the New Starter currently employed in your organisation?`);
+                                  MessageBox.error(`We can confirm that ${data.d.results[0].username} is already set up and their SAP ID is ${data.d.results[0].personIdExternal}. Please cancel this form and create a new form selecting Yes to the initial question Is the New Starter currently employed in your organisation?`);
+                                  busyDialog.close();
+                                },
+                                error: function (e) {
+                                  console.log("error: " + e);
+                                  busyDialog.close();
+                                }
+                              });
+                              break;
+                            }
+                          }
+                          busyDialog.close();
+                        }
+                      } catch {
+                        busyDialog.close();
+                      }
+                    }.bind(this),
+                    error: function (e) {
+                      console.log("error: " + e);
+                      busyDialog.close();
+                    }
+                  });
+                } else busyDialog.close();
               }.bind(this),
               error: function (e) {
                 console.log("error: " + e);
+                busyDialog.close();
               }
             });
           }
@@ -3939,35 +4145,35 @@ Please note that this schedule will repeat every ${oScheduleData.length} days, a
       },
       validateTelePhoneLiveChange: function (oEvent) {
         if (oEvent && oEvent.mParameters && oEvent.mParameters.id) {
-          this.getView().byId(oEvent.mParameters.id).setValueState(sap.ui.core.ValueState.None);
+          this.getId(oEvent.mParameters.id).setValueState(sap.ui.core.ValueState.None);
         }
         var phone = oEvent.getParameter("newValue");
-        // var phone = this.getView().byId("homeTelephone1").getValue();
+        // var phone = this.getId("homeTelephone1").getValue();
         if (phone.substring(0, 1) != "0") {
           phone = "0" + phone;
-          this.getView().byId(oEvent.getSource().sId).setValue(phone)
+          this.getId(oEvent.getSource().sId).setValue(phone)
         }
         //var mailregex = /^\w+[\w-+\.]*\@\w+([-\.]\w+)*\.[a-zA-Z]{2,}$/;
         if (phone.length > 11) {
           phone = phone.slice(0, phone.length - 1);
-          this.getView().byId(oEvent.getSource().sId).setValue(phone);
+          this.getId(oEvent.getSource().sId).setValue(phone);
         }
       },
       validatePhoneLiveChange: function (oEvent) {
         if (oEvent && oEvent.mParameters && oEvent.mParameters.id) {
-          this.getView().byId(oEvent.mParameters.id).setValueState(sap.ui.core.ValueState.None);
+          this.getId(oEvent.mParameters.id).setValueState(sap.ui.core.ValueState.None);
         }
         var phone = oEvent.getParameter("newValue");
-        //var phone = this.getView().byId("mobileTelephone1").getValue();
+        //var phone = this.getId("mobileTelephone1").getValue();
         if (phone.substring(0, 1) != "0") {
           phone = "0" + phone;
-          this.getView().byId(oEvent.getSource().sId).setValue(phone)
+          this.getId(oEvent.getSource().sId).setValue(phone)
         }
 
         //var mailregex = /^\w+[\w-+\.]*\@\w+([-\.]\w+)*\.[a-zA-Z]{2,}$/;
         if (phone.length > 11) {
           phone = phone.slice(0, phone.length - 1);
-          this.getView().byId(oEvent.getSource().sId).setValue(phone);
+          this.getId(oEvent.getSource().sId).setValue(phone);
 
         }
       },
@@ -3976,65 +4182,65 @@ Please note that this schedule will repeat every ${oScheduleData.length} days, a
         if (postCode.includes(" ")) {
           var postalCodeRegex = /^([Gg][Ii][Rr] 0[Aa]{2})|((([A-Za-z][0-9]{1,2})|(([A-Za-z][A-Ha-hJ-Yj-y][0-9]{1,2})|(([AZa-z][0-9][A-Za-z])|([A-Za-z][A-Ha-hJ-Yj-y][0-9]?[A-Za-z])))) [0-9][A-Za-z]{2})$/;
           if (postalCodeRegex.test(postCode.toUpperCase())) {
-            this.getView().byId(oEvent.getSource().sId).setValueState(sap.ui.core.ValueState.None);
+            this.getId(oEvent.getSource().sId).setValueState(sap.ui.core.ValueState.None);
           }
           else {
             MessageBox.error("Please enter the Postcode in a valid format, should you have any further difficulties, please call ContactUs on 01452 425888");
-            this.getView().byId(oEvent.getSource().sId).setValueState(sap.ui.core.ValueState.Error);
-            this.getView().byId(oEvent.getSource().sId).setValueStateText("Please enter the Postcode in a valid format, should you have any further difficulties, please call ContactUs on 01452 425888");
-            this.getView().byId(oEvent.getSource().sId).setValue("");
+            this.getId(oEvent.getSource().sId).setValueState(sap.ui.core.ValueState.Error);
+            this.getId(oEvent.getSource().sId).setValueStateText("Please enter the Postcode in a valid format, should you have any further difficulties, please call ContactUs on 01452 425888");
+            this.getId(oEvent.getSource().sId).setValue("");
           }
         }
         else {
           MessageBox.error("Please enter the Postcode in a valid format, should you have any further difficulties, please call ContactUs on 01452 425888");
-          this.getView().byId(oEvent.getSource().sId).setValueStateText("Please enter the Postcode in a valid format, should you have any further difficulties, please call ContactUs on 01452 425888");
-          this.getView().byId(oEvent.getSource().sId).setValueState(sap.ui.core.ValueState.Error);
-          this.getView().byId(oEvent.getSource().sId).setValue("");
+          this.getId(oEvent.getSource().sId).setValueStateText("Please enter the Postcode in a valid format, should you have any further difficulties, please call ContactUs on 01452 425888");
+          this.getId(oEvent.getSource().sId).setValueState(sap.ui.core.ValueState.Error);
+          this.getId(oEvent.getSource().sId).setValue("");
         }
       },
       validateTelePhone: function (oEvent) {
         if (oEvent && oEvent.mParameters && oEvent.mParameters.id) {
-          this.getView().byId(oEvent.mParameters.id).setValueState(sap.ui.core.ValueState.None);
+          this.getId(oEvent.mParameters.id).setValueState(sap.ui.core.ValueState.None);
         }
         var phone = oEvent.getParameter("newValue");
-        // var phone = this.getView().byId("homeTelephone1").getValue();
+        // var phone = this.getId("homeTelephone1").getValue();
         //var mailregex = /^\w+[\w-+\.]*\@\w+([-\.]\w+)*\.[a-zA-Z]{2,}$/;
         if (phone.length != 11) {
           MessageBox.error("Please enter the telephone number in a valid format, should you have any further difficulties, please call ContactUs on 01452 425888");
-          this.getView().byId(oEvent.getSource().sId).setValueState(sap.ui.core.ValueState.Error);
+          this.getId(oEvent.getSource().sId).setValueState(sap.ui.core.ValueState.Error);
         } else {
-          this.getView().byId(oEvent.getSource().sId).setValueState(sap.ui.core.ValueState.None);
+          this.getId(oEvent.getSource().sId).setValueState(sap.ui.core.ValueState.None);
         }
       },
       validatePhone: function (oEvent) {
         if (oEvent && oEvent.mParameters && oEvent.mParameters.id) {
-          this.getView().byId(oEvent.mParameters.id).setValueState(sap.ui.core.ValueState.None);
+          this.getId(oEvent.mParameters.id).setValueState(sap.ui.core.ValueState.None);
         }
         var phone = oEvent.getParameter("newValue");
-        // var phone = this.getView().byId("mobileTelephone1").getValue();
+        // var phone = this.getId("mobileTelephone1").getValue();
         //var mailregex = /^\w+[\w-+\.]*\@\w+([-\.]\w+)*\.[a-zA-Z]{2,}$/;
         if (phone.length != 11) {
           MessageBox.error(phone + " is not a valid Phone Number");
-          this.getView().byId(oEvent.getSource().sId).setValueState(sap.ui.core.ValueState.Error);
-          this.getView().byId(oEvent.getSource().sId).setValueState(phone + " is not a valid home mobile number");
+          this.getId(oEvent.getSource().sId).setValueState(sap.ui.core.ValueState.Error);
+          this.getId(oEvent.getSource().sId).setValueState(phone + " is not a valid home mobile number");
         } else {
-          this.getView().byId(oEvent.getSource().sId).setValueState(sap.ui.core.ValueState.None);
-          this.getView().byId(oEvent.getSource().sId).setValueState("");
+          this.getId(oEvent.getSource().sId).setValueState(sap.ui.core.ValueState.None);
+          this.getId(oEvent.getSource().sId).setValueState("");
         }
       },
       probationPeriodChange: function (oEvent) {
         if (oEvent.getSource().getSelectedItem()) {
           oEvent.getSource().setValueState(sap.ui.core.ValueState.None);
-          var ComboYesNo = this.getView().byId("_IDGenInput141").getSelectedKey();
+          var ComboYesNo = this.getId("_IDGenInput141").getSelectedKey();
           if (ComboYesNo == "Yes") {
-            this.getView().byId("probationEndDate").setVisible(true);
-            this.getView().byId("probationEndDatePic").setVisible(true);
-            this.getView().byId("probationEndDatePic").setRequired(true);
+            this.getId("probationEndDate").setVisible(true);
+            this.getId("probationEndDatePic").setVisible(true);
+            this.getId("probationEndDatePic").setRequired(true);
           } else {
-            this.getView().byId("probationEndDate").setVisible(false);
-            this.getView().byId("probationEndDatePic").setVisible(false);
-            this.getView().byId("probationEndDatePic").setRequired(false);
-            this.getView().byId("probationEndDatePic").setValueState(sap.ui.core.ValueState.None);
+            this.getId("probationEndDate").setVisible(false);
+            this.getId("probationEndDatePic").setVisible(false);
+            this.getId("probationEndDatePic").setRequired(false);
+            this.getId("probationEndDatePic").setValueState(sap.ui.core.ValueState.None);
           }
         }
         else {
@@ -4061,18 +4267,18 @@ Please note that this schedule will repeat every ${oScheduleData.length} days, a
 
       onLiveChangeBankAcc: function (oEvent) {
         if (oEvent && oEvent.mParameters && oEvent.mParameters.id) {
-          this.getView().byId(oEvent.mParameters.id).setValueState(sap.ui.core.ValueState.None);
+          this.getId(oEvent.mParameters.id).setValueState(sap.ui.core.ValueState.None);
         }
         var bankAcc = oEvent.getParameter("newValue");
         if (bankAcc.length > 8) {
           bankAcc = bankAcc.slice(0, bankAcc.length - 1);
-          this.getView().byId("BankAccNum1").setValue(bankAcc);
+          this.getId("BankAccNum1").setValue(bankAcc);
         }
 
       },
       //   onAccNumChange: function (oEvent) {
       //     if(oEvent && oEvent.mParameters &&  oEvent.mParameters.id){
-      //       this.getView().byId(oEvent.mParameters.id).setValueState(sap.ui.core.ValueState.None);
+      //       this.getId(oEvent.mParameters.id).setValueState(sap.ui.core.ValueState.None);
       //       }
       //     var value = oEvent.getSource().getValue();
       //     if (value.length < 8 || value.length > 8) {
@@ -4096,29 +4302,43 @@ Please note that this schedule will repeat every ${oScheduleData.length} days, a
         if (value) {
           oEvent.getSource().setValueState(sap.ui.core.ValueState.None);
           this.getGrades(this.getView().getModel("oneModel"), value.getKey());
-          var ContractType = this.getView().byId("_IDGenComboBox411").getSelectedKey();
+          var ContractType = this.getId("_IDGenComboBox411").getSelectedKey();
           if (ContractType == "4") {
-            this.getView().byId("_IDGenInput141").setSelectedKey("No");
-            this.getView().byId("_IDGenInput141").setEditable(false);
+            this.getId("_IDGenInput141").setSelectedKey("No");
+            this.getId("_IDGenInput141").setEditable(false);
           } else {
-            this.getView().byId("_IDGenInput141").setSelectedKey(null);
-            this.getView().byId("_IDGenInput141").setEditable(true);
+            this.getId("_IDGenInput141").setSelectedKey(null);
+            this.getId("_IDGenInput141").setEditable(true);
           }
-          var emplExist = this.getView().byId("_IDGenComboBox1").getSelectedKey();
-          var cirencesterCheck = this.getView().getModel("oneModel").getProperty("/EmpJobData").company == "4600";
-          if (emplExist == "X" && ((ContractType == "4" || ContractType == "5") || (cirencesterCheck && ContractType == "34"))) {
-            this.getView().byId("TeachRegNum11").setVisible(true);
-            this.getView().byId("TeachRegNum12").setVisible(true);
-            this.getView().byId("TeachRegNum").setVisible(false);
-            this.getView().byId("TeachRegNum1").setVisible(false);
-            this.getView().byId("TeachRegNum12").setRequired(true);
+          var emplExist = this.getId("_IDGenComboBox1").getSelectedKey();
+          var cirencesterCheck = this.getView().getModel("oneModel").getProperty("/EmpJobData").company == cirencesterCompanyCode;
+          if ((ContractType == "4" || ContractType == "5") || (cirencesterCheck && ContractType == "34")) {
+            if (emplExist == "X") {
+              this.getId("TeachRegNum11").setVisible(true);
+              this.getId("TeachRegNum12").setVisible(true);
+              this.getId("TeachRegNum").setVisible(false);
+              this.getId("TeachRegNum1").setVisible(false);
+              this.getId("TeachRegNum").setRequired(false);
+              this.getId("TeachRegNum1").setRequired(false);
+              this.getId("TeachRegNum12").setRequired(true);
+            } else {
+              this.getId("TeachRegNum11").setVisible(false);
+              this.getId("TeachRegNum12").setVisible(false);
+              this.getId("TeachRegNum").setVisible(true);
+              this.getId("TeachRegNum1").setVisible(true);
+              this.getId("TeachRegNum").setRequired(true);
+              this.getId("TeachRegNum1").setRequired(true);
+              this.getId("TeachRegNum12").setRequired(false);
+            }
           }
           else {
-            this.getView().byId("TeachRegNum11").setVisible(false);
-            this.getView().byId("TeachRegNum12").setVisible(false);
-            this.getView().byId("TeachRegNum").setVisible(true);
-            this.getView().byId("TeachRegNum1").setVisible(true);
-            this.getView().byId("TeachRegNum12").setRequired(false);
+            this.getId("TeachRegNum11").setVisible(false);
+            this.getId("TeachRegNum12").setVisible(false);
+            this.getId("TeachRegNum").setVisible(true);
+            this.getId("TeachRegNum1").setVisible(true);
+            this.getId("TeachRegNum").setRequired(false);
+            this.getId("TeachRegNum1").setRequired(false);
+            this.getId("TeachRegNum12").setRequired(false);
           }
         }
         else {
@@ -4129,34 +4349,34 @@ Please note that this schedule will repeat every ${oScheduleData.length} days, a
         if (oEvent.getSource().getSelectedItem()) {
           oEvent.getSource().setValueState(sap.ui.core.ValueState.None);
           var claimPosition = oEvent.getParameter("newValue");
-          var isTeacher = this.getView().byId("_IDGenComboBox411").getSelectedItem() != null ? this.getView().byId("_IDGenComboBox411").getSelectedItem().getKey() : this.getView().byId("_IDGenComboBox411").getSelectedKey()
+          var isTeacher = this.getId("_IDGenComboBox411").getSelectedItem() != null ? this.getId("_IDGenComboBox411").getSelectedItem().getKey() : this.getId("_IDGenComboBox411").getSelectedKey()
           if (claimPosition == "No") {
-            this.getView().byId("Hoursperweek").setValue("");
-            this.getView().byId("idFTEperc").setValue("");
-            this.getView().byId("idFTE").setValue("");
-            if ((isTeacher == "4" || isTeacher == "5") || (companyCode == "4600" && isTeacher == "34")) {
-              this.getView().byId("idfte1").setVisible(true);
-              this.getView().byId("idFTE").setRequired(true);
-              this.getView().byId("Hoursperweek").setRequired(false);
+            this.getId("Hoursperweek").setValue("");
+            this.getId("idFTEperc").setValue("");
+            this.getId("idFTE").setValue("");
+            if ((isTeacher == "4" || isTeacher == "5") || (companyCode == cirencesterCompanyCode && isTeacher == "34")) {
+              this.getId("idfte1").setVisible(true);
+              this.getId("idFTE").setRequired(true);
+              this.getId("Hoursperweek").setRequired(false);
             }
             else {
-              this.getView().byId("idfte1").setVisible(false);
-              this.getView().byId("idHoursPerWeek1").setVisible(true);
-              this.getView().byId("idWeekYear1").setVisible(true);
-              this.getView().byId("Hoursperweek").setRequired(true);
-              this.getView().byId("idFTE").setRequired(false);
+              this.getId("idfte1").setVisible(false);
+              this.getId("idHoursPerWeek1").setVisible(true);
+              this.getId("idWeekYear1").setVisible(true);
+              this.getId("Hoursperweek").setRequired(true);
+              this.getId("idFTE").setRequired(false);
             }
           } else {
-            this.getView().byId("idHoursPerWeek1").setVisible(false);
-            this.getView().byId("idfte1").setVisible(false);
-            this.getView().byId("idWeekYear1").setVisible(false);
-            this.getView().byId("Hoursperweek").setRequired(false)
-            this.getView().byId("idFTE").setRequired(false);
-            this.getView().byId("Hoursperweek").setValueState(sap.ui.core.ValueState.None);
-            this.getView().byId("idFTE").setValueState(sap.ui.core.ValueState.None);
-            // this.getView().byId("Hoursperweek").setValue("37.0");
-            // this.getView().byId("idFTE").setValue("1.0000");
-            // this.getView().byId("idFTEperc").setValue("100%");
+            this.getId("idHoursPerWeek1").setVisible(false);
+            this.getId("idfte1").setVisible(false);
+            this.getId("idWeekYear1").setVisible(false);
+            this.getId("Hoursperweek").setRequired(false)
+            this.getId("idFTE").setRequired(false);
+            this.getId("Hoursperweek").setValueState(sap.ui.core.ValueState.None);
+            this.getId("idFTE").setValueState(sap.ui.core.ValueState.None);
+            // this.getId("Hoursperweek").setValue("37.0");
+            // this.getId("idFTE").setValue("1.0000");
+            // this.getId("idFTEperc").setValue("100%");
             this.getView().getModel("oneModel").setProperty("/wage2Value", "");
           }
         }
@@ -4177,7 +4397,7 @@ Please note that this schedule will repeat every ${oScheduleData.length} days, a
             oEvent.getSource().setValueState(sap.ui.core.ValueState.None);
             value = value.toFixed(4);
             oEvent.getSource().setValue(value);
-            this.getView().byId("idFTEperc").setValue((parseFloat(value) * 100).toFixed(2) + "%");
+            this.getId("idFTEperc").setValue((parseFloat(value) * 100).toFixed(2) + "%");
           }
         }
         else {
@@ -4185,23 +4405,47 @@ Please note that this schedule will repeat every ${oScheduleData.length} days, a
         }
       },
 
+      validateWorkingWeeks: function (workingWeeks, addWorkingWeeks) {
+        return new Promise(
+          function (resolve, reject) {
+            if (workingWeeks) {
+              addWorkingWeeks = addWorkingWeeks ? +addWorkingWeeks : 0;
+              $.ajax({
+                url: serviceURL + `/odata/v2/cust_ZFLM_TTO_EC?$filter=cust_TTOWeeks eq '${+workingWeeks + addWorkingWeeks}' and (cust_CompanyCode eq '${companyCode}' or cust_CompanyCode eq 'XXXX')&$format=json`,
+                type: 'GET',
+                contentType: "application/json",
+                success: function (data) {
+                  if (data.d.results.length > 0) {
+                    this.getId("idWeekYeardrop").setValueState("None");
+                    this.getId("idWorkingWeeksdrop").setValueState("None");
+                    resolve();
+                  }
+                  else {
+                    this.getId("idWeekYeardrop").setValueState("Error");
+                    this.getId("idWorkingWeeksdrop").setValueState("Error");
+                    reject("Entered Weeks Per Year and Additional Working Weeks are not Valid, please ensure you select correct values");
+                  }
+                }.bind(this),
+                error: function (e) {
+                  console.log("error: " + e);
+                }
+              });
+            }
+          }.bind(this))
+      },
+
       onWorkingChange: function (oEvent) {
         if (oEvent.getSource().getSelectedItem() != null) {
-          var grade = this.getView().byId("_IDGenComboBox2").getSelectedItem() != null ? this.getView().byId("_IDGenComboBox2").getSelectedItem().getKey() : this.getView().byId("_IDGenComboBox2").getSelectedKey();
+          var grade = this.getId("_IDGenComboBox2").getSelectedItem() != null ? this.getId("_IDGenComboBox2").getSelectedItem().getKey() : this.getId("_IDGenComboBox2").getSelectedKey();
           var workingWeeks = oEvent.getSource().getSelectedItem().getText();
-          this._checkWage2(grade, workingWeeks);
-          $.ajax({
-            url: serviceURL + "/odata/v2/PickListValueV2?$filter=PickListV2_id eq 'TermtimeWeeks' and status eq 'A' and externalCode eq '" + workingWeeks.split(".")[0] + "'&$format=json",
-            type: 'GET',
-            contentType: "application/json",
-            success: function (data) {
-              if (data.d.results[0])
-                this.getView().byId("idWeekYeardrop").getSelectedItem().setKey(data.d.results[0].optionId);
-            }.bind(this),
-            error: function (e) {
-              console.log("error: " + e);
-            }
-          });
+          this._checkWage2(grade, workingWeeks)
+            // var addWorkingWeeks = this.getId("idWorkingWeeksdrop").getValue();
+            // this.validateWorkingWeeks(workingWeeks, addWorkingWeeks)
+            .then(() => {
+            })
+            .catch((e) => {
+              MessageBox.error(e);
+            })
         }
         else if (oEvent.getSource().getValue() == "") {
           this.getView().getModel("oneModel").setProperty("/wage2Value", "")
@@ -4214,45 +4458,87 @@ Please note that this schedule will repeat every ${oScheduleData.length} days, a
       onAddWorkChange: function (oEvent) {
         if (oEvent.getSource().getSelectedItem() != null) {
           var addWorkingWeeks = oEvent.getSource().getSelectedItem().getText();
-          $.ajax({
-            url: serviceURL + "/odata/v2/PickListValueV2?$filter=PickListV2_id eq 'TTOAdditionalWeeks' and status eq 'A' and externalCode eq '" + addWorkingWeeks + "'&$format=json",
-            type: 'GET',
-            contentType: "application/json",
-            success: function (data) {
-              this.getView().byId("idWorkingWeeksdrop").getSelectedItem().setKey(data.d.results[0].optionId);
-            }.bind(this),
-            error: function (e) {
-              console.log("error: " + e);
-            }
-          });
+          var grade = this.getId("_IDGenComboBox2").getSelectedItem() != null ? this.getId("_IDGenComboBox2").getSelectedItem().getKey() : this.getId("_IDGenComboBox2").getSelectedKey();
+          var workingWeeks = this.getId("idWeekYeardrop").getSelectedItem() != null ? this.getId("idWeekYeardrop").getSelectedItem().getText() : this.getId("idWeekYeardrop").getValue();
+          this._checkWage2(grade, workingWeeks)
+            // this.validateWorkingWeeks(workingWeeks, addWorkingWeeks)
+            .then(() => {
+              if (+addWorkingWeeks) {
+                $.ajax({
+                  url: serviceURL + "/odata/v2/PickListValueV2?$filter=PickListV2_id eq 'TTOAdditionalWeeks' and status eq 'A' and externalCode eq '" + addWorkingWeeks + "'&$format=json",
+                  type: 'GET',
+                  contentType: "application/json",
+                  success: function (data) {
+                    this.getId("idWorkingWeeksdrop").getSelectedItem().setKey(data.d.results[0].optionId);
+                  }.bind(this),
+                  error: function (e) {
+                    console.log("error: " + e);
+                  }
+                });
+              }
+            })
+            .catch((e) => {
+              MessageBox.error(e);
+            })
+
         }
         else {
           MessageBox.error("Please select a valid value");
         }
       },
 
-      _getTTOWeeks: function (grade) {
+      _getTTOWeeks: async function (grade) {
+        let termWeeks = [];
+        await $.ajax({
+          url: serviceURL + "/odata/v2/PickListValueV2?$filter=PickListV2_id eq 'TermtimeWeeks' and status eq 'A'&$format=json",
+          type: 'GET',
+          contentType: "application/json",
+          success: function (data) {
+            if (data.d.results.length > 0) {
+              termWeeks = data.d.results;
+            }
+          }.bind(this),
+          error: function (e) {
+            console.log("error: " + e);
+          }
+        });
         $.ajax({
-          url: serviceURL + "/odata/v2/cust_ZFLM_TTOWAGE_DD?$filter=cust_PayScaleGroup eq '" + grade + "' and cust_CompanyCode eq '" + companyCode + "'&$format=json",
+          url: serviceURL + `/odata/v2/cust_ZFLM_TTO_EC?$filter=cust_PayScaleGroup eq '${grade}' and cust_CompanyCode eq '${companyCode}'&$format=json`,
           type: 'GET',
           contentType: "application/json",
           success: function (data) {
             if (data.d.results.length > 0) {
               data.d.results.sort(function (a, b) {
-                return a.cust_WorkingWeeks - b.cust_WorkingWeeks;
+                return a.cust_TTOWeeks - b.cust_TTOWeeks;
               })
-              this.getView().getModel("oneModel").setProperty("/workingWeeks", data.d.results)
+              let preparedData = [];
+              data.d.results.forEach(function (oItem) {
+                var temp = {
+                  externalCode: termWeeks.find((el) => el.externalCode == oItem.cust_TTOWeeks.split(".")[0]).optionId,
+                  cust_TTOWeeks: oItem.cust_TTOWeeks
+                }
+                preparedData.push(temp);
+              });
+              this.getView().getModel("oneModel").setProperty("/workingWeeks", preparedData)
             } else {
               $.ajax({
-                url: serviceURL + "/odata/v2/cust_ZFLM_TTOWAGE_DD?$filter=cust_PayScaleGroup eq 'XXXXXXXX' and cust_CompanyCode eq 'XXXX'&$format=json",
+                url: serviceURL + `/odata/v2/cust_ZFLM_TTO_EC?$filter=cust_PayScaleGroup eq '${defaultPayGrade}' and cust_CompanyCode eq '${defaultCompanyCode}'&$format=json`,
                 type: 'GET',
                 contentType: "application/json",
                 success: function (data) {
                   if (data.d.results.length > 0) {
                     data.d.results.sort(function (a, b) {
-                      return a.cust_WorkingWeeks - b.cust_WorkingWeeks;
+                      return a.cust_TTOWeeks - b.cust_TTOWeeks;
                     })
-                    this.getView().getModel("oneModel").setProperty("/workingWeeks", data.d.results)
+                    let preparedData = [];
+                    data.d.results.forEach(function (oItem) {
+                      var temp = {
+                        externalCode: termWeeks.find((el) => el.externalCode == oItem.cust_TTOWeeks.split(".")[0]).optionId,
+                        cust_TTOWeeks: oItem.cust_TTOWeeks
+                      }
+                      preparedData.push(temp);
+                    });
+                    this.getView().getModel("oneModel").setProperty("/workingWeeks", preparedData)
                   }
                 }.bind(this),
                 error: function (e) {
@@ -4268,52 +4554,104 @@ Please note that this schedule will repeat every ${oScheduleData.length} days, a
       },
 
       _checkWage2: function (grade, workingWeeks) {
-        grade = "XXXXXXXX"
-        this.getView().getModel("oneModel").setProperty("/wage2Value", "");
-        if (grade && workingWeeks) {
-          var contStartDate = new Date(this.getView().byId("contStartDate1").getValue());
-          var consStartYear = contStartDate.getFullYear();
-          var consStartMonth = contStartDate.getMonth();
-          var todayYear = (new Date()).getFullYear();
-          var todayMonth = (new Date()).getMonth()
-          var diff = Number(todayYear - consStartYear);
-          if (consStartMonth > todayMonth) diff--
-          else if (consStartMonth == todayMonth) {
-            var consStartDay = (contStartDate).getDate();
-            var todayDay = (new Date()).getDate()
-            if (consStartDay > todayDay) diff--
-          }
-          if (diff < 0) {
-            diff = 0;
-          }
-          $.ajax({
-            url: serviceURL + "/odata/v2/cust_ZFLM_TTO_EC?$filter=cust_PayScaleGroup eq '" + grade + "' and cust_TTOWeeks eq '" + workingWeeks + "' and cust_CompanyCode eq '" + companyCode + "'&$format=json",
-            type: 'GET',
-            contentType: "application/json",
-            success: function (data) {
-              if (data.d.results.lenght != 0) {
-                if (diff < 5) {
-                  this.getView().getModel("oneModel").setProperty("/wage2Value", data.d.results[0].cust_Service1);
-                }
-                else if (diff > 10) {
-                  this.getView().getModel("oneModel").setProperty("/wage2Value", data.d.results[0].cust_Service3);
-                }
-                else {
-                  this.getView().getModel("oneModel").setProperty("/wage2Value", data.d.results[0].cust_Service2);
-                }
+        return new Promise(
+          function (resolve, reject) {
+            this.getView().getModel("oneModel").setProperty("/wage2Value", "");
+            var additonalWorkingWeeks = this.getId("idWorkingWeeksdrop").getValue();
+            if (grade && workingWeeks) {
+              var contStartDate = new Date(this.getId("contStartDate1").getValue());
+              var consStartYear = contStartDate.getFullYear();
+              var consStartMonth = contStartDate.getMonth();
+              var todayYear = (new Date()).getFullYear();
+              var todayMonth = (new Date()).getMonth()
+              var diff = Number(todayYear - consStartYear);
+              if (consStartMonth > todayMonth) diff--
+              else if (consStartMonth == todayMonth) {
+                var consStartDay = (contStartDate).getDate();
+                var todayDay = (new Date()).getDate()
+                if (consStartDay > todayDay) diff--
               }
-              else {
-                this.getView().getModel("oneModel").setProperty("/wage2Value", "");
+              if (diff < 0) {
+                diff = 0;
               }
-            }.bind(this),
-            error: function (e) {
-              console.log("error: " + e);
+              additonalWorkingWeeks = additonalWorkingWeeks ? +additonalWorkingWeeks : 0
+
+              // checking if particular company code and working weeks combination exist.
+              // If not, then taking the default combination
+              const formattedGrade = grade.split("/")[grade.split("/").length - 1];
+              $.ajax({
+                url: serviceURL + `/odata/v2/cust_ZFLM_TTO_EC?$filter=(cust_PayScaleGroup eq '${formattedGrade}' or cust_PayScaleGroup eq '${defaultPayGrade}') and cust_TTOWeeks eq '${+workingWeeks + additonalWorkingWeeks}' and (cust_CompanyCode eq '${companyCode}' or cust_CompanyCode eq '${defaultCompanyCode}')&$format=json`,
+                type: 'GET',
+                contentType: "application/json",
+                success: function (data) {
+                  if (data.d.results.length != 0) {
+
+                    // finding if company code and working weeks combination existingData
+                    // otherwise replacing them with thei default values
+                    let requiredData = {}; const aData = data.d.results;
+                    if (aData.filter((el) => el.cust_CompanyCode == companyCode && el.cust_PayScaleGroup == formattedGrade).length > 0)
+                      requiredData = aData.filter((el) => el.cust_CompanyCode == companyCode && el.cust_PayScaleGroup == formattedGrade)[0];
+                    else if (aData.filter((el) => el.cust_CompanyCode == companyCode && el.cust_PayScaleGroup == defaultPayGrade).length > 0)
+                      requiredData = aData.filter((el) => el.cust_CompanyCode == companyCode && el.cust_PayScaleGroup == defaultPayGrade)[0];
+                    else
+                      requiredData = aData.filter((el) => el.cust_CompanyCode == defaultCompanyCode && el.cust_PayScaleGroup == defaultPayGrade)[0];
+                    // after finding the required data
+                    // checking the working time of the employee
+                    if (diff < 5) {
+                      this.getView().getModel("oneModel").setProperty("/wage2Value", requiredData.cust_Service1);
+                    }
+                    else if (diff > 10) {
+                      this.getView().getModel("oneModel").setProperty("/wage2Value", requiredData.cust_Service3);
+                    }
+                    else {
+                      this.getView().getModel("oneModel").setProperty("/wage2Value", requiredData.cust_Service2);
+                    }
+                    this.getId("idWeekYeardrop").setValueState("None");
+                    this.getId("idWorkingWeeksdrop").setValueState("None");
+                    resolve();
+                  }
+                  else {
+                    // If not finding any value, then erroring
+                    this.getId("idWeekYeardrop").setValueState("Error");
+                    this.getId("idWorkingWeeksdrop").setValueState("Error");
+                    reject("Entered Weeks Per Year and Additional Working Weeks are not Valid, please ensure you select correct values");
+                  }
+                  // else {
+                  //   $.ajax({
+                  //     url: serviceURL + `/odata/v2/cust_ZFLM_TTO_EC?$filter=cust_PayScaleGroup eq '${defaultPayGrade}' and cust_TTOWeeks eq '${+workingWeeks + +additonalWorkingWeeks}' and cust_CompanyCode eq '${defaultCompanyCode}'&$format=json`,
+                  //     type: 'GET',
+                  //     contentType: "application/json",
+                  //     success: function (data) {
+                  //       if (data.d.results.length != 0) {
+                  //         if (diff < 5) {
+                  //           this.getView().getModel("oneModel").setProperty("/wage2Value", data.d.results[0].cust_Service1);
+                  //         }
+                  //         else if (diff > 10) {
+                  //           this.getView().getModel("oneModel").setProperty("/wage2Value", data.d.results[0].cust_Service3);
+                  //         }
+                  //         else {
+                  //           this.getView().getModel("oneModel").setProperty("/wage2Value", data.d.results[0].cust_Service2);
+                  //         }
+                  //       }
+                  //       else {
+                  //         this.getView().getModel("oneModel").setProperty("/wage2Value", "");
+                  //       }
+                  //     }.bind(this),
+                  //     error: function (e) {
+                  //       console.log("error: " + e);
+                  //     }
+                  //   });
+                  // }
+                }.bind(this),
+                error: function (e) {
+                  console.log("error: " + e);
+                }
+              });
             }
-          });
-        }
-        else {
-          this.getView().getModel("oneModel").setProperty("/wage2Value", "");
-        }
+            else {
+              this.getView().getModel("oneModel").setProperty("/wage2Value", "");
+            }
+          }.bind(this))
       },
 
       onStartDateChange: function (oEvent) {
@@ -4323,15 +4661,15 @@ Please note that this schedule will repeat every ${oScheduleData.length} days, a
         else {
           if (oEvent.getSource().getValue()) {
             oEvent.getSource().setValueState(sap.ui.core.ValueState.None);
-            if (new Date(oEvent.getSource().getValue()) > new Date(this.getView().byId("_IDGenDatePicker2").getValue()))
-              this.getView().byId("_IDGenDatePicker2").setDateValue(null);
-            this.getView().byId("_IDGenDatePicker2").setMinDate(new Date(oEvent.getSource().getValue()));
-            if (new Date(oEvent.getSource().getValue()) > new Date(this.getView().byId("probationEndDatePic").getValue()))
-              this.getView().byId("probationEndDatePic").setDateValue(null);
-            this.getView().byId("probationEndDatePic").setMinDate(new Date(oEvent.getSource().getValue()));
+            if (new Date(oEvent.getSource().getValue()) > new Date(this.getId("_IDGenDatePicker2").getValue()))
+              this.getId("_IDGenDatePicker2").setDateValue(null);
+            this.getId("_IDGenDatePicker2").setMinDate(new Date(oEvent.getSource().getValue()));
+            if (new Date(oEvent.getSource().getValue()) > new Date(this.getId("probationEndDatePic").getValue()))
+              this.getId("probationEndDatePic").setDateValue(null);
+            this.getId("probationEndDatePic").setMinDate(new Date(oEvent.getSource().getValue()));
           } else {
-            this.getView().byId("_IDGenDatePicker2").setMinDate(null);
-            this.getView().byId("probationEndDatePic").setMinDate(null);
+            this.getId("_IDGenDatePicker2").setMinDate(null);
+            this.getId("probationEndDatePic").setMinDate(null);
           }
         }
       },
@@ -4340,32 +4678,32 @@ Please note that this schedule will repeat every ${oScheduleData.length} days, a
         if (oEvent.getSource().getSelectedItem()) {
           oEvent.getSource().setValueState(sap.ui.core.ValueState.None);
           if (oEvent.getSource().getSelectedItem().getText().includes("Fixed Term")) {
-            this.getView().byId("_IDGenLabel81").setVisible(true);
-            this.getView().byId("_IDGenDatePicker2").setVisible(true);
-            this.getView().byId("_IDGenDatePicker2").setRequired(true);
+            this.getId("_IDGenLabel81").setVisible(true);
+            this.getId("_IDGenDatePicker2").setVisible(true);
+            this.getId("_IDGenDatePicker2").setRequired(true);
           }
           else {
-            this.getView().byId("_IDGenLabel81").setVisible(false);
-            this.getView().byId("_IDGenDatePicker2").setVisible(false);
-            this.getView().byId("_IDGenDatePicker2").setRequired(false);
+            this.getId("_IDGenLabel81").setVisible(false);
+            this.getId("_IDGenDatePicker2").setVisible(false);
+            this.getId("_IDGenDatePicker2").setRequired(false);
           }
 
           if (oEvent.getSource().getSelectedItem().getText().includes("Casual")) {
-            this.getView().byId("_IDGenComboBox6").setSelectedKey("Yes");
-            this.getView().byId("_IDGenComboBox6").setEditable(false);
-            this.getView().byId("idHoursPerWeek1").setVisible(false);
-            this.getView().byId("idfte1").setVisible(false);
-            this.getView().byId("idWeekYear1").setVisible(false);
-            this.getView().byId("Hoursperweek").setRequired(false)
-            this.getView().byId("idFTE").setRequired(false);
-            this.getView().byId("Hoursperweek").setValueState(sap.ui.core.ValueState.None);
-            this.getView().byId("idFTE").setValueState(sap.ui.core.ValueState.None);
-            // this.getView().byId("Hoursperweek").setValue("37.0");
-            // this.getView().byId("idFTE").setValue("1.0000");
-            // this.getView().byId("idFTEperc").setValue("100%");
+            this.getId("_IDGenComboBox6").setSelectedKey("Yes");
+            this.getId("_IDGenComboBox6").setEditable(false);
+            this.getId("idHoursPerWeek1").setVisible(false);
+            this.getId("idfte1").setVisible(false);
+            this.getId("idWeekYear1").setVisible(false);
+            this.getId("Hoursperweek").setRequired(false)
+            this.getId("idFTE").setRequired(false);
+            this.getId("Hoursperweek").setValueState(sap.ui.core.ValueState.None);
+            this.getId("idFTE").setValueState(sap.ui.core.ValueState.None);
+            // this.getId("Hoursperweek").setValue("37.0");
+            // this.getId("idFTE").setValue("1.0000");
+            // this.getId("idFTEperc").setValue("100%");
             this.getView().getModel("oneModel").setProperty("/wage2Value", "");
           } else {
-            this.getView().byId("_IDGenComboBox6").setEditable(true);
+            this.getId("_IDGenComboBox6").setEditable(true);
           }
         }
         else {
@@ -4384,10 +4722,10 @@ Please note that this schedule will repeat every ${oScheduleData.length} days, a
 
       onChangeGeneral: function (oEvent) {
         if (oEvent && oEvent.mParameters && oEvent.mParameters.id) {
-          this.getView().byId(oEvent.mParameters.id).setValueState(sap.ui.core.ValueState.None);
+          this.getId(oEvent.mParameters.id).setValueState(sap.ui.core.ValueState.None);
         }
         else {
-          this.getView().byId(oEvent.mParameters.id).setValueState(sap.ui.core.ValueState.Error);
+          this.getId(oEvent.mParameters.id).setValueState(sap.ui.core.ValueState.Error);
         }
       },
 
@@ -4396,13 +4734,13 @@ Please note that this schedule will repeat every ${oScheduleData.length} days, a
 
       onWorkSchedBut: function () {
         sap.ui.core.BusyIndicator.show();
-        var startDate = this.getView().byId("_IDGenDatePicker1").getValue();
-        var hoursPerWeek = this.getView().byId("Hoursperweek").getValue();
-        var FTE = this.getView().byId("idFTE").getValue();
+        var startDate = this.getId("_IDGenDatePicker1").getValue();
+        var hoursPerWeek = this.getId("Hoursperweek").getValue();
+        var FTE = this.getId("idFTE").getValue();
         if (startDate && (hoursPerWeek || FTE)) {
           startDate = new Date(startDate)
-          this.getView().byId("_IDGenDatePicker1").setValueState(sap.ui.core.ValueState.None);
-          this.getView().byId("Hoursperweek").setValueState(sap.ui.core.ValueState.None);
+          this.getId("_IDGenDatePicker1").setValueState(sap.ui.core.ValueState.None);
+          this.getId("Hoursperweek").setValueState(sap.ui.core.ValueState.None);
           var WSStartDate = new Date(this.getView().getModel("WSModel") ? this.getView().getModel("WSModel").getProperty("/WSStartDate") : "12/31/9999");
           var oModelWS = this.getView().getModel("WSModel") ? this.getView().getModel("WSModel") : new JSONModel();
           if (!this.oWorkSchedules) {
@@ -4470,7 +4808,7 @@ Please note that this schedule will repeat every ${oScheduleData.length} days, a
               this.calculateTotalHours();
               oModelWS.setProperty("/DelButShow", true);
             }
-            oModelWS.setProperty("/WSStartDate", new Date(this.getView().byId("_IDGenDatePicker1").getValue()));
+            oModelWS.setProperty("/WSStartDate", new Date(this.getId("_IDGenDatePicker1").getValue()));
             this.getView().setModel(oModelWS, "WSModel");
           } else {
             if (oModelWS.getProperty("/WSSavedItems") && oModelWS.getProperty("/WSSavedItems").length > 0)
@@ -4486,14 +4824,14 @@ Please note that this schedule will repeat every ${oScheduleData.length} days, a
           this.oWorkSchedules.open();
         } else {
           if (!startDate) {
-            this.getView().byId("_IDGenDatePicker1").setValueState(sap.ui.core.ValueState.Error);
+            this.getId("_IDGenDatePicker1").setValueState(sap.ui.core.ValueState.Error);
             MessageBox.error("Please fill the start date first");
           } else {
-            if (this.getView().byId("idHoursPerWeek1").getVisible()) {
-              this.getView().byId("Hoursperweek").setValueState(sap.ui.core.ValueState.Error);
+            if (this.getId("idHoursPerWeek1").getVisible()) {
+              this.getId("Hoursperweek").setValueState(sap.ui.core.ValueState.Error);
               MessageBox.error("Please fill Hours per week first");
             } else {
-              this.getView().byId("idFTE").setValueState(sap.ui.core.ValueState.Error);
+              this.getId("idFTE").setValueState(sap.ui.core.ValueState.Error);
               MessageBox.error("Please fill FTE first");
             }
           }

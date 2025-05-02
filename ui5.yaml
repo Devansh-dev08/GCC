@@ -20,9 +20,9 @@ server:
             url: https://api55.sapsf.eu
             destination: SFSF_new_QA
           - path: /sap
-            url: http://s4devwz1.sap.gloscc.gov.uk:44300
-            client: "310"
-            destination: s4hanartdev_CLONING
+            url: http://s4hqa1.sap.gloscc.gov.uk:44300
+            client: '300'
+            destination: s4hanartqa
     - name: fiori-tools-appreload
       afterMiddleware: compression
       configuration:
